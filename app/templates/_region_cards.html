@@ -1,0 +1,29 @@
+<div class="container row row-cols-1 row-cols-md-3 g-4">
+  {% for cat in categories %}
+    <div class="col">
+    <div class="card">
+      <h5 class="card-header">
+        {{ cat.name }}
+      </h2>
+
+      <ul class="list-group list-group-flush">
+        {% for srv in region.services_by_category(cat.id) %}
+          {% with incidents = srv.get_open_incidents_in_region(region.id) %}
+          <li class="list-group-item d-flex justify-content-between
+                       align-items-center">
+            {{srv.name}}
+            {% if incidents|length == 0 %}
+            <i class="bi sd-available"></i>
+            {% else %}
+            <a href="/incidents/{{incidents[0].id}}" title="Open Incident">
+              <i class="bi sd-{{incidents[0].impact.value}}"></i>
+            </a>
+            {% endif %}
+          </li>
+          {% endwith %}
+        {% endfor %}
+      </ul>
+    </div>
+    </div>
+  {% endfor %}
+</div>

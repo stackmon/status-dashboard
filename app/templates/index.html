@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  {% if incidents | length == 0 %}
+    <div class="alert alert-success" role="alert">
+      All systems running
+    </div>
+  {% else %}
+    {% for incident in incidents %}
+      <div class="alert alert-{{incident.impact.value}}" role="alert">
+          <h4 class="alert-heading">
+              <a
+                  href="incidents/{{incident.id}}">{{incident.impact.value|capitalize}}: {{ incident.text }}</a>
+        </h4>
+        <h6 class="alert-regions">Affected Regions: {{
+            incident.regions.all()
+            | map(attribute='name')
+            | join(', ')
+            }}</h6>
+        <h6 class="alert-services">Affected Services: {{
+            incident.services.all()
+            | map(attribute='name')
+            | join(', ')
+            }}</h6>
+        <small>Start: {{ incident.start_date.strftime('%Y-%m-%dT%H:%M') }}</small>
+        <hr/>
+        <div class="container text-left">
+        {% for update in incident.updates %}
+          <div class="row">
+              <div class="col-md-2">
+                  <h6>{{ update.status }}</h6>
+                  <small>{{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+              </div>
+              <div class="col-md-10">
+                  {{ update.text }}
+              </div>
+              <hr/>
+           </div>
+        {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+<div class="container">
+ <!-- Nav tabs -->
+ <ul class="nav nav-tabs justify-content-center" id="myTab" role="tablist">
+    {% for region in regions %}
+      <li class="nav-item" role="presentation">
+          {% if loop.first %}
+          <button class="nav-link active" 
+          {% else %}
+          <button class="nav-link" 
+          {% endif %}
+                  id="{{ region.name }}-tab"
+                  data-bs-toggle="tab" 
+                  data-bs-target="#{{ region.name }}" 
+                  type="button" 
+                  role="tab" 
+                  aria-controls="{{region.name}}"
+                  {% if loop.first %}
+                  aria-selected="true"
+                  {% else %}
+                  aria-selected="false"
+                  {% endif %}
+                  >
+              {{ region.name | upper }}</button>
+      </li>
+    {% endfor %}
+  </ul>
+  <!-- Tab panes -->
+  <div class="tab-content mt-3">
+    {% for region in regions %}
+    {% if loop.first %}
+    <div class="tab-pane active" 
+    {% else %}
+    <div class="tab-pane" 
+    {% endif %}
+         id="{{region.name}}" 
+         tabindex="0"
+         role="tabpanel"
+         aria-labelledby="{{region.name}}-tab" 
+         >
+         {% include '_region_cards.html' %}
+          </div>
+    {% endfor %}
+  </div>
+  </div>
+  <div class="container mt-4">
+    <ul class="list-group list-group-horizontal list-group-flush">
+      <li class="list-group-item">
+          <i class="bi sd-available me-1"></i>Operational</li>
+      <li class="list-group-item">
+          <i class="bi sd-maintenance me-1"></i>Maintenance</li>
+      <li class="list-group-item">
+          <i class="bi sd-minor me-1"></i><span>Minor Issue</span></li>
+      <li class="list-group-item">
+          <i class="bi sd-major me-1"></i><span>Major Issue</span></li>
+      <li class="list-group-item">
+          <i class="bi sd-outage me-1"></i><span>Outage</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

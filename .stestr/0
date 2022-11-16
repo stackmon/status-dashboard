@@ -1,0 +1,7 @@
+time: 2022-11-10 16:26:39.518317Z
+tags: worker-0
+test: status-dashboard.tests.unit.test_model.Test.test_basic
+time: 2022-11-10 16:26:39.518414Z
+successful: status-dashboard.tests.unit.test_model.Test.test_basic [ multipart
+]
+tags: -worker-0

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- set the encoding of your site -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% block metatags %}
+  {% endblock %}
+  
+  {% block css %}
+    {% include 'css.html' %}
+  {% endblock %}
+  
+</head>
+<body class="d-flex flex-column h-100">
+  {% block header %}
+    {% include 'header.html' %}
+  {% endblock %}
+  
+  <main class="container">
+  <!-- Start Main content -->
+  {% block content %}
+  {% endblock %}
+  <!-- End Main content -->
+  </main>
+  
+  {% block footer %}
+    {% include 'footer.html' %}
+  {% endblock %}
+  
+  {% block scripts %}
+    {% include 'scripts.html' %}
+  {% endblock %}
+
+</body>
+</html>
