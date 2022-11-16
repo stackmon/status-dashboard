@@ -1,0 +1,5 @@
+Flask # BSD-3-Clause
+Flask-SQLAlchemy # BSD-3-Clause
+Flask-Migrate
+Flask-Wtf
+
