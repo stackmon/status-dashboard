@@ -109,6 +109,6 @@ def post_incident_update(id):
         db.session.add(update)
         db.session.commit()
     else:
-        print(f"Data validation failed {form.update_text.data}")
-        print(f"Data validation failed {form.update_status.data}")
+        print(f"Data validation failed {form.update_text.errors}")
+        print(f"Data validation failed {form.update_status.errors}")
     return redirect(url_for("web.incident", id=id))

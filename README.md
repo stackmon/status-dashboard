@@ -18,6 +18,11 @@ flask boostrap provision
 
 ## DB Architecture
 
+services=components, service_category - grouping of services.
+
+
+Initial sketch diagram (no 100% matching reality)
+
 ```mermaid
 classDiagram
    Incident "1" -- "*" IncidentStatuses
@@ -76,3 +81,4 @@ classDiagram
     }
 ```
 
+A real data model is however represented in https://github.com/stackmon/status-dashboard/blob/main/app/models.py
