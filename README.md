@@ -16,22 +16,26 @@ It is possible to bootstrap DB with some initial data
 flask boostrap provision
 ```
 
-## DB Architecture
+## Architecture
 
-services=components, service_category - grouping of services.
+As stupidly simple as possible:
+
+- flask to impement "API" and render web
+- web pages without JavaScript logic (kiss and working with JS blockers)
+- DB (using through sqlalchemy)
+- bootstrap
+- auth to be done with OpenID connect
+- services are representing what should be verified (working or not)
+- service_category - meta grouping of services into groups
+- regions - different services are existing in regions (many to many relation)
+- incidents - entry about issues affecting certain regions and certain services
+- incident_status - change history (or incident updates)
 
 
 Initial sketch diagram (no 100% matching reality)
 
 ```mermaid
 classDiagram
-   Incident "1" -- "*" IncidentStatuses
-   Incident "1" -- "*" IncidentServiceRelation
-   Incident "1" -- "*" IncidentRegionRelation
-   Service "1" -- "*" IncidentServiceRelation
-   Region "1" -- "*" IncidentRegionRelation
-   Operator "1" -- "*" Incident
-   Operator "1" -- "*" IncidentStatuses
 
     class Incident{
       -int id
