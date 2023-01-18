@@ -5,7 +5,8 @@
 ```
 tox -e py39
 source .tox/py39/bin/activate
-flask A status_dashboard.py --debug run
+export FLASK_APP=status_dashboard.py
+flask --debug run
 ```
 
 ## Bootstraping
