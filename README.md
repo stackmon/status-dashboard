@@ -15,7 +15,7 @@ flask --debug run
 It is possible to bootstrap DB with some initial data
 
 ```
-flask boostrap provision
+flask bootstrap provision
 ```
 
 ## Architecture
