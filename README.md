@@ -6,6 +6,7 @@
 tox -e py39
 source .tox/py39/bin/activate
 export FLASK_APP=status_dashboard.py
+flask db upgrade  # Initialize DB
 flask --debug run
 ```
 
