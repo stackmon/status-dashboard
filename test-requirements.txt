@@ -2,3 +2,4 @@ stestr>=1.0.0 # Apache-2.0
 testrepository>=0.0.18 # Apache-2.0/BSD
 mock
 flake8
+git+https://git@gitea.eco.tsi-dev.otc-service.com/infra/otc-metadata.git
