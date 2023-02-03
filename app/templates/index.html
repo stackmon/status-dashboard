@@ -1,96 +1,86 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="container">
-  {% if incidents | length == 0 %}
-    <div class="alert alert-success" role="alert">
-      All systems running
-    </div>
-  {% else %}
-    {% for incident in incidents %}
-      <div class="alert alert-{{incident.impact.value}}" role="alert">
-          <h4 class="alert-heading">
-              <a
-                  href="incidents/{{incident.id}}">{{incident.impact.value|capitalize}}: {{ incident.text }}</a>
-        </h4>
-        <h6 class="alert-regions">Affected Regions: {{
-            incident.regions.all()
-            | map(attribute='name')
-            | join(', ')
-            }}</h6>
-        <h6 class="alert-services">Affected Services: {{
-            incident.services.all()
-            | map(attribute='name')
-            | join(', ')
-            }}</h6>
-        <small>Start: {{ incident.start_date.strftime('%Y-%m-%dT%H:%M') }}</small>
-        <hr/>
-        <div class="container text-left">
-        {% for update in incident.updates %}
-          <div class="row">
-              <div class="col-md-2">
-                  <h6>{{ update.status }}</h6>
-                  <small>{{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
-              </div>
-              <div class="col-md-10">
-                  {{ update.text }}
-              </div>
-              <hr/>
-           </div>
+<div class="table_wrapper">
+  <table class="scroll_table">
+    <caption>
+      Services availabilities
+    </caption>
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Component ID</th>
+        <th>Component Name</th>
+        {% for region in regions %}
+        <th>{{ region }}</th>
         {% endfor %}
-        </div>
-      </div>
-    {% endfor %}
-  {% endif %}
-
-<div class="container">
- <!-- Nav tabs -->
- <ul class="nav nav-tabs justify-content-center" id="myTab" role="tablist">
-    {% for region in regions %}
-      <li class="nav-item" role="presentation">
-          {% if loop.first %}
-          <button class="nav-link active" 
-          {% else %}
-          <button class="nav-link" 
-          {% endif %}
-                  id="{{ region.name }}-tab"
-                  data-bs-toggle="tab" 
-                  data-bs-target="#{{ region.name }}" 
-                  type="button" 
-                  role="tab" 
-                  aria-controls="{{region.name}}"
-                  {% if loop.first %}
-                  aria-selected="true"
-                  {% else %}
-                  aria-selected="false"
-                  {% endif %}
-                  >
-              {{ region.name | upper }}</button>
-      </li>
-    {% endfor %}
-  </ul>
-  <!-- Tab panes -->
-  <div class="tab-content mt-3">
-    {% for region in regions %}
-    {% if loop.first %}
-    <div class="tab-pane active" 
-    {% else %}
-    <div class="tab-pane" 
-    {% endif %}
-         id="{{region.name}}" 
-         tabindex="0"
-         role="tabpanel"
-         aria-labelledby="{{region.name}}-tab" 
-         >
-         {% include '_region_cards.html' %}
-          </div>
+      </tr>
+    </thead>
+    <div>
+    {% for category in categories %}
+      <tbody class="scroll_table_area">
+        <tr>
+          <th rowspan="{{ components_by_cats[category]|length }}">
+            {{ categories[category] }}
+          </th>
+          <td class="component_id_cell">{{ components_by_cats[category][0] }}</td>
+          <td class="component_name_cell">
+            {% for component in all_components %}
+              {% if component.id == components_by_cats[category][0] %}
+                {{ component.name }}
+              {% endif %}
+            {% endfor %}
+          </td>
+          {% for region in regions %}
+          <td class="component_status_cell">
+            {% for component in all_components %}
+              {% if (component.id == components_by_cats[category][0]) %}
+                {% if component.component_by_region(component.id, region) == None %}
+                  <i class="bi bi-cloud-minus"></i>
+                {% else %}
+                  <i class="bi sd-{{ component.get_status(region) }}"></i>
+                {% endif %}
+              {% endif %}  
+            {% endfor %}
+          </td>
+          {% endfor %}
+        </tr>
+      {% for component_id in components_by_cats[category][1:] %}  
+        <tr>
+          <td class="component_id_cell">{{ component_id }}</td>
+          <td class="component_name_cell">
+            {% for component in all_components %}
+              {% if component.id == component_id %}
+                {{ component.name }}
+              {% endif %}  
+            {% endfor %}
+          </td>
+          {% for region in regions %}
+          <td class="component_status_cell">
+            {% for component in all_components %}
+              {% if component.id == component_id %}
+                {% if component.component_by_region(component.id, region) == None %}
+                  <i class="bi bi-cloud-minus"></i>
+                {% else %}
+                  <i class="bi sd-{{ component.get_status(region) }}"></i>
+                {% endif %}
+              {% endif %}  
+            {% endfor %}
+          </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+      </tbody>
     {% endfor %}
   </div>
-  </div>
+  </table>
+</div>
+<div>
   <div class="container mt-4">
     <ul class="list-group list-group-horizontal list-group-flush">
       <li class="list-group-item">
-          <i class="bi sd-available me-1"></i>Operational</li>
+          <i class="bi bi-cloud-minus"></i>Not Exist</li>
+      <li class="list-group-item">
+          <i class="bi sd-available me-1"></i>Operational</li></li> 
       <li class="list-group-item">
           <i class="bi sd-maintenance me-1"></i>Maintenance</li>
       <li class="list-group-item">

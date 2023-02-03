@@ -3,10 +3,11 @@
     <div class="col">
     <div class="card">
       <h5 class="card-header">
-        {{ cat.name }}
+        {{ cat }}
       </h2>
 
       <ul class="list-group list-group-flush">
+        {% for srv in region.services_by_category(cat.id) %}
         {% for srv in region.services_by_category(cat.id) %}
           {% with incidents = srv.get_open_incidents_in_region(region.id) %}
           <li class="list-group-item d-flex justify-content-between
