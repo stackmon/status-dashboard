@@ -21,61 +21,62 @@ from sqlalchemy import and_
 from app import db
 
 
-class ServiceRegionRelation(db.Model):
-    __tablename__ = "service_region_relation"
-    id = db.Column(db.Integer, primary_key=True)
-    region_id = db.Column(db.Integer, db.ForeignKey("region.id"))
-    service_id = db.Column(db.Integer, db.ForeignKey("service.id"))
+# class ComponentRegionRelation(db.Model):
+#     __tablename__ = "component_region_relation"
+#     id = db.Column(db.Integer, primary_key=True)
+#     region_id = db.Column(db.Integer, db.ForeignKey("region.id"))
+#     component_id = db.Column(db.Integer, db.ForeignKey("component.id"))
 
 
-class IncidentServiceRelation(db.Model):
-    __tablename__ = "incident_service_relation"
-    id = db.Column(db.Integer, primary_key=True)
-    incident_id = db.Column(db.Integer, db.ForeignKey("incident.id"))
-    service_id = db.Column(db.Integer, db.ForeignKey("service.id"))
-
-
-class IncidentRegionRelation(db.Model):
-    __tablename = "incident_region_relation"
+class IncidentComponentRelation(db.Model):
+    __tablename__ = "incident_component_relation"
     id = db.Column(db.Integer, primary_key=True)
     incident_id = db.Column(db.Integer, db.ForeignKey("incident.id"))
-    region_id = db.Column(db.Integer, db.ForeignKey("region.id"))
+    component_id = db.Column(db.Integer, db.ForeignKey("component.id"))
 
 
-class Region(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    services = db.relationship(
-        "Service",
-        secondary=ServiceRegionRelation.__table__,
-        backref="Region",
-        lazy="dynamic",
-    )
-
-    def __repr__(self):
-        return "<Region {}>".format(self.name)
-
-    def services_by_category(self, category):
-        return self.services.filter(Service.category_id == category)
+# class IncidentRegionRelation(db.Model):
+#     __tablename__ = "incident_region_relation"
+#     id = db.Column(db.Integer, primary_key=True)
+#     incident_id = db.Column(db.Integer, db.ForeignKey("incident.id"))
+#     region_id = db.Column(db.Integer, db.ForeignKey("region.id"))
 
 
-class ServiceCategory(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    services = db.relationship("Service", backref="category")
+# class Region(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String)
+#     components = db.relationship(
+#         "Component",
+#         secondary=ComponentRegionRelation.__table__,
+#         backref="Region",
+#         lazy="dynamic",
+#     )
+# 
+#     def __repr__(self):
+#         return "<Region {}>".format(self.name)
+# 
+#     def components_by_category(self, category):
+#         return self.components.filter(Component.category_id == category)
 
-    def __repr__(self):
-        return "<ServiceCategory {}>".format(self.name)
+
+# class ComponentCategory(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String)
+#     components = db.relationship("Component", backref="category")
+# 
+#     def __repr__(self):
+#         return "<ComponentCategory {}>".format(self.name)
 
 
-class Service(db.Model):
+class Component(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     type = db.Column(db.String)
-    category_id = db.Column(db.Integer, db.ForeignKey("service_category.id"))
+    # category_id = db.Column(db.Integer, db.ForeignKey("component_category.id"))
+    attributes = db.relationship("ComponentAttribute", backref="Component")
 
     def __repr__(self):
-        return "<Service {}:{}:{}>".format(
+        return "<Component {}:{}:{}>".format(
             self.id, self.category.name, self.name
         )
 
@@ -87,7 +88,17 @@ class Service(db.Model):
             return incidents[0].impact.value
 
     def get_open_incidents_in_region(self, region_id):
-        return Incident.get_open_for_service(self.id, region_id)
+        return Incident.get_open_for_component(self.id, region_id)
+
+class ComponentAttribute(db.Model):
+    __tablename__ = "component_attribute"
+    id = db.Column(db.Integer, primary_key=True)
+    component_id = db.Column(db.Integer, db.ForeignKey("component.id"))
+    name = db.Column(db.String)
+    value = db.Column(db.String)
+    
+    def __repr__(self):
+        return "<ComponentAttribute {}>".format(self.name)
 
 
 class IncidentImpactEnum(enum.Enum):
@@ -96,25 +107,24 @@ class IncidentImpactEnum(enum.Enum):
     major = "major"
     outage = "outage"
 
-
 class Incident(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String)
     start_date = db.Column(db.DateTime)
     end_date = db.Column(db.DateTime)
     impact = db.Column(Enum(IncidentImpactEnum))
-    services = db.relationship(
-        "Service",
-        secondary=IncidentServiceRelation.__table__,
+    components = db.relationship(
+        "Component",
+        secondary=IncidentComponentRelation.__table__,
         backref="Incident",
         lazy="dynamic",
     )
-    regions = db.relationship(
-        "Region",
-        secondary=IncidentRegionRelation.__table__,
-        backref="Incident",
-        lazy="dynamic",
-    )
+    # regions = db.relationship(
+    #     "Region",
+    #     secondary=IncidentRegionRelation.__table__,
+    #     backref="Incident",
+    #     lazy="dynamic",
+    # )
     updates = db.relationship(
         "IncidentStatus",
         backref="incident",
@@ -133,24 +143,24 @@ class Incident(db.Model):
         return Incident.query.filter(Incident.end_date.is_not(None)).all()
 
     @staticmethod
-    def get_open_for_service(service_id, region_id):
-        """List open incidents affecting service in region"""
+    def get_open_for_component(component_id, region_id):
+        """List open incidents affecting component in region"""
         return (
             db.session.query(Incident)
             .join(
-                IncidentServiceRelation,
+                IncidentComponentRelation,
                 and_(
-                    Incident.id == IncidentServiceRelation.incident_id,
-                    IncidentServiceRelation.service_id == service_id,
+                    Incident.id == IncidentComponentRelation.incident_id,
+                    IncidentComponentRelation.component_id == component_id,
                 ),
             )
-            .join(
-                IncidentRegionRelation,
-                and_(
-                    Incident.id == IncidentRegionRelation.incident_id,
-                    IncidentRegionRelation.region_id == region_id,
-                ),
-            )
+            # .join(
+            #     IncidentRegionRelation,
+            #     and_(
+            #         Incident.id == IncidentRegionRelation.incident_id,
+            #         IncidentRegionRelation.region_id == region_id,
+            #     ),
+            # )
             .filter(Incident.end_date.is_(None))
             .all()
         )

@@ -24,11 +24,10 @@ from flask import (
 
 from app import db
 
-from app.models import Region
 from app.models import Incident
 from app.models import IncidentStatus
-from app.models import Service
-from app.models import ServiceCategory
+from app.models import Component
+from app.models import ComponentAttribute
 
 
 from app.web import bp
@@ -39,7 +38,7 @@ from app.web.forms import IncidentUpdateForm
 @bp.route("/", methods=["GET", "POST"])
 @bp.route("/index", methods=["GET", "POST"])
 def index():
-    categories = ServiceCategory.query.all()
+    categories = ComponentCategory.query.all()
     regions = Region.query.all()
     incidents = Incident.open()
     return render_template(
@@ -54,32 +53,32 @@ def index():
 @bp.route("/incidents", methods=["GET", "POST"])
 def new_incident():
     all_regions = Region.query.order_by(Region.name).all()
-    all_services = Service.query.order_by(Service.name).all()
+    all_components = Component.query.order_by(Component.name).all()
     form = IncidentForm()
-    form.incident_services.choices = [
-        (s.id, s.name) for s in all_services
+    form.incident_components.choices = [
+        (s.id, s.name) for s in all_components
     ]
     form.incident_regions.choices = [
         (s.id, s.name) for s in all_regions
     ]
     if form.validate_on_submit():
         selected_regions = [int(x) for x in form.incident_regions.raw_data]
-        selected_services = [int(x) for x in form.incident_services.raw_data]
+        selected_components = [int(x) for x in form.incident_components.raw_data]
         incident_regions = []
-        incident_services = []
+        incident_components = []
         for reg in all_regions:
             if reg.id in selected_regions:
                 incident_regions.append(reg)
-        for srv in all_services:
-            if srv.id in selected_services:
-                incident_services.append(srv)
+        for srv in all_components:
+            if srv.id in selected_components:
+                incident_components.append(srv)
 
         incident = Incident(
             text=form.incident_text.data,
             impact=form.incident_impact.data,
             start_date=form.incident_start.data,
             regions=incident_regions,
-            services=incident_services
+            components=incident_components
         )
         db.session.add(incident)
         db.session.commit()
