@@ -27,19 +27,22 @@ from app import db
 from app.models import Incident
 from app.models import IncidentStatus
 from app.models import Component
-from app.models import ComponentAttribute
 
 
 from app.web import bp
 from app.web.forms import IncidentForm
 from app.web.forms import IncidentUpdateForm
+from sqlalchemy import text
 
 
 @bp.route("/", methods=["GET", "POST"])
 @bp.route("/index", methods=["GET", "POST"])
 def index():
-    categories = ComponentCategory.query.all()
-    regions = Region.query.all()
+    stmt_region = text("SELECT DISTINCT value FROM component_attribute WHERE name='region'")
+    stmt_category = text("SELECT DISTINCT value FROM component_attribute WHERE name='category'")
+    regions = db.engine.execute(stmt_region).fetchall()
+    categories = db.engine.execute(stmt_category).fetchall()
+    components = Component.query.all()
     incidents = Incident.open()
     return render_template(
         "index.html",
@@ -47,67 +50,5 @@ def index():
         regions=regions,
         categories=categories,
         incidents=incidents,
+        components=components,
     )
-
-
-@bp.route("/incidents", methods=["GET", "POST"])
-def new_incident():
-    all_regions = Region.query.order_by(Region.name).all()
-    all_components = Component.query.order_by(Component.name).all()
-    form = IncidentForm()
-    form.incident_components.choices = [
-        (s.id, s.name) for s in all_components
-    ]
-    form.incident_regions.choices = [
-        (s.id, s.name) for s in all_regions
-    ]
-    if form.validate_on_submit():
-        selected_regions = [int(x) for x in form.incident_regions.raw_data]
-        selected_components = [int(x) for x in form.incident_components.raw_data]
-        incident_regions = []
-        incident_components = []
-        for reg in all_regions:
-            if reg.id in selected_regions:
-                incident_regions.append(reg)
-        for srv in all_components:
-            if srv.id in selected_components:
-                incident_components.append(srv)
-
-        incident = Incident(
-            text=form.incident_text.data,
-            impact=form.incident_impact.data,
-            start_date=form.incident_start.data,
-            regions=incident_regions,
-            components=incident_components
-        )
-        db.session.add(incident)
-        db.session.commit()
-    return render_template(
-        "create_incident.html", title="Open Incident", form=form
-    )
-
-
-@bp.route("/incidents/<id>", methods=["GET"])
-def incident(id):
-    incident = Incident.query.filter_by(id=id).first_or_404()
-    form = IncidentUpdateForm(id)
-    return render_template(
-        "incident.html", title="Incident", incident=incident, form=form
-    )
-
-
-@bp.route("/incidents/<id>/update", methods=["POST"])
-def post_incident_update(id):
-    form = IncidentUpdateForm(id)
-    if form.validate_on_submit():
-        update = IncidentStatus(
-            incident_id=id,
-            text=form.update_text.data,
-            status=form.update_status.data,
-        )
-        db.session.add(update)
-        db.session.commit()
-    else:
-        print(f"Data validation failed {form.update_text.errors}")
-        print(f"Data validation failed {form.update_status.errors}")
-    return redirect(url_for("web.incident", id=id))

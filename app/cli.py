@@ -55,10 +55,10 @@ def register(app):
     @bootstrap.command()
     def provision():
         """Fill database with initial data"""
-#        r1 = Region(name="EU-DE")
-#        r2 = Region(name="EU-NL")
-#        r3 = Region(name="Swiss")
-#        a1 = ComponentAttribute(name="important")
+        r1 = "EU-DE"
+        r2 = "EU-NL"
+        r3 = "Swiss"
+        regions={r1: "EU-DE", r2: "EU-NL", r3: "Swiss"}
         components = {}
         for cat in data.service_categories:
             # db_cat = ComponentCategory(name=cat["title"])
@@ -89,7 +89,7 @@ def register(app):
             text="Test incident",
             impact=IncidentImpactEnum.outage,
             start_date=datetime.datetime.now(),
-            # regions=[r1],
+            regions=regions[r1],
             components=[components["ecs"], components["vpc"]],
         )
         db.session.add(inc1)
@@ -98,9 +98,17 @@ def register(app):
             impact=IncidentImpactEnum.maintenance,
             start_date=datetime.datetime.now()
             - datetime.timedelta(minutes=30),
-            # regions=[r1, r2, r3],
+            regions=regions[r2],
         )
         db.session.add(inc2)
+        inc3 = Incident(
+            text="Test Maintenance 2",
+            impact=IncidentImpactEnum.maintenance,
+            start_date=datetime.datetime.now()
+            - datetime.timedelta(minutes=30),
+            regions=regions[r3],
+        )
+        db.session.add(inc3)
         db.session.add(
             IncidentStatus(
                 incident=inc2,
@@ -113,6 +121,23 @@ def register(app):
         db.session.add(
             IncidentStatus(
                 incident=inc2,
+                timestamp=datetime.datetime.now(),
+                text="We have finished upgrade. Watching",
+                status="watching",
+            )
+        )
+        db.session.add(
+            IncidentStatus(
+                incident=inc3,
+                timestamp=datetime.datetime.now()
+                - datetime.timedelta(minutes=5),
+                text="We have started working",
+                status="started",
+            )
+        )
+        db.session.add(
+            IncidentStatus(
+                incident=inc3,
                 timestamp=datetime.datetime.now(),
                 text="We have finished upgrade. Watching",
                 status="watching",

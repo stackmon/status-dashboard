@@ -8,29 +8,33 @@
   {% endblock %}
   
   {% block css %}
-    {% include 'css.html' %}
+    {% include 'css.html' ignore missing %}
   {% endblock %}
   
 </head>
 <body class="d-flex flex-column h-100">
   {% block header %}
-    {% include 'header.html' %}
+    {% include 'header.html' ignore missing %}
   {% endblock %}
   
-  <main class="container">
+  <main class="container" style="max-width:1200px">
+    <h1 class="head_of_dashboard">
+      <style>h1{color:#444;font-size:18px;font-weight:600}</style>
+      Components list
+
   <!-- Start Main content -->
   {% block content %}
   {% endblock %}
   <!-- End Main content -->
   </main>
-  
+
   {% block footer %}
-    {% include 'footer.html' %}
+    {% include 'footer.html' ignore missing %}
   {% endblock %}
   
   {% block scripts %}
-    {% include 'scripts.html' %}
+    {% include 'scripts.html' ignore missing %}
   {% endblock %}
-
+  
 </body>
 </html>

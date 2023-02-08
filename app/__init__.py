@@ -55,5 +55,4 @@ def create_app(test_config=None):
 
     return app
 
-
 from app import models

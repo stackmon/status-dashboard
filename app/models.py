@@ -28,11 +28,7 @@ from app import db
 #     component_id = db.Column(db.Integer, db.ForeignKey("component.id"))
 
 
-class IncidentComponentRelation(db.Model):
-    __tablename__ = "incident_component_relation"
-    id = db.Column(db.Integer, primary_key=True)
-    incident_id = db.Column(db.Integer, db.ForeignKey("incident.id"))
-    component_id = db.Column(db.Integer, db.ForeignKey("component.id"))
+
 
 
 # class IncidentRegionRelation(db.Model):
@@ -67,13 +63,21 @@ class IncidentComponentRelation(db.Model):
 #     def __repr__(self):
 #         return "<ComponentCategory {}>".format(self.name)
 
+class IncidentComponentRelation(db.Model):
+    __tablename__ = "incident_component_relation"
+    id = db.Column(db.Integer, primary_key=True)
+    incident_id = db.Column(db.Integer, db.ForeignKey("incident.id"))
+    component_id = db.Column(db.Integer, db.ForeignKey("component.id"))
 
 class Component(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     type = db.Column(db.String)
     # category_id = db.Column(db.Integer, db.ForeignKey("component_category.id"))
-    attributes = db.relationship("ComponentAttribute", backref="Component")
+    attributes = db.relationship(
+        "ComponentAttribute",
+        backref="Component"
+        )
 
     def __repr__(self):
         return "<Component {}:{}:{}>".format(
@@ -86,6 +90,21 @@ class Component(db.Model):
             return "available"
         else:
             return incidents[0].impact.value
+
+    @staticmethod
+    def component_by_region(comp_name, region_name):
+        return (
+            db.session.query(Component.name)
+            .join(
+                ComponentAttribute, ComponentAttribute.component_id == Component.id
+                )
+                .filter(
+                    Component.name == comp_name,
+                    ComponentAttribute.name == "region",
+                    ComponentAttribute.value == region_name
+                    )
+                .all()
+        )
 
     def get_open_incidents_in_region(self, region_id):
         return Incident.get_open_for_component(self.id, region_id)
@@ -119,12 +138,7 @@ class Incident(db.Model):
         backref="Incident",
         lazy="dynamic",
     )
-    # regions = db.relationship(
-    #     "Region",
-    #     secondary=IncidentRegionRelation.__table__,
-    #     backref="Incident",
-    #     lazy="dynamic",
-    # )
+    regions = db.Column(db.String)
     updates = db.relationship(
         "IncidentStatus",
         backref="incident",
