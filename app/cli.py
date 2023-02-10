@@ -72,6 +72,7 @@ def register(app):
                     attributes=[cat_attr],
                 )
                 db.session.add(db_srv)
+
                 for region in ["EU-DE", "EU-NL", "Swiss"]:
                     comp_id = db.session.query(Component.id).filter_by(name=srv["service_title"]).first()[0]
                     reg_attr = ComponentAttribute(component_id=comp_id, name="region", value=region)
@@ -84,6 +85,9 @@ def register(app):
         # db.session.add(r1)
         # db.session.add(r2)
         # db.session.add(r3)
+        print("COMPONENTS:")
+        print(components)
+        print(components["ecs"])
 
         inc1 = Incident(
             text="Test incident",

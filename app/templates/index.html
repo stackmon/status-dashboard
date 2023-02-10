@@ -6,8 +6,9 @@
     <thead class="thead-dark">
       <tr>
         <th scope="col">Components</th>
+        <th scope="col">IDs</th>
         {% for region in regions %}
-        <th scope="col">{{ region[0] }}</th>
+        <th scope="col">{{ region }}</th>
         {% endfor %}
       </tr>
     </thead>
@@ -15,12 +16,23 @@
       {% for component in components %}
         <tr>
           <th scope="row">{{ component.name }}</th>
+          <th scope="row">{{ component.id }}</th>
           {% for region in regions %}
             <td>
-              {% if component.component_by_region(component.name, region[0])[0][0] == component.name %}
-                <i class="bi sd-available me-1"></i></li>
+              {% if component.get_component_with_incident(component.id, region)[0] == component.id %}
+                {% if component.get_component_with_incident(component.id, region)[2].value == "outage" %}
+                <i class="bi sd-outage"></i>
+                {% elif component.get_component_with_incident(component.id, region)[2].value == "maintenance" %}
+                <i class="bi sd-maintenance"></i>
+                {% elif component.get_component_with_incident(component.id, region)[2].value == "minor" %}
+                <i class="bi sd-minor"></i>
+                {% elif component.get_component_with_incident(component.id, region)[2].value == "major" %}
+                <i class="bi sd-major"></i>
+                {% endif %}
+              {% elif component.component_by_region(component.id, region).id == component.id %}
+                <i class="bi sd-available"></i>
               {% else %}
-                UNAVAILABLE
+                <i class="bi bi-dash-circle-dotted"></i>
               {% endif %}
             </td>
           {% endfor %}
@@ -34,10 +46,9 @@
   <div class="container mt-4">
     <ul class="list-group list-group-horizontal list-group-flush">
       <li class="list-group-item">
-        <i class="bi sd-available me-1"></i><span>Exist</span></li>
+        <i class="bi bi-check2-circle me-1"></i><span>Exist</span></li>
       <li class="list-group-item">
-        <i class="bi sd-outage me-1"></i><span>Not Exist</span></li>
-      <!--
+        <i class="bi bi-dash-circle-dotted me-1"></i><span>Not Exist</span></li>
       <li class="list-group-item">
           <i class="bi sd-available me-1"></i>Operational</li>
       <li class="list-group-item">
@@ -48,7 +59,6 @@
           <i class="bi sd-major me-1"></i><span>Major Issue</span></li>
       <li class="list-group-item">
           <i class="bi sd-outage me-1"></i><span>Outage</span></li>
-      -->
     </ul>
   </div>
 </div>

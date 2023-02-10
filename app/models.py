@@ -80,8 +80,8 @@ class Component(db.Model):
         )
 
     def __repr__(self):
-        return "<Component {}:{}:{}>".format(
-            self.id, self.category.name, self.name
+        return "<Component {}:{}>".format(
+            self.id, self.name
         )
 
     def get_status(self, region_id):
@@ -92,19 +92,36 @@ class Component(db.Model):
             return incidents[0].impact.value
 
     @staticmethod
-    def component_by_region(comp_name, region_name):
-        return (
-            db.session.query(Component.name)
-            .join(
-                ComponentAttribute, ComponentAttribute.component_id == Component.id
-                )
-                .filter(
-                    Component.name == comp_name,
-                    ComponentAttribute.name == "region",
-                    ComponentAttribute.value == region_name
-                    )
-                .all()
+    def component_by_region(component_id, region_name):
+        component_by_region = (db.session.query(Component).join(
+            ComponentAttribute,
+            ComponentAttribute.component_id == Component.id
+            ).filter(
+                Component.id == component_id,
+                ComponentAttribute.name == "region",
+                ComponentAttribute.value == region_name
+            )
+            .all()
         )
+        return component_by_region[0] if len(component_by_region) > 0 else None
+
+    @staticmethod
+    def get_component_with_incident(component_id, region_name):
+
+        component_with_incident = (db.session.query(Component.id, Incident.id, Incident.impact).join(
+            IncidentComponentRelation,
+            and_(
+                Component.id == IncidentComponentRelation.component_id,
+                IncidentComponentRelation.component_id == component_id,
+            ),
+            ).join(
+                Incident, IncidentComponentRelation.incident_id == Incident.id
+            ).filter(
+                Incident.end_date.is_(None), Incident.regions == region_name
+            ).all()
+        )
+        return  component_with_incident[0] if len(component_with_incident) > 0 else None
+
 
     def get_open_incidents_in_region(self, region_id):
         return Incident.get_open_for_component(self.id, region_id)
@@ -127,6 +144,7 @@ class IncidentImpactEnum(enum.Enum):
     outage = "outage"
 
 class Incident(db.Model):
+    __tablename__ = "incident"
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String)
     start_date = db.Column(db.DateTime)
@@ -157,7 +175,7 @@ class Incident(db.Model):
         return Incident.query.filter(Incident.end_date.is_not(None)).all()
 
     @staticmethod
-    def get_open_for_component(component_id, region_id):
+    def get_open_for_component(component_id, region_name):
         """List open incidents affecting component in region"""
         return (
             db.session.query(Incident)
@@ -168,16 +186,17 @@ class Incident(db.Model):
                     IncidentComponentRelation.component_id == component_id,
                 ),
             )
-            # .join(
-            #     IncidentRegionRelation,
-            #     and_(
-            #         Incident.id == IncidentRegionRelation.incident_id,
-            #         IncidentRegionRelation.region_id == region_id,
-            #     ),
-            # )
+            #.join(
+            #    IncidentRegionRelation,
+            #    and_(
+            #        Incident.id == IncidentRegionRelation.incident_id,
+            #        IncidentRegionRelation.region_id == region_id,
+            #    ),
+            #)
             .filter(Incident.end_date.is_(None))
             .all()
         )
+
 
 
 class IncidentStatus(db.Model):

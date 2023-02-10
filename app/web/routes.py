@@ -40,7 +40,8 @@ from sqlalchemy import text
 def index():
     stmt_region = text("SELECT DISTINCT value FROM component_attribute WHERE name='region'")
     stmt_category = text("SELECT DISTINCT value FROM component_attribute WHERE name='category'")
-    regions = db.engine.execute(stmt_region).fetchall()
+    #regions = db.engine.execute(stmt_region).fetchall()
+    regions = ("EU-DE", "EU-NL", "Swiss")
     categories = db.engine.execute(stmt_category).fetchall()
     components = Component.query.all()
     incidents = Incident.open()
