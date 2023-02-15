@@ -1,55 +1,72 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="container mt-3">
-  <table class="table">
-    <thead class="thead-dark">
+<div>
+  <table class="scroll_table">
+    <caption>
+      Services availabilities
+    </caption>
+    <thead>
       <tr>
-        <th scope="col">Components</th>
-        <th scope="col">IDs</th>
+        <th>Category</th>
+        <th>Component ID</th>
+        <th>Component Name</th>
         {% for region in regions %}
-        <th scope="col">{{ region }}</th>
+        <th>REGION {{ region }}</th>
         {% endfor %}
       </tr>
     </thead>
-    <tbody>
-      {% for component in components %}
+    {% for category in categories %}
+      <tbody>
         <tr>
-          <th scope="row">{{ component.name }}</th>
-          <th scope="row">{{ component.id }}</th>
+          <th rowspan="{{ components_by_cats[category]|length }}">
+            {{ categories[category] }}
+          </th>
+          <td class="component_id_cell">{{ components_by_cats[category][0] }}</td>
+          <td class="component_name_cell">
+            {% for component in all_components %}
+              {% if component.id == components_by_cats[category][0] %}
+                {{ component.name }}
+              {% endif %}  
+            {% endfor %}
+          </td>
           {% for region in regions %}
-            <td>
-              {% if component.get_component_with_incident(component.id, region)[0] == component.id %}
-                {% if component.get_component_with_incident(component.id, region)[2].value == "outage" %}
-                <i class="bi sd-outage"></i>
-                {% elif component.get_component_with_incident(component.id, region)[2].value == "maintenance" %}
-                <i class="bi sd-maintenance"></i>
-                {% elif component.get_component_with_incident(component.id, region)[2].value == "minor" %}
-                <i class="bi sd-minor"></i>
-                {% elif component.get_component_with_incident(component.id, region)[2].value == "major" %}
-                <i class="bi sd-major"></i>
-                {% endif %}
-              {% elif component.component_by_region(component.id, region).id == component.id %}
-                <i class="bi sd-available"></i>
-              {% else %}
-                <i class="bi bi-dash-circle-dotted"></i>
-              {% endif %}
-            </td>
+          <td class="component_status_cell">
+            {% for component in all_components %}
+              {% if component.id == components_by_cats[category][0] %}
+                <i class="bi sd-{{ component.get_status(region) }}"></i>
+              {% endif %}  
+            {% endfor %}
+          </td>
+          {% endfor %}
+        </tr>
+      {% for component_id in components_by_cats[category][1:] %}  
+        <tr>
+          <td class="component_id_cell">{{ component_id }}</td>
+          <td class="component_name_cell">
+            {% for component in all_components %}
+              {% if component.id == component_id %}
+                {{ component.name }}
+              {% endif %}  
+            {% endfor %}
+          </td>
+          {% for region in regions %}
+          <td class="component_status_cell">
+            {% for component in all_components %}
+              {% if component.id == component_id %}
+                <i class="bi sd-{{ component.get_status(region) }}"></i>
+              {% endif %}  
+            {% endfor %}
+          </td>
           {% endfor %}
         </tr>
       {% endfor %}
-    </tbody>
+      </tbody>
+    {% endfor %}
   </table>
 </div>
-
 <div>
   <div class="container mt-4">
     <ul class="list-group list-group-horizontal list-group-flush">
-      <li class="list-group-item">
-        <i class="bi bi-check2-circle me-1"></i><span>Exist</span></li>
-      <li class="list-group-item">
-        <i class="bi bi-dash-circle-dotted me-1"></i><span>Not Exist</span></li>
-      <li class="list-group-item">
           <i class="bi sd-available me-1"></i>Operational</li>
       <li class="list-group-item">
           <i class="bi sd-maintenance me-1"></i>Maintenance</li>

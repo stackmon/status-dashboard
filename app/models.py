@@ -84,12 +84,23 @@ class Component(db.Model):
             self.id, self.name
         )
 
-    def get_status(self, region_id):
-        incidents = self.get_open_incidents_in_region(region_id)
+    #def get_status(self, region_name):
+    #    incidents = self.get_open_incidents_in_region(region_name)
+    #    if incidents == None:
+    #        return "available"
+    #    else:
+    #        return "+"#incidents[0].impact.value
+
+    def get_open_incidents_in_region(self, region_name):
+        return Incident.get_open_for_component(self.id, region_name)
+
+    def get_status(self, region_name):
+        incidents = self.get_open_incidents_in_region(region_name)
         if len(incidents) == 0:
-            return "available"
+            status = "available"
         else:
-            return incidents[0].impact.value
+            status = incidents[0].impact.value
+        return status
 
     @staticmethod
     def component_by_region(component_id, region_name):
@@ -107,7 +118,6 @@ class Component(db.Model):
 
     @staticmethod
     def get_component_with_incident(component_id, region_name):
-
         component_with_incident = (db.session.query(Component.id, Incident.id, Incident.impact).join(
             IncidentComponentRelation,
             and_(
@@ -122,9 +132,37 @@ class Component(db.Model):
         )
         return  component_with_incident[0] if len(component_with_incident) > 0 else None
 
+    @staticmethod
+    def component_by_category(component_id, category_name):
+        component_by_category = (db.session.query(Component.id, Component.name).join(
+            ComponentAttribute,
+            ComponentAttribute.component_id == Component.id
+            ).filter(
+                Component.id == component_id,
+                ComponentAttribute.name == "category",
+                ComponentAttribute.value == category_name,
+            )
+            .all()
+        )
+        return component_by_category[0] if len(component_by_category) > 0 else None
+    
+    @staticmethod
+    def components_by_category(category_name):
+        component_id_list = ()
+        components_by_category = (db.session.query(Component.id).join(
+            ComponentAttribute,
+            ComponentAttribute.component_id == Component.id
+            ).filter(
+                ComponentAttribute.name == "category",
+                ComponentAttribute.value == category_name,
+            )
+            .all()
+        )
+        if len(components_by_category) > 0:
+            for component in components_by_category:
+                component_id_list = component_id_list + (component.id,)
+        return component_id_list if len(components_by_category) > 0 else None
 
-    def get_open_incidents_in_region(self, region_id):
-        return Incident.get_open_for_component(self.id, region_id)
 
 class ComponentAttribute(db.Model):
     __tablename__ = "component_attribute"
@@ -132,7 +170,7 @@ class ComponentAttribute(db.Model):
     component_id = db.Column(db.Integer, db.ForeignKey("component.id"))
     name = db.Column(db.String)
     value = db.Column(db.String)
-    
+
     def __repr__(self):
         return "<ComponentAttribute {}>".format(self.name)
 
@@ -174,29 +212,44 @@ class Incident(db.Model):
     def closed():
         return Incident.query.filter(Incident.end_date.is_not(None)).all()
 
+    #@staticmethod
+    #def get_open_for_component(component_id, region_name):
+    #    """List open incidents affecting component in region"""
+    #    return (
+    #        db.session.query(Incident)
+    #        .join(
+    #            IncidentComponentRelation,
+    #            and_(
+    #                Incident.id == IncidentComponentRelation.incident_id,
+    #                IncidentComponentRelation.component_id == component_id,
+    #            ),
+    #        )
+    #        #.join(
+    #        #    IncidentRegionRelation,
+    #        #    and_(
+    #        #        Incident.id == IncidentRegionRelation.incident_id,
+    #        #        IncidentRegionRelation.region_id == region_id,
+    #        #    ),
+    #        #)
+    #        .filter(Incident.end_date.is_(None))
+    #        .all()
+    #    )
+
     @staticmethod
     def get_open_for_component(component_id, region_name):
-        """List open incidents affecting component in region"""
-        return (
-            db.session.query(Incident)
-            .join(
-                IncidentComponentRelation,
-                and_(
-                    Incident.id == IncidentComponentRelation.incident_id,
-                    IncidentComponentRelation.component_id == component_id,
-                ),
-            )
-            #.join(
-            #    IncidentRegionRelation,
-            #    and_(
-            #        Incident.id == IncidentRegionRelation.incident_id,
-            #        IncidentRegionRelation.region_id == region_id,
-            #    ),
-            #)
-            .filter(Incident.end_date.is_(None))
-            .all()
+        open_incident_for_component = (db.session.query(Incident).join(
+            IncidentComponentRelation,
+            and_(
+                Incident.id == IncidentComponentRelation.incident_id,
+                IncidentComponentRelation.component_id == component_id,
+            ),
+            ).join(
+                Component, IncidentComponentRelation.component_id == Component.id
+            ).filter(
+                Incident.end_date.is_(None), Incident.regions == region_name
+            ).all()
         )
-
+        return  open_incident_for_component #[0] if len(open_incident_for_component) > 0 else None
 
 
 class IncidentStatus(db.Model):

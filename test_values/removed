@@ -1,0 +1,84 @@
+<tbody>
+      {% for component in components %}
+        <div>
+          <tr>
+            
+          </tr>
+        </div>
+        <tr>
+          <td class="table-first-column" scope="row">{{ component.attributes[0].value }}</td>
+          <td class="table-second-column" scope="row">{{ component.name }}</td>
+          {% for region in regions %}
+            <td>
+              {% if component.get_component_with_incident(component.id, region)[0] == component.id %}
+                {% if component.get_component_with_incident(component.id, region)[2].value == "outage" %}
+                <i class="bi sd-outage"> outage</i>
+                {% elif component.get_component_with_incident(component.id, region)[2].value == "maintenance" %}
+                <i class="bi sd-maintenance"> maintenance</i>
+                {% elif component.get_component_with_incident(component.id, region)[2].value == "minor" %}
+                <i class="bi sd-minor"> minor</i>
+                {% elif component.get_component_with_incident(component.id, region)[2].value == "major" %}
+                <i class="bi sd-major"> major</i>
+                {% endif %}
+              {% elif component.component_by_region(component.id, region).id == component.id %}
+                <i class="bi sd-available"> operational</i>
+              {% else %}
+                <i class="bi bi-dash-circle-dotted"> not exist</i>
+              {% endif %}
+            </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+
+
+
+    {% for region in regions %}
+        <th scope="col">{{ region }}</th>
+        {% endfor %}
+
+        {{ component.components_by_category(component.id, category) }}
+
+
+        {% set components_by_cat = [] %}
+        {% for component in components %}
+          {% if component.component_by_category(component.id, category) != None %}
+            {{ components_by_cat.append(component) }}
+          {% endif %}
+        {% endfor %}
+
+
+        {% for category in categories %}
+      <tbody>
+        <tr>
+          <th>
+            {{ categories[category] }}
+          </th>
+          <td>
+            {% for component in components_all %}
+              <tr>
+                {% if component.component_by_category(component.id, category) != None %}
+                {% endif %} 
+              </tr>
+            {% endfor %}
+          </td>
+        {% for region in regions %}
+         <td>
+         </td>
+        {% endfor %}
+        </tr>
+      </tbody>
+
+      {% for category in categories %}
+      <tr>
+        <th scope="row"> {{ categories[category] }} </th>
+      </tr>
+      {% endfor %}
+
+      {{ components_by_cats[category]|length }}
+
+      <li class="list-group-item">
+        <i class="bi bi-check2-circle me-1"></i><span>Exist</span></li>
+      <li class="list-group-item">
+        <i class="bi bi-dash-circle-dotted me-1"></i><span>Not Exist</span></li>
+      <li class="list-group-item">

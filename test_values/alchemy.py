@@ -47,6 +47,7 @@ print("QUERY OUTPUT")
 
 component_id = 12
 region = "EU-DE"
+category_name = "application"
 
 def get_component_with_inc(component_id, region):
     component_with_incident = session.query(Component.id, Incident.id, Incident.impact).join(
@@ -63,11 +64,44 @@ def get_component_with_inc(component_id, region):
     print("COMPONENT NAME IS:")
     return component_with_incident[0]
 
+
+def component_by_category(component_id, category_name):
+    component_by_category = session.query(Component).join(
+        ComponentAttribute, ComponentAttribute.component_id == Component.id
+        ).filter(
+            Component.id == component_id,
+            ComponentAttribute.name == "category",
+            ComponentAttribute.value == category_name,
+        ).all()
+    return component_by_category[0] if len(component_by_category) > 0 else None
+
+def get_open_for_component(component_id, region_name):
+    incident_for_component = session.query(Incident).join(
+        IncidentComponentRelation,
+        and_(
+            Incident.id == IncidentComponentRelation.incident_id,
+            IncidentComponentRelation.component_id == component_id,
+        ),
+        ).join(
+            Component, IncidentComponentRelation.component_id == Component.id
+        ).filter(
+            Incident.end_date.is_(None), Incident.regions == region_name
+        ).all()
+    return  incident_for_component[0] if len(incident_for_component) > 0 else None
+
 print("#" * 20)
 print("#" * 20)
 print("#" * 20)
 
 if __name__ == "__main__":
     #get_component_by_inc(13)
-    print("region is:" + region)
-    print(get_component_with_inc(12, region))
+    #print("region is:" + region)
+    #print(get_component_with_inc(12, region))
+    #print("name is: ")
+    component_obj = component_by_category(1, category_name)
+    print("name is: ")
+    print(component_obj)
+    #print(dir(components_by_category(category_name)[0]))
+
+    #incident = get_open_for_component(12, "EU-DE")
+    #print((incident).text)

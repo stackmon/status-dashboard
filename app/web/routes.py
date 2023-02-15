@@ -40,11 +40,30 @@ from sqlalchemy import text
 def index():
     stmt_region = text("SELECT DISTINCT value FROM component_attribute WHERE name='region'")
     stmt_category = text("SELECT DISTINCT value FROM component_attribute WHERE name='category'")
+    categories_query = db.engine.execute(stmt_category).fetchall()
     #regions = db.engine.execute(stmt_region).fetchall()
     regions = ("EU-DE", "EU-NL", "Swiss")
-    categories = db.engine.execute(stmt_category).fetchall()
-    components = Component.query.all()
+
+    categories_list = []
+    for category in categories_query:
+        category = category[0]
+        categories_list += [category]
+    categories_list = sorted(categories_list, reverse=False)
+
+    categories = {}
+    for category in categories_list:
+        categories[category] = transform_category_name(category)
+    all_components = Component.query.all()
+    components = {}
+    for component in all_components:
+        components[component.id] = component.name
+
     incidents = Incident.open()
+    
+    components_by_cats = {}
+    for category in categories_list:
+        components_by_cats[category] = components_by_category(category)
+
     return render_template(
         "index.html",
         title="Home",
@@ -52,4 +71,14 @@ def index():
         categories=categories,
         incidents=incidents,
         components=components,
+        components_by_cats = components_by_cats,
+        all_components = all_components,
     )
+
+def transform_category_name(category_name):
+    transformed_name = category_name.replace("_", " ").replace("-", " ").capitalize()
+    return transformed_name
+
+def components_by_category(category_name):
+    components_by_cat = Component.components_by_category(category_name)
+    return components_by_cat

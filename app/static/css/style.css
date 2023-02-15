@@ -326,3 +326,138 @@ footer.footer {
 .footer-logo {
   height: 24px;
 }
+
+
+.table-scroll {
+  position: relative;
+  width:100%;
+  z-index: 1;
+  margin: auto;
+  overflow: auto;
+  height: 640px;
+}
+
+.table-scroll table {
+  width: 100%;
+  min-width: 480px;
+  margin: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.table-scroll th,
+.table-scroll td {
+  padding: 5px 10px;
+  border: 1px solid #000;
+  background: #fff;
+  vertical-align: top;
+}
+.table-scroll thead th {
+  background: #333;
+  color: #fff;
+  position:sticky;
+  position: sticky;
+  top: 0;
+}
+
+.table-first-column {
+  width:30%;
+}
+/* safari and ios need the tfoot itself to be position:sticky also */
+
+.scroll_table {
+  position: relative;
+  width:100%;
+  z-index: 1;
+  margin: auto;
+  overflow: auto;
+  height: 640px;
+}
+
+.scroll_table table {
+  width: 100%;
+  min-width: 480px;
+  margin: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.scroll_table table tbody tr th {
+  width: 100%;
+  margin: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.scroll_table th {
+  text-align: center;
+  position: sticky;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #ee8e8e;
+  padding: 5px 10px;
+  border: 1px solid #000;
+}
+
+.scroll_table thead th {
+  background: #e20074;
+  color: #fff;
+  position:sticky;
+  position: sticky;
+  top: 0;
+}
+
+a:focus {
+  background: red;
+} /* testing links*/
+
+
+thead th:first-child,
+tfoot th:first-child {
+  text-align: center;
+  z-index: 5;
+}
+
+.tabs {
+  position: relative;
+  min-height: 200px;
+  width: 500px;
+  margin: 25px 0;
+}
+.tab {
+  float: left;
+}
+.tab label {
+  background: #ddd; 
+  padding: 10px; 
+  border: 1px solid #ccc;
+  cursor: pointer;
+  margin-left: -1px; 
+}
+.tab:first-child label {
+  margin-left: 0;
+}
+.tab input[type=radio] {
+  display: none;   
+}
+input[type=radio]:checked ~ label {
+  background: white;
+}
+input[type=radio]:checked ~ label ~ .tab-content {
+  display: block;
+}
+
+.component_id_cell {
+  text-align: center;
+  align-items: center;
+}
+
+.component_status_cell {
+  text-align: center;
+  align-items: center;
+}
+
+.component_name_cell {
+  text-align: left;
+  align-items: left;
+}
