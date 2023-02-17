@@ -1,25 +1,24 @@
 ---
 
 - job:
-    name: apimon-build-image
+    name: stackmon-status-dashboard-build-image
     parent: otc-build-docker-image
-    description: Build apimon container image
+    description: Build stackmon-status-dashboard container image
     timeout: 2700 # 45 minutes
-    provides: apimon-container-image
-    vars: &apimon_image_vars
+    provides: status-dashboard-container-image
+    vars: &status-dashboard_image_vars
       docker_images:
         - context: .
-          repository: opentelekomcloud/apimon
+          repository: opentelekomcloud/status-dashboard
           tags:
             # If zuul.tag is defined: [ '3', '3.19', '3.19.0' ].  Only works for 3-component tags.
             # Otherwise: ['latest']
             &imagetag "{{ zuul.tag is defined | ternary([zuul.get('tag', '').split('.')[0], '.'.join(zuul.get('tag', '').split('.')[:2]), zuul.get('tag', '')], ['latest']) }}"
 
 - job:
-    name: apimon-upload-image
+    name: stackmon-status-dashboard-upload-image
     parent: otcinfra-upload-image-quay
-    provides: apimon-container-image
-    vars: *apimon_image_vars
+    vars: *status-dashboard_image_vars
 
 - project:
     merge-mode: squash-merge
@@ -31,14 +30,14 @@
       jobs:
         - otc-tox-pep8
         - otc-tox-py38
-        - apimon-build-image
+        - stackmon-status-dashboard-build-image
     check-post:
       jobs:
-        - apimon-upload-image
+        - stackmon-status-dashboard-upload-image
     gate:
       jobs:
         - otc-tox-pep8
-        - apimon-upload-image
+        - stackmon-status-dashboard-upload-image
     release:
       jobs:
-        - apimon-upload-image
+        - stackmon-status-dashboard-upload-image
