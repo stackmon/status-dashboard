@@ -25,6 +25,7 @@ migrate = Migrate()
 
 def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
+    print("Here in the create")
     app = Flask(__name__, instance_relative_config=True)
 
     app.config.from_mapping(
@@ -54,6 +55,3 @@ def create_app(test_config=None):
     app.register_blueprint(web_bp)
 
     return app
-
-
-from app import models
