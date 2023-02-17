@@ -2,4 +2,4 @@ Flask # BSD-3-Clause
 Flask-SQLAlchemy # BSD-3-Clause
 Flask-Migrate
 Flask-Wtf
-
+# git+https://git@gitea.eco.tsi-dev.otc-service.com/infra/otc-metadata.git

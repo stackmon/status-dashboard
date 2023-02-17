@@ -13,7 +13,6 @@
 
 import datetime
 
-import otc_metadata.services
 
 from app import db
 
@@ -26,9 +25,6 @@ from app.models import IncidentImpactEnum
 from app.models import IncidentStatus
 from app.models import IncidentRegionRelation
 from app.models import IncidentServiceRelation
-
-
-data = otc_metadata.services.Services()
 
 
 def register(app):
@@ -53,6 +49,10 @@ def register(app):
     @bootstrap.command()
     def provision():
         """Fill database with initial data"""
+
+        import otc_metadata.services
+        data = otc_metadata.services.Services()
+
         r1 = Region(name="EU-DE")
         r2 = Region(name="EU-NL")
         r3 = Region(name="Swiss")
