@@ -11,16 +11,14 @@
 # under the License.
 #
 
-from flask import (
-    render_template,
-    flash,
-    redirect,
-    url_for,
-    request,
-    g,
-    jsonify,
-    current_app,
-)
+from flask import render_template
+# from flask import flash
+from flask import redirect
+from flask import url_for
+# from flask import request
+# from flask import g
+# from flask import jsonify
+# from flask import current_app
 
 from app import db
 

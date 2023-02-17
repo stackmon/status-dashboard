@@ -9,7 +9,7 @@
     vars: &status-dashboard_image_vars
       docker_images:
         - context: .
-          repository: opentelekomcloud/status-dashboard
+          repository: opentelekomcloud/stackmon-status-dashboard
           tags:
             # If zuul.tag is defined: [ '3', '3.19', '3.19.0' ].  Only works for 3-component tags.
             # Otherwise: ['latest']

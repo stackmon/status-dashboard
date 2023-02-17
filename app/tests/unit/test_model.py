@@ -11,7 +11,7 @@
 # under the License.
 #
 
-from unittest import mock, TestCase
+from unittest import TestCase
 
 
 class Test(TestCase):
