@@ -1,5 +1,7 @@
 Flask # BSD-3-Clause
 Flask-SQLAlchemy # BSD-3-Clause
-Flask-Migrate
-Flask-Wtf
-# git+https://git@gitea.eco.tsi-dev.otc-service.com/infra/otc-metadata.git
+Flask-Migrate # MIT
+Flask-Wtf # BSD-3-Clause
+authlib # BSD-3-Clause
+# Requests is an unlisted dependency of authlib
+requests # Apache-2.0

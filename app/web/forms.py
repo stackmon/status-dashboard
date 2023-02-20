@@ -11,17 +11,14 @@
 # under the License.
 #
 
-# from flask import request
 from flask_wtf import FlaskForm
+
+from wtforms import DateTimeField
+from wtforms import SelectField
 from wtforms import SubmitField
 from wtforms import TextAreaField
-from wtforms import SelectField
-from wtforms import DateTimeField
-# from wtforms.validators import ValidationError
 from wtforms.validators import DataRequired
 from wtforms.validators import Length
-# from wtforms.validators import AnyOf
-# from app.models import IncidentStatus
 
 
 class IncidentUpdateForm(FlaskForm):
@@ -53,9 +50,8 @@ class IncidentUpdateForm(FlaskForm):
 
 class IncidentForm(FlaskForm):
     incident_text = TextAreaField(
-        "Incident summary", validators=[
-            DataRequired(),
-            Length(min=10, max=200)]
+        "Incident summary",
+        validators=[DataRequired(), Length(min=10, max=200)],
     )
     incident_impact = SelectField(
         "Incident Impact",
@@ -64,13 +60,9 @@ class IncidentForm(FlaskForm):
             ("minor", "Minor incident (i.e. performance impact)"),
             ("major", "Major incident"),
             ("outage", "Service outage"),
-        ]
+        ],
     )
-    incident_regions = SelectField(
-        "Affected Regions"
-    )
-    incident_services = SelectField(
-        "Affected services"
-    )
+    incident_regions = SelectField("Affected Regions")
+    incident_services = SelectField("Affected services")
     incident_start = DateTimeField("Start", validators=[DataRequired()])
     submit = SubmitField("Submit")
