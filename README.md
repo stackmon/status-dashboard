@@ -8,14 +8,17 @@ source .tox/py39/bin/activate
 export FLASK_APP=status_dashboard.py
 flask db upgrade  # Initialize DB
 flask --debug run
+
+flask db stamp head # to start the upgrade db models
 ```
 
 ## Bootstraping
 
-It is possible to bootstrap DB with some initial data
-
+It is possible to bootstrap DB with some initial data.  
+To create and purge the test data run the command:
 ```
 flask bootstrap provision
+flask bootstrap purge
 ```
 
 ## Architecture

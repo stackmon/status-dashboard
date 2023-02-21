@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 28bcb1d72583
+Revision ID: 964240faa5a5
 Revises: 
-Create Date: 2023-01-31 23:29:16.043162
+Create Date: 2023-02-21 21:40:47.508271
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '28bcb1d72583'
+revision = '964240faa5a5'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -30,6 +30,7 @@ def upgrade():
     sa.Column('start_date', sa.DateTime(), nullable=True),
     sa.Column('end_date', sa.DateTime(), nullable=True),
     sa.Column('impact', sa.Enum('maintenance', 'minor', 'major', 'outage', name='incidentimpactenum'), nullable=True),
+    sa.Column('regions', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('component_attribute',
@@ -38,7 +39,8 @@ def upgrade():
     sa.Column('name', sa.String(), nullable=True),
     sa.Column('value', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['component_id'], ['component.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('component_id', 'name', name='u_attr_comp')
     )
     op.create_table('incident_component_relation',
     sa.Column('id', sa.Integer(), nullable=False),

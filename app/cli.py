@@ -45,30 +45,35 @@ def register(app):
 
         data = otc_metadata.services.Services()
         components = {}
-        for cat in data.service_categories:
-            for srv in data.services_by_category(cat["name"]):
-                cat_attr = ComponentAttribute(
-                    name="category", value=srv["service_category"]
-                )
-                db.session.add(cat_attr)
-                db_srv = Component(
-                    name=srv["service_title"],
-                    type=srv["service_type"],
-                    attributes=[cat_attr],
-                )
-                db.session.add(db_srv)
-
-                for region in ["EU-DE", "EU-NL", "Swiss"]:
-                    comp_id = (
-                        db.session.query(Component.id)
-                        .filter_by(name=srv["service_title"])
-                        .first()[0]
+        for region in ["EU-DE", "EU-NL", "Swiss"]:
+            for cat in data.service_categories:
+                for srv in data.services_by_category(cat["name"]):
+                    #
+                    # component attribute region
+                    #
+                    cat_attr = ComponentAttribute(
+                        name="category", value=srv["service_category"]
                     )
+                    db.session.add(cat_attr)
+                    #
+                    # component attribute category
+                    #
                     reg_attr = ComponentAttribute(
-                        component_id=comp_id, name="region", value=region
+                        name="region", value=region
                     )
                     db.session.add(reg_attr)
-                components[srv["service_type"]] = db_srv
+
+                    db_srv = Component(
+                        name=srv["service_title"],
+                        type=srv["service_type"],
+                        attributes=[cat_attr, reg_attr],
+                    )
+                    db.session.add(db_srv)
+                    # comp_id = (
+                    #     db.session.query(Component.id)
+                    #     .filter_by(name=srv["service_title"])
+                    #     .first()[0]
+                    components[srv["service_type"]] = db_srv
         inc1 = Incident(
             text="Test incident",
             impact=IncidentImpactEnum.outage,

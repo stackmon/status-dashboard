@@ -134,6 +134,10 @@ class Component(db.Model):
 
 class ComponentAttribute(db.Model):
     __tablename__ = "component_attribute"
+    __table_args__ = (db.UniqueConstraint(
+        "component_id",
+        "name",
+        name="u_attr_comp"),)
     id = db.Column(db.Integer, primary_key=True)
     component_id = db.Column(db.Integer, db.ForeignKey("component.id"))
     name = db.Column(db.String)

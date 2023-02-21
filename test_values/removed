@@ -157,3 +157,8 @@ overflow:auto}
 
 
 components_by_cats[category][0]
+
+EXAMPLE OF REQUEST: unique component by attribute
+
+{% for component in components %}
+                  {{ component_by_attribute("region", "EU-DE") }}
