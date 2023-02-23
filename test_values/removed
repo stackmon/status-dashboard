@@ -1,0 +1,164 @@
+<tbody>
+      {% for component in components %}
+        <div>
+          <tr>
+            
+          </tr>
+        </div>
+        <tr>
+          <td class="table-first-column" scope="row">{{ component.attributes[0].value }}</td>
+          <td class="table-second-column" scope="row">{{ component.name }}</td>
+          {% for region in regions %}
+            <td>
+              {% if component.get_component_with_incident(component.id, region)[0] == component.id %}
+                {% if component.get_component_with_incident(component.id, region)[2].value == "outage" %}
+                <i class="bi sd-outage"> outage</i>
+                {% elif component.get_component_with_incident(component.id, region)[2].value == "maintenance" %}
+                <i class="bi sd-maintenance"> maintenance</i>
+                {% elif component.get_component_with_incident(component.id, region)[2].value == "minor" %}
+                <i class="bi sd-minor"> minor</i>
+                {% elif component.get_component_with_incident(component.id, region)[2].value == "major" %}
+                <i class="bi sd-major"> major</i>
+                {% endif %}
+              {% elif component.component_by_region(component.id, region).id == component.id %}
+                <i class="bi sd-available"> operational</i>
+              {% else %}
+                <i class="bi bi-dash-circle-dotted"> not exist</i>
+              {% endif %}
+            </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+
+
+
+    {% for region in regions %}
+        <th scope="col">{{ region }}</th>
+        {% endfor %}
+
+        {{ component.components_by_category(component.id, category) }}
+
+
+        {% set components_by_cat = [] %}
+        {% for component in components %}
+          {% if component.component_by_category(component.id, category) != None %}
+            {{ components_by_cat.append(component) }}
+          {% endif %}
+        {% endfor %}
+
+
+        {% for category in categories %}
+      <tbody>
+        <tr>
+          <th>
+            {{ categories[category] }}
+          </th>
+          <td>
+            {% for component in components_all %}
+              <tr>
+                {% if component.component_by_category(component.id, category) != None %}
+                {% endif %} 
+              </tr>
+            {% endfor %}
+          </td>
+        {% for region in regions %}
+         <td>
+         </td>
+        {% endfor %}
+        </tr>
+      </tbody>
+
+      {% for category in categories %}
+      <tr>
+        <th scope="row"> {{ categories[category] }} </th>
+      </tr>
+      {% endfor %}
+
+      {{ components_by_cats[category]|length }}
+
+      <li class="list-group-item">
+        <i class="bi bi-check2-circle me-1"></i><span>Exist</span></li>
+      <li class="list-group-item">
+        <i class="bi bi-dash-circle-dotted me-1"></i><span>Not Exist</span></li>
+      <li class="list-group-item">
+
+tr{border-bottom:1px solid #dadce0}
+thead th{background-color:#fff;
+border-top:1px solid #dadce0;
+height:56px;
+position:-webkit-sticky;
+position:sticky;
+top:0;
+z-index:2}
+thead th.j2GwVIZkdLB__product{z-index:3}
+tbody th{font-weight:400}
+td,th {
+border-bottom:1px solid #dadce0;
+height:36px;
+min-widh:100px;
+overflow:hidden;
+
+          text-align:center;
+padding-left:10px;
+padding-right:10px;
+text-overflow:ellipsis}
+        td.j2GwVIZkdLB__unknown{background-color:#f8f9fa}
+        .j2GwVIZkdLB__unknown-wrapper{display:-webkit-box;
+display:-webkit-flex;
+display:-moz-box;
+display:-ms-flexbox;
+display:flex;
+-webkit-box-pack:center;
+-webkit-justify-content:center;
+-moz-box-pack:center;
+-ms-flex-pack:center;
+justify-content:center}
+.j2GwVIZkdLB__unknown-link{
+  text-decoration:none
+}
+.j2GwVIZkdLB__unknown-link:hover{
+  text-decoration:none
+}
+        th{white-space:normal}
+        tbody{white-space:nowrap}.j2GwVIZkdLB__regional-table{border-spacing:0;
+border-right:1px solid #dadce0;
+font-size:14px;
+overflow:auto;
+table-layout:fixed}.j2GwVIZkdLB__product{background-color:#fff;
+border-left:1px solid #dadce0;
+border-right:1px solid #dadce0;
+padding-left:17px;
+padding-right:8px;
+left:0;
+max-width:120px;
+position:-webkit-sticky;
+position:sticky;
+text-align:left;
+z-index:1
+}
+.j2GwVIZkdLB__location{
+  color:#202124
+}
+.j2GwVIZkdLB__table-wrapper{
+  max-height:600px;
+overflow:auto}
+.j2GwVIZkdLB__table-wrapper::-webkit-scrollbar{width:12px}
+.j2GwVIZkdLB__table-wrapper::-webkit-scrollbar-track{
+  background-color:#d3d3d3
+}
+.j2GwVIZkdLB__table-wrapper::-webkit-scrollbar-thumb{
+  background-color:gray
+}
+.j2GwVIZkdLB__highlight-row{
+  background-color:#fcf5e2
+}
+
+
+
+components_by_cats[category][0]
+
+EXAMPLE OF REQUEST: unique component by attribute
+
+{% for component in components %}
+                  {{ component_by_attribute("region", "EU-DE") }}

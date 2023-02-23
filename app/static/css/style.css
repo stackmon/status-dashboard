@@ -201,9 +201,6 @@ main.container {
 /*    color: white;*/
 }
 
-header {
-}
-
 nav.navbar {
     padding: 0 0 0.75rem 0 !important;
     background: var(--dt-color-magenta);
@@ -261,9 +258,6 @@ nav.navbar {
 }
 
 
-
-
-
 .alert-outage {
     background-color: var(--dt-color-red-10);
     border: 2px solid var(--dt-color-red-50);
@@ -288,6 +282,7 @@ nav.navbar {
 footer.footer {
   background: var(--dt-color-grey-90);
   display: flex;
+  bottom: 0;
 }
 
 .footer-links {
@@ -326,3 +321,120 @@ footer.footer {
 .footer-logo {
   height: 24px;
 }
+
+.table_wrapper {
+  max-height: 600px;
+  max-width: 1024px;
+  overflow-y:scroll;
+  overflow-x: hidden;
+  top: 0;
+}
+
+.table_wrapper::-webkit-scrollbar{
+  width:10px
+}
+
+.table_wrapper::-webkit-scrollbar-track{
+  background-color:#d3d3d3
+}
+
+.table_wrapper::-webkit-scrollbar-thumb{
+  background-color:gray
+}
+
+.scroll_table {
+  position: relative;
+  width:100%;
+  z-index: 1;
+  margin: auto;
+  height: 640px;
+  border: 1px solid var(--dt-color-grey-20);
+  border-collapse:collapse;
+}
+
+.scroll_table_area {
+}
+
+.scroll_table table {
+  width: 100%;
+  min-width: 480px;
+  margin: auto;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.scroll_table table th {
+  text-align: center;
+  padding: 5px 10px;
+  top: 0;
+}
+
+.scroll_table thead th {
+  background: var(--dt-color-magenta);
+  color: var(--dt-color-white);
+  border-top:1px solid var(--dt-color-grey-20);
+  font-weight:700;
+  z-index: 4;
+  position: sticky;
+  text-align: center;
+  top: 0;
+}
+
+.scroll_table tbody th {
+  position: sticky;
+  background: var(--dt-color-grey-50);
+  color: var(--dt-color-white);
+  font-weight:400;
+  z-index: 2;
+  text-align: center;
+  left: 0;
+}
+
+.scroll_table tr {
+  border-bottom: 1px solid var(--dt-color-grey-20);
+}
+
+.component_id_cell {
+  text-align: center;
+  align-items: center;
+}
+
+.component_status_cell {
+  text-align: center;
+  align-items: center;
+}
+
+.component_name_cell {
+  text-align: left;
+  align-items: left;
+}
+
+.tabs {
+  position: relative;
+  min-height: 50px;
+  width: 500px;
+  margin: 25px 0;
+}
+.tab {
+  float: left;
+}
+.tab label {
+  background: #ddd; 
+  padding: 10px; 
+  border: 1px solid #ccc;
+  cursor: pointer;
+  margin-left: -1px; 
+}
+.tab:first-child label {
+  margin-left: 0;
+}
+.tab input[type=radio] {
+  display: none;   
+}
+input[type=radio]:checked ~ label {
+  background: white;
+}
+input[type=radio]:checked ~ label ~ .tab-content {
+  display: block;
+}
+

@@ -23,7 +23,7 @@ def make_shell_context():
     return {
         "db": db,
         "Region": models.Region,
-        "Service": models.Service,
+        "Component": models.Component,
         "Incident": models.Incident,
         "incident_service_relation": models.IncidentServiceRelation
     }

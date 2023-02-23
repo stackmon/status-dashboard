@@ -15,13 +15,11 @@ from app import db
 from app import oauth
 from app.models import Incident
 from app.models import IncidentStatus
-from app.models import Region
-from app.models import Service
-from app.models import ServiceCategory
+from app.models import Component
 from app.web import bp
 from app.web.forms import IncidentForm
 from app.web.forms import IncidentUpdateForm
-
+from sqlalchemy import text
 from flask import abort
 from flask import current_app
 from flask import redirect
@@ -33,15 +31,38 @@ from flask import url_for
 @bp.route("/", methods=["GET", "POST"])
 @bp.route("/index", methods=["GET", "POST"])
 def index():
-    categories = ServiceCategory.query.all()
-    regions = Region.query.all()
+    stmt_category = text(
+        "SELECT DISTINCT value FROM component_attribute WHERE name='category'"
+    )
+    categories_query = db.engine.execute(stmt_category).fetchall()
+    regions = ("EU-DE", "EU-NL", "Swiss")
+
+    categories_list = []
+    for category in categories_query:
+        category = category[0]
+        categories_list += [category]
+    categories_list = sorted(categories_list, reverse=False)
+    categories = {}
+    for category in categories_list:
+        categories[category] = transform_category_name(category)
+    all_components = Component.query.all()
+    components = {}
+    for component in all_components:
+        components[component.id] = component.name
     incidents = Incident.open()
+    components_by_cats = {}
+    for category in categories_list:
+        components_by_cats[category] = components_by_category(category)
+
     return render_template(
         "index.html",
         title="Home",
         regions=regions,
         categories=categories,
         incidents=incidents,
+        components=components,
+        components_by_cats=components_by_cats,
+        all_components=all_components,
     )
 
 
@@ -52,29 +73,35 @@ def new_incident():
     else:
         print(session["user"])
 
-    all_regions = Region.query.order_by(Region.name).all()
-    all_services = Service.query.order_by(Service.name).all()
+    all_regions = (
+        "EU-DE",
+        "EU-NL",
+        "Swiss",
+    )  # Region.query.order_by(Region.name).all()
+    all_components = Component.query.order_by(Component.name).all()
     form = IncidentForm()
-    form.incident_services.choices = [(s.id, s.name) for s in all_services]
+    form.incident_components.choices = [(s.id, s.name) for s in all_components]
     form.incident_regions.choices = [(s.id, s.name) for s in all_regions]
     if form.validate_on_submit():
         selected_regions = [int(x) for x in form.incident_regions.raw_data]
-        selected_services = [int(x) for x in form.incident_services.raw_data]
+        selected_components = [
+            int(x) for x in form.incident_components.raw_data
+        ]
         incident_regions = []
-        incident_services = []
+        incident_components = []
         for reg in all_regions:
             if reg.id in selected_regions:
                 incident_regions.append(reg)
-        for srv in all_services:
-            if srv.id in selected_services:
-                incident_services.append(srv)
+        for srv in all_components:
+            if srv.id in selected_components:
+                incident_components.append(srv)
 
         incident = Incident(
             text=form.incident_text.data,
             impact=form.incident_impact.data,
             start_date=form.incident_start.data,
             regions=incident_regions,
-            services=incident_services,
+            components=incident_components,
         )
         db.session.add(incident)
         db.session.commit()
@@ -145,3 +172,15 @@ def logout():
     # remove the username from the session if it's there
     session.pop("user", None)
     return redirect("/")
+
+
+def transform_category_name(category_name):
+    transformed_name = (
+        category_name.replace("_", " ").replace("-", " ").capitalize()
+    )
+    return transformed_name
+
+
+def components_by_category(category_name):
+    components_by_cat = Component.components_by_category(category_name)
+    return components_by_cat

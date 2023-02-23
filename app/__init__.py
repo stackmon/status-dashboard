@@ -98,3 +98,6 @@ def create_app(test_config=None):
     app.register_blueprint(web_bp)
 
     return app
+
+
+# from app import models

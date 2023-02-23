@@ -14,15 +14,12 @@
 import datetime
 
 from app import db
+from app.models import Component
+from app.models import ComponentAttribute
 from app.models import Incident
 from app.models import IncidentImpactEnum
-from app.models import IncidentRegionRelation
-from app.models import IncidentServiceRelation
 from app.models import IncidentStatus
-from app.models import Region
-from app.models import Service
-from app.models import ServiceCategory
-from app.models import ServiceRegionRelation
+from app.models import IncidentComponentRelation
 
 
 def register(app):
@@ -34,52 +31,55 @@ def register(app):
     @bootstrap.command()
     def purge():
         """Purge current configuration"""
-        db.session.query(Region).delete()
-        db.session.query(Service).delete()
-        db.session.query(ServiceCategory).delete()
+        db.session.query(Component).delete()
+        db.session.query(ComponentAttribute).delete()
         db.session.query(Incident).delete()
         db.session.query(IncidentStatus).delete()
-        db.session.query(IncidentServiceRelation).delete()
-        db.session.query(IncidentRegionRelation).delete()
-        db.session.query(ServiceRegionRelation).delete()
+        db.session.query(IncidentComponentRelation).delete()
         db.session.commit()
 
     @bootstrap.command()
     def provision():
         """Fill database with initial data"""
-
         import otc_metadata.services
 
         data = otc_metadata.services.Services()
+        components = {}
+        for region in ["EU-DE", "EU-NL", "Swiss"]:
+            for cat in data.service_categories:
+                for srv in data.services_by_category(cat["name"]):
+                    #
+                    # component attribute region
+                    #
+                    cat_attr = ComponentAttribute(
+                        name="category", value=srv["service_category"]
+                    )
+                    db.session.add(cat_attr)
+                    #
+                    # component attribute category
+                    #
+                    reg_attr = ComponentAttribute(
+                        name="region", value=region
+                    )
+                    db.session.add(reg_attr)
 
-        r1 = Region(name="EU-DE")
-        r2 = Region(name="EU-NL")
-        r3 = Region(name="Swiss")
-        services = {}
-        for cat in data.service_categories:
-            db_cat = ServiceCategory(name=cat["title"])
-            db.session.add(db_cat)
-            for srv in data.services_by_category(cat["name"]):
-                db_srv = Service(
-                    name=srv["service_title"],
-                    type=srv["service_type"],
-                    category=db_cat,
-                )
-                services[srv["service_type"]] = db_srv
-                r1.services.append(db_srv)
-                r2.services.append(db_srv)
-                db.session.add(db_srv)
-
-        db.session.add(r1)
-        db.session.add(r2)
-        db.session.add(r3)
-
+                    db_srv = Component(
+                        name=srv["service_title"],
+                        type=srv["service_type"],
+                        attributes=[cat_attr, reg_attr],
+                    )
+                    db.session.add(db_srv)
+                    # comp_id = (
+                    #     db.session.query(Component.id)
+                    #     .filter_by(name=srv["service_title"])
+                    #     .first()[0]
+                    components[srv["service_type"]] = db_srv
         inc1 = Incident(
             text="Test incident",
             impact=IncidentImpactEnum.outage,
             start_date=datetime.datetime.now(),
-            regions=[r1],
-            services=[services["ecs"], services["vpc"]],
+            regions="EU-DE",
+            components=[components["ecs"], components["vpc"]],
         )
         db.session.add(inc1)
         inc2 = Incident(
@@ -87,9 +87,16 @@ def register(app):
             impact=IncidentImpactEnum.maintenance,
             start_date=datetime.datetime.now()
             - datetime.timedelta(minutes=30),
-            regions=[r1, r2, r3],
         )
         db.session.add(inc2)
+        inc3 = Incident(
+            text="Test Maintenance 2",
+            impact=IncidentImpactEnum.maintenance,
+            start_date=datetime.datetime.now()
+            - datetime.timedelta(minutes=30),
+            regions="Swiss",
+        )
+        db.session.add(inc3)
         db.session.add(
             IncidentStatus(
                 incident=inc2,
@@ -102,6 +109,23 @@ def register(app):
         db.session.add(
             IncidentStatus(
                 incident=inc2,
+                timestamp=datetime.datetime.now(),
+                text="We have finished upgrade. Watching",
+                status="watching",
+            )
+        )
+        db.session.add(
+            IncidentStatus(
+                incident=inc3,
+                timestamp=datetime.datetime.now()
+                - datetime.timedelta(minutes=5),
+                text="We have started working",
+                status="started",
+            )
+        )
+        db.session.add(
+            IncidentStatus(
+                incident=inc3,
                 timestamp=datetime.datetime.now(),
                 text="We have finished upgrade. Watching",
                 status="watching",
@@ -130,7 +154,7 @@ def register(app):
                 incident=inc1,
                 timestamp=datetime.datetime.now()
                 - datetime.timedelta(minutes=20),
-                text="Fix is deployed. Service is recovering",
+                text="Fix is deployed. Component is recovering",
                 status="fix_deployed",
             )
         )
