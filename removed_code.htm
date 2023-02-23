@@ -1,0 +1,36 @@
+
+
+        <h6 class="alert-regions">Affected Regions: {{
+            incident.regions.all()
+            | map(attribute='name')
+            | join(', ')
+            }}</h6>
+            -->
+ 
+        <h6 class="alert-services">Affected Services: {{
+            incident.services.all()
+            | map(attribute='name')
+            | join(', ')
+            }}</h6>
+
+
+
+
+
+
+  <div class="tab-content mt-3">
+    {% for region in regions %}
+    {% if loop.first %}
+    <div class="tab-pane active" 
+    {% else %}
+    <div class="tab-pane" 
+    {% endif %}
+         id="{{region.name}}" 
+         tabindex="0"
+         role="tabpanel"
+         aria-labelledby="{{region.name}}-tab" 
+         >
+         {% include '_region_cards.html' %}
+          </div>
+    {% endfor %}
+  </div>

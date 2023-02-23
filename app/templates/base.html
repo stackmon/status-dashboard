@@ -6,31 +6,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   {% block metatags %}
   {% endblock %}
-  
+
   {% block css %}
-    {% include 'css.html' %}
+    {% include 'css.html' ignore missing %}
   {% endblock %}
-  
 </head>
 <body class="d-flex flex-column h-100">
+
   {% block header %}
-    {% include 'header.html' %}
+    {% include 'header.html' ignore missing %}
   {% endblock %}
-  
-  <main class="container">
+
+  <main class="container" style="max-width:1200px">
+    {% block tabs %}
+      {% include 'tabs.html' ignore missing %}
+    {% endblock %}
   <!-- Start Main content -->
   {% block content %}
   {% endblock %}
   <!-- End Main content -->
   </main>
-  
+
   {% block footer %}
-    {% include 'footer.html' %}
+    {% include 'footer.html' ignore missing %}
   {% endblock %}
   
   {% block scripts %}
-    {% include 'scripts.html' %}
+    {% include 'scripts.html' ignore missing %}
   {% endblock %}
-
+  
 </body>
 </html>
