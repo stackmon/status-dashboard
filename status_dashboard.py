@@ -11,7 +11,9 @@
 # under the License.
 #
 
-from app import create_app, db, cli
+from app import cli
+from app import create_app
+from app import db
 from app import models
 
 app = create_app()
@@ -22,8 +24,8 @@ cli.register(app)
 def make_shell_context():
     return {
         "db": db,
-        "Region": models.Region,
         "Component": models.Component,
+        "ComponentAttribute": models.ComponentAttribute,
         "Incident": models.Incident,
-        "incident_service_relation": models.IncidentServiceRelation
+        "incident_component_relation": models.IncidentComponentRelation
     }

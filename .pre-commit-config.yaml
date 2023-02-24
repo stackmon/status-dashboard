@@ -25,4 +25,4 @@ repos:
         language: python
         entry: flake8
         files: '^.*\.py$'
-        exclude: '^(doc|releasenotes|tools)/.*$'
+        exclude: '^(doc|releasenotes|tools|migrations)/.*$'

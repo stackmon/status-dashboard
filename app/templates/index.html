@@ -1,86 +1,58 @@
 {% extends "base.html" %}
+
 {% block content %}
-<div class="table_wrapper">
-  <table class="scroll_table">
-    <caption>
-      Services availabilities
-    </caption>
-    <thead>
-      <tr>
-        <th>Category</th>
-        <th>Component ID</th>
-        <th>Component Name</th>
-        {% for region in regions %}
-        <th>{{ region }}</th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <div>
-    {% for category in categories %}
-      <tbody class="scroll_table_area">
-        <tr>
-          <th rowspan="{{ components_by_cats[category]|length }}">
-            {{ categories[category] }}
-          </th>
-          <td class="component_id_cell">{{ components_by_cats[category][0] }}</td>
-          <td class="component_name_cell">
-            {% for component in all_components %}
-              {% if component.id == components_by_cats[category][0] %}
-                {{ component.name }}
-              {% endif %}
-            {% endfor %}
-          </td>
-          {% for region in regions %}
-          <td class="component_status_cell">
-            {% for component in all_components %}
-              {% if (component.id == components_by_cats[category][0]) %}
-                {% if component.component_by_region(component.id, region) == None %}
-                  <i class="bi bi-cloud-minus"></i>
-                {% else %}
-                  <i class="bi sd-{{ component.get_status(region) }}"></i>
-                {% endif %}
-              {% endif %}  
-            {% endfor %}
-          </td>
-          {% endfor %}
-        </tr>
-      {% for component_id in components_by_cats[category][1:] %}  
-        <tr>
-          <td class="component_id_cell">{{ component_id }}</td>
-          <td class="component_name_cell">
-            {% for component in all_components %}
-              {% if component.id == component_id %}
-                {{ component.name }}
-              {% endif %}  
-            {% endfor %}
-          </td>
-          {% for region in regions %}
-          <td class="component_status_cell">
-            {% for component in all_components %}
-              {% if component.id == component_id %}
-                {% if component.component_by_region(component.id, region) == None %}
-                  <i class="bi bi-cloud-minus"></i>
-                {% else %}
-                  <i class="bi sd-{{ component.get_status(region) }}"></i>
-                {% endif %}
-              {% endif %}  
-            {% endfor %}
-          </td>
-          {% endfor %}
-        </tr>
-      {% endfor %}
-      </tbody>
+<div class="container">
+  {% set regions = component_attributes.get_unique_values('region') %}
+  {% set all_components = components.query.all() %}
+  <!-- Nav tabs -->
+  <ul class="nav nav-tabs justify-content-center" id="myTab" role="tablist">
+    {% for region in regions %}
+      <li class="nav-item" role="presentation">
+          {% if loop.first %}
+          <button class="nav-link active"
+          {% else %}
+          <button class="nav-link"
+          {% endif %}
+                  id="{{ region }}-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#{{ region }}"
+                  type="button"
+                  role="tab"
+                  aria-controls="{{region}}"
+                  {% if loop.first %}
+                  aria-selected="true"
+                  {% else %}
+                  aria-selected="false"
+                  {% endif %}
+                  >
+              {{ region | upper }}</button>
+      </li>
     {% endfor %}
-  </div>
-  </table>
+  </ul>
+ <!-- Tab panes -->
+ <div class="tab-content mt-3">
+   {% for region in regions %}
+     {% if loop.first %}
+       <div class="tab-pane fade show active"
+     {% else %}
+       <div class="tab-pane fade"
+     {% endif %}
+          id="{{region}}"
+          tabindex="0"
+          role="tabpanel"
+          aria-labelledby="{{region}}-tab"
+          >
+          {% include 'region_card.html' %}
+       </div>
+   {% endfor %}
+ </div>
 </div>
+
 <div>
   <div class="container mt-4">
     <ul class="list-group list-group-horizontal list-group-flush">
       <li class="list-group-item">
-          <i class="bi bi-cloud-minus"></i>Not Exist</li>
-      <li class="list-group-item">
-          <i class="bi sd-available me-1"></i>Operational</li></li> 
+          <i class="bi sd-available me-1"></i>Operational</li></li>
       <li class="list-group-item">
           <i class="bi sd-maintenance me-1"></i>Maintenance</li>
       <li class="list-group-item">

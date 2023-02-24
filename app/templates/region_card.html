@@ -1,0 +1,36 @@
+<div class="container row row-cols-1 row-cols-md-3 g-4">
+  {% set categories = component_attributes.get_unique_values("category") %}
+  {% for cat in categories|sort %}
+    <div class="col">
+      <div class="card">
+        <h5 class="card-header">
+          {{ cat }}
+        </h2>
+
+        <ul class="list-group list-group-flush">
+          {% for component in all_components %}
+            {% with attrs = component.get_attributes_as_dict() %}
+            {% if 'region' in attrs and attrs['region'] == region and 'category' in attrs and attrs['category'] == cat %}
+              {% with incidents = component.get_open_incidents() %}
+                <li class="list-group-item d-flex justify-content-between
+                       align-items-center">
+                    {{ component.name }}
+                    {% if incidents.count() == 0 %}
+                      <i class="bi sd-available"></i>
+                    {% else %}
+                      <a href="/incidents/{{incidents[0].id}}" title="Open Incident">
+                        <i class="bi sd-{{incidents[0].impact.value}}"></i>
+                      </a>
+                    {% endif %}
+
+                </li>
+              {% endwith %}
+            {% endif %}
+            {% endwith %}
+          {% endfor %}
+        </ul>
+
+      </div>
+    </div>
+  {% endfor %}
+</div>
