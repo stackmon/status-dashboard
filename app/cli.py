@@ -17,9 +17,9 @@ from app import db
 from app.models import Component
 from app.models import ComponentAttribute
 from app.models import Incident
+from app.models import IncidentComponentRelation
 from app.models import IncidentImpactEnum
 from app.models import IncidentStatus
-from app.models import IncidentComponentRelation
 
 
 def register(app):
@@ -46,13 +46,14 @@ def register(app):
         data = otc_metadata.services.Services()
         components = {}
         for region in ["EU-DE", "EU-NL", "Swiss"]:
+            components[region] = dict()
             for cat in data.service_categories:
                 for srv in data.services_by_category(cat["name"]):
                     #
                     # component attribute region
                     #
                     cat_attr = ComponentAttribute(
-                        name="category", value=srv["service_category"]
+                        name="category", value=cat["title"]
                     )
                     db.session.add(cat_attr)
                     #
@@ -63,23 +64,26 @@ def register(app):
                     )
                     db.session.add(reg_attr)
 
+                    # Service type attribute
+                    type_attr = ComponentAttribute(
+                        name="type", value=srv["service_type"]
+                    )
+                    db.session.add(type_attr)
+
                     db_srv = Component(
                         name=srv["service_title"],
-                        type=srv["service_type"],
                         attributes=[cat_attr, reg_attr],
                     )
                     db.session.add(db_srv)
-                    # comp_id = (
-                    #     db.session.query(Component.id)
-                    #     .filter_by(name=srv["service_title"])
-                    #     .first()[0]
-                    components[srv["service_type"]] = db_srv
+                    components[region][srv["service_type"]] = db_srv
         inc1 = Incident(
             text="Test incident",
             impact=IncidentImpactEnum.outage,
             start_date=datetime.datetime.now(),
-            regions="EU-DE",
-            components=[components["ecs"], components["vpc"]],
+            components=[
+                components['EU-DE']["ecs"],
+                components['EU-DE']["vpc"]
+            ],
         )
         db.session.add(inc1)
         inc2 = Incident(
@@ -94,7 +98,6 @@ def register(app):
             impact=IncidentImpactEnum.maintenance,
             start_date=datetime.datetime.now()
             - datetime.timedelta(minutes=30),
-            regions="Swiss",
         )
         db.session.add(inc3)
         db.session.add(
