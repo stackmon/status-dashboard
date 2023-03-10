@@ -2,22 +2,20 @@
 
 - job:
     name: stackmon-status-dashboard-build-image
-    parent: otc-build-docker-image
+    parent: otc-build-container-image
     description: Build stackmon-status-dashboard container image
-    timeout: 2700 # 45 minutes
     provides: status-dashboard-container-image
     vars: &status-dashboard_image_vars
-      docker_images:
+      container_images:
         - context: .
+          registry: quay.io
           repository: opentelekomcloud/stackmon-status-dashboard
           tags:
-            # If zuul.tag is defined: [ '3', '3.19', '3.19.0' ].  Only works for 3-component tags.
-            # Otherwise: ['latest']
             &imagetag "{{ zuul.tag is defined | ternary([zuul.get('tag', '').split('.')[0], '.'.join(zuul.get('tag', '').split('.')[:2]), zuul.get('tag', '')], ['latest']) }}"
 
 - job:
     name: stackmon-status-dashboard-upload-image
-    parent: otcinfra-upload-image-quay
+    parent: otcinfra-upload-container-images
     vars: *status-dashboard_image_vars
 
 - project:

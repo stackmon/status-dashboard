@@ -147,15 +147,3 @@ def logout():
     # remove the username from the session if it's there
     session.pop("user", None)
     return redirect("/")
-
-
-def transform_category_name(category_name):
-    transformed_name = (
-        category_name.replace("_", " ").replace("-", " ").capitalize()
-    )
-    return transformed_name
-
-
-def components_by_category(category_name):
-    components_by_cat = Component.components_by_category(category_name)
-    return components_by_cat
