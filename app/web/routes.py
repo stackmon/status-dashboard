@@ -11,7 +11,7 @@
 # under the License.
 #
 
-from app import db
+from app.models import db
 from app import oauth
 from app.models import Component
 from app.models import ComponentAttribute

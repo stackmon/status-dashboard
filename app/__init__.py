@@ -24,6 +24,7 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
 import yaml
+from flask_restful import Api
 
 
 db = SQLAlchemy()
@@ -33,10 +34,12 @@ cache = Cache(config={"CACHE_TYPE": "SimpleCache"})
 
 
 def create_app(test_config=None):
+
     """Create and configure an instance of the Flask application."""
     app = Flask(__name__, instance_relative_config=True)
+    api = Api(app)
 
-    app.config.from_mapping(SECRET_KEY="dev", SQLALCHEMY_ECHO=True)
+    app.config.from_mapping(SECRET_KEY="dev", SQLALCHEMY_ECHO=True, JSON_SORT_KEYS=False)
 
     app.config.from_prefixed_env(prefix="SDB")
 
@@ -110,8 +113,10 @@ def create_app(test_config=None):
         )
 
     from app.web import bp as web_bp
+    from app.api.routes import initialize_routes
 
     app.register_blueprint(web_bp)
+    initialize_routes(api)
 
     with app.app_context():
         # Ensure there is some DB when we start the app

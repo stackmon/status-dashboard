@@ -22,9 +22,12 @@ from flask import jsonify
 from flask import make_response
 from flask import session
 
+#from app import db
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Enum
 from sqlalchemy import and_
 from sqlalchemy import select
+from app import db
 
 
 class IncidentComponentRelation(db.Model):
@@ -119,6 +122,18 @@ class Component(db.Model):
                 return comp
         return None
 
+    @property
+    def serialize(self):
+        return {
+            "component": {
+                "id": self.id,
+                "name": self.name,
+            },
+            "component_attributes": {
+                "attributes": self.get_attributes_as_dict(),
+            },
+        }
+
 
 class ComponentAttribute(db.Model):
     """Component Attribute model"""
@@ -191,6 +206,19 @@ class Incident(db.Model):
     def __repr__(self):
         return "<Incident {}>".format(self.text)
 
+    def get_components_as_list(self):
+        """Return component attributes as dicionary"""
+        components = []
+        for component in self.components:
+            components.append(
+                {
+                "component_id": component.id,
+                "component_name": component.name,
+                "component_attributes": component.get_attributes_as_dict(),
+                }
+            )
+        return components
+
     @staticmethod
     def open():
         return Incident.query.filter(Incident.end_date.is_(None))
@@ -225,6 +253,18 @@ class Incident(db.Model):
         """Get Incident component attribute by key"""
         return {c.get_attributes_as_dict()[attr_key] for c in self.components}
 
+    @property
+    def serialize(self):
+        return {
+            "incident": {
+                "id": self.id,
+                "text": self.text,
+                "start_date": self.start_date,
+                "end_date": self.end_date,
+            },
+            "components": self.get_components_as_list(),
+            "impact": self.impact.value,
+        }
 
 class IncidentStatus(db.Model):
     """Incident Updates"""
