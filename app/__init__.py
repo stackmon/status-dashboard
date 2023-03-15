@@ -13,6 +13,8 @@
 import os
 import pathlib
 
+from app.default_settings import DefaultConfiguration
+
 from authlib.integrations.flask_client import OAuth
 
 from flask import Flask
@@ -20,6 +22,8 @@ from flask import Flask
 from flask_caching import Cache
 
 from flask_migrate import Migrate
+
+from flask_smorest import Api
 
 from flask_sqlalchemy import SQLAlchemy
 
@@ -35,8 +39,9 @@ cache = Cache(config={"CACHE_TYPE": "SimpleCache"})
 def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
     app = Flask(__name__, instance_relative_config=True)
+    app.config.from_object(DefaultConfiguration)
 
-    app.config.from_mapping(SECRET_KEY="dev", SQLALCHEMY_ECHO=True)
+    api = Api(app) # noqa
 
     app.config.from_prefixed_env(prefix="SDB")
 
@@ -110,8 +115,10 @@ def create_app(test_config=None):
         )
 
     from app.web import bp as web_bp
+    from app.api import bp as api_bp
 
     app.register_blueprint(web_bp)
+    app.register_blueprint(api_bp)
 
     with app.app_context():
         # Ensure there is some DB when we start the app

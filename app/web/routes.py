@@ -11,13 +11,13 @@
 # under the License.
 #
 
-from app import db
 from app import oauth
 from app.models import Component
 from app.models import ComponentAttribute
 from app.models import Incident
 from app.models import IncidentStatus
 from app.models import auth_required
+from app.models import db
 from app.web import bp
 from app.web.forms import IncidentForm
 from app.web.forms import IncidentUpdateForm
