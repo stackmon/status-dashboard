@@ -25,7 +25,7 @@ body {
     --dt-color-orange-30: hsl(38.69999999999999, 100%, 79.6%);
     --dt-color-orange-40: hsl(33.5, 100%, 75.1%);
     --dt-color-orange-50: hsl(29, 100%, 70.8%);
-    --dt-color-orange-60: hsl(24.80000000000001, 96.5%, 66.1%);
+    --dt-color-orange-60: hsl(24.8%, 96.5%, 66.1%);
     --dt-color-orange-70: hsl(17.30000000000001, 71.4%, 56.1%);
     --dt-color-orange-80: hsl(17.30000000000001, 72.3%, 39.6%);
     --dt-color-orange-90: hsl(17.30000000000001, 88.8%, 31.4%);
@@ -229,45 +229,53 @@ nav.navbar {
 .bi-check-circle {
     color: var(--dt-color-green-100);
 }
+
 .bi-info-circle {
     color: var(--dt-color-blue-100);
 }
+
 .bi-x-circle {
     color: var(--dt-color-red-100);
 }
 
 .sd-available::before {
-    content: "\f26b";
+    content: "\f26a";
     color: var(--dt-color-green-100);
 }
+
 .sd-outage::before {
-    content: "\f623";
-    color: var(--dt-color-red-100);
-}
-.sd-major::before {
-    content: "\f623";
-    color: var(--dt-color-orange-100);
-}
-.sd-minor::before {
-    content: "\f623";
-    color: var(--dt-color-yellow-100);
-}
-.sd-maintenance::before {
-    content: "\f130";
-    color: var(--dt-color-blue);
+    content: "\f622";
+    color: var(--dt-color-red-60);
 }
 
+.sd-major::before {
+    content: "\f622";
+    color: var(--dt-color-red-80);
+}
+
+.sd-minor::before {
+    content: "\f622";
+    color: var(--admonition-icon-warning);
+}
+
+.sd-maintenance::before {
+    content: "\f78e";
+    color: var(--dt-color-blue-70);
+}
 
 .alert-outage {
     background-color: var(--dt-color-red-10);
     border: 2px solid var(--dt-color-red-50);
 }
+
 .alert-major {
     border: 2px solid var(--dt-color-orange-80);
 }
+
 .alert-minor {
     border: 2px solid var(--dt-color-yellow-80);
 }
+
 .alert-maintenance {
     /*background-color: var(--dt-color-blue-30);*/
     border: 2px solid var(--dt-color-blue-80);
@@ -276,7 +284,6 @@ nav.navbar {
 .bi {
     font-size: 1rem;
 }
-
 
 /* Footer */
 footer.footer {
@@ -415,9 +422,11 @@ footer.footer {
   width: 500px;
   margin: 25px 0;
 }
+
 .tab {
   float: left;
 }
+
 .tab label {
   background: #ddd; 
   padding: 10px; 
@@ -425,15 +434,19 @@ footer.footer {
   cursor: pointer;
   margin-left: -1px; 
 }
+
 .tab:first-child label {
   margin-left: 0;
 }
+
 .tab input[type=radio] {
   display: none;   
 }
+
 input[type=radio]:checked ~ label {
   background: white;
 }
+
 input[type=radio]:checked ~ label ~ .tab-content {
   display: block;
 }
