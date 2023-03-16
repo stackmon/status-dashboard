@@ -48,34 +48,27 @@ def new_incident():
     else:
         print(session["user"])
 
-    all_regions = (
-        "EU-DE",
-        "EU-NL",
-        "Swiss",
-    )  # Region.query.order_by(Region.name).all()
     all_components = Component.query.order_by(Component.name).all()
     form = IncidentForm()
-    form.incident_components.choices = [(s.id, s.name) for s in all_components]
-    form.incident_regions.choices = [(s.id, s.name) for s in all_regions]
+    form.incident_components.choices = [
+        (c.id, c) for c in all_components
+    ]
+
     if form.validate_on_submit():
-        selected_regions = [int(x) for x in form.incident_regions.raw_data]
         selected_components = [
             int(x) for x in form.incident_components.raw_data
         ]
-        incident_regions = []
+
         incident_components = []
-        for reg in all_regions:
-            if reg.id in selected_regions:
-                incident_regions.append(reg)
-        for srv in all_components:
-            if srv.id in selected_components:
-                incident_components.append(srv)
+
+        for comp in all_components:
+            if comp.id in selected_components:
+                incident_components.append(comp)
 
         incident = Incident(
             text=form.incident_text.data,
             impact=form.incident_impact.data,
             start_date=form.incident_start.data,
-            regions=incident_regions,
             components=incident_components,
         )
         db.session.add(incident)

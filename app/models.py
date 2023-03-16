@@ -146,6 +146,9 @@ class Incident(db.Model):
         )
         return open_incident_for_component
 
+    def get_attributes_by_key(self, attr_key):
+        return {c.get_attributes_as_dict()[attr_key] for c in self.components}
+
 
 class IncidentStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True, index=True)

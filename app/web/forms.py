@@ -62,7 +62,6 @@ class IncidentForm(FlaskForm):
             ("outage", "Service outage"),
         ],
     )
-    incident_regions = SelectField("Affected Regions")
-    incident_services = SelectField("Affected services")
+    incident_components = SelectField("Affected services")
     incident_start = DateTimeField("Start", validators=[DataRequired()])
     submit = SubmitField("Submit")
