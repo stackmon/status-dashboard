@@ -3,15 +3,6 @@
 }
 
 body {
-    --admonition-background-error: hsla(353.8, 100%, 88.6%, 0.35);
-    --admonition-icon-error: rgb(253, 0, 25);
-    --admonition-background-warning:  hsla(33.5, 100%, 75.1%, 0.3);
-    --admonition-icon-warning:  rgb(243, 138, 0);
-    --admonition-background-informational: hsla(190.2, 100%, 92%, 0.75);
-    --admonition-icon-informational: rgb(5, 181, 216);
-    --admonition-background-success: hsl(98.8, 49.7%, 61%, 0.2);
-    --admonition-icon-success: rgb(69, 192, 3);
-
 }
 
 body {
@@ -25,7 +16,7 @@ body {
 }
 
 /* NAVBAR */
-/* tiny magenta line sticks to the top */
+/* tiny blue line sticks to the top */
 .skippy {
   background-color: var(--bs-blue);
   height: 4px;
@@ -37,7 +28,7 @@ main.container {
 }
 
 .alert-success {
-    background-color: var(--admonition-background-success);
+/*    background-color: var(--admonition-background-success);*/
 /*    color: white;*/
 }
 
@@ -48,7 +39,7 @@ nav.navbar {
 
 .navbar-brand {
   max-width: 250px;
-  display: flex;
+/*  display: flex;*/
 }
 
 .navbar-brand img {
@@ -75,23 +66,23 @@ nav.navbar {
 }
 
 .sd-available::before {
-    content: "\f26b";
+    content: "\f26a";
     color: var(--bs-green);
 }
 .sd-outage::before {
-    content: "\f623";
+    content: "\f622";
     color: var(--bs-red);
 }
 .sd-major::before {
-    content: "\f623";
+    content: "\f622";
     color: var(--bs-orange);
 }
 .sd-minor::before {
-    content: "\f623";
+    content: "\f622";
     color: var(--bs-cyan);
 }
 .sd-maintenance::before {
-    content: "\f130";
+    content: "\f78e";
     color: var(--bs-blue);
 }
 

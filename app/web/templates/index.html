@@ -3,7 +3,8 @@
 {% block content %}
 <div class="container">
   {% set regions = component_attributes.get_unique_values('region') %}
-  {% set all_components = components.query.all() %}
+  {% set all_components_with_incidents = components.query_all_with_active_incidents().all() %}
+  {% set open_incidents = incidents.open().first() %}
   <!-- Nav tabs -->
   <ul class="nav nav-tabs justify-content-center" id="myTab" role="tablist">
     {% for region in regions %}
@@ -65,3 +66,13 @@
   </div>
 </div>
 {% endblock %}
+
+{% macro component_status_widget(incident) -%}
+    {% if not incident %}
+      <i class="bi sd-available"></i>
+    {% else %}
+      <a href="/incidents/{{incident.id}}" title="Open Incident">
+        <i class="bi sd-{{incident.impact.value}}"></i>
+      </a>
+    {% endif %}
+{% endmacro -%}

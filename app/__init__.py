@@ -10,12 +10,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-
 import os
 
 from authlib.integrations.flask_client import OAuth
 
 from flask import Flask
+
+from flask_caching import Cache
 
 from flask_migrate import Migrate
 
@@ -25,18 +26,14 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 migrate = Migrate()
 oauth = OAuth()
+cache = Cache(config={"CACHE_TYPE": "SimpleCache"})
 
 
 def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
-    print("Here in the create")
     app = Flask(__name__, instance_relative_config=True)
 
-    app.config.from_mapping(
-        SECRET_KEY="dev",
-        SQLALCHEMY_DATABASE_URI="sqlite:///example.sqlite",
-        SQLALCHEMY_ECHO=True,
-    )
+    app.config.from_mapping(SECRET_KEY="dev", SQLALCHEMY_ECHO=True)
 
     app.config.from_prefixed_env(prefix="SDB")
 
@@ -47,21 +44,35 @@ def create_app(test_config=None):
         # load the test config if passed in
         app.config.from_mapping(test_config)
 
+    if (
+        "SQLALCHEMY_DATABASE_URI" not in app.config
+        and "DATABASE_URI" in app.config
+    ):
+        app.config["SQLALCHEMY_DATABASE_URI"] = app.config["DATABASE_URI"]
+    if "SQLALCHEMY_DATABASE_URI" not in app.config:
+        # TODO(gtema): sooner or later this should be dropped
+        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///example.sqlite"
+
     # ensure the instance folder exists
     try:
         os.makedirs(app.instance_path)
     except OSError:
         pass
 
+    cache.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
-    oauth.init_app(app)
+    oauth.init_app(app, cache=cache)
+
+    @app.before_first_request
+    def create_tables():
+        db.create_all()
 
     if (
         "GITHUB_CLIENT_ID" in app.config
         and "GITHUB_CLIENT_SECRET" in app.config
     ):
-        app.logger.debug("Enabling GitHub auh")
+        app.logger.debug("Enabling GitHub auth")
         oauth.register(
             name="github",
             client_id=app.config["GITHUB_CLIENT_ID"],
@@ -91,6 +102,7 @@ def create_app(test_config=None):
             server_metadata_url=metadata_url,
             # client_kwargs={"scope": "openid profile status-dashboard-aud"},
             client_kwargs={"scope": "openid profile"},
+            token_placement="header",
         )
 
     from app.web import bp as web_bp
@@ -98,6 +110,3 @@ def create_app(test_config=None):
     app.register_blueprint(web_bp)
 
     return app
-
-
-# from app import models

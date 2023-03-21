@@ -36,53 +36,55 @@
   {% endfor %}
   </div>
 
-  <div class="incident-update-form mt-4">
-    <form action="/incidents/{{incident.id}}/update" method="POST" novalidate>
-    {{ form.hidden_tag() }}
-    <div class="mb-3">
-      <label for="{{form.update_text.id}}" class="form-label">{{form.update_text.label}}</label>
-      <textarea class="form-control" 
-             id="{{form.update_text.id}}"
-             name="{{form.update_text.name}}"
-             rows=3
-             aria-describedby="updateTextHelp"></textarea>
-       <div id="updateTextHelp" class="form-text">Please enter update message
-      here.</div>
+  {% if form %}
+    <div class="incident-update-form mt-4">
+      <form action="/incidents/{{incident.id}}/update" method="POST" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="mb-3">
+        <label for="{{form.update_text.id}}" class="form-label">{{form.update_text.label}}</label>
+        <textarea class="form-control" 
+               id="{{form.update_text.id}}"
+               name="{{form.update_text.name}}"
+               rows=3
+               aria-describedby="updateTextHelp"></textarea>
+         <div id="updateTextHelp" class="form-text">Please enter update message
+        here.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="{{form.update_status.id}}" class="form-label">{{form.update_status.label}}</label>
+        <select 
+            class="form-select form-select-sm mb-3"
+            aria-label=".form-select-sm" 
+            id="{{form.update_status.id}}"
+            name="{{form.update_status.name}}">
+          <option selected>Choose...</option>
+          {% for (k, v) in form.update_status.choices %}
+          <option value="{{k}}">{{v}}</option>
+          {% endfor %}
+        </select>
+
+        <div id="updateStatusHelp" class="form-text">Please enter update status
+        here.</div>
+
+      </div>
+
+      <div class=mb-3">
+        <label for="{{form.next_update.id}}" class="form-label">{{form.next_update.label}}</label>
+        <input class="form-control" type="datetime"
+               id="{{form.next_update.id}}"
+               name="{{form.next_update.name}}"
+               aria-describedby="nextUpdateHelp"
+               placeholder="2023-01-01 12:34:56"/>
+         <div id="nextUpdateHelp" class="form-text">Next update is expected by
+           (%Y-%m-%d %H:%M:%S).</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Submit</button>
+
+      </form>
     </div>
-
-    <div class="mb-3">
-      <label for="{{form.update_status.id}}" class="form-label">{{form.update_status.label}}</label>
-      <select 
-          class="form-select form-select-sm mb-3"
-          aria-label=".form-select-sm" 
-          id="{{form.update_status.id}}"
-          name="{{form.update_status.name}}">
-        <option selected>Choose...</option>
-        {% for (k, v) in form.update_status.choices %}
-        <option value="{{k}}">{{v}}</option>
-        {% endfor %}
-      </select>
-
-      <div id="updateStatusHelp" class="form-text">Please enter update status
-      here.</div>
-
-    </div>
-
-    <div class=mb-3">
-      <label for="{{form.next_update.id}}" class="form-label">{{form.next_update.label}}</label>
-      <input class="form-control" type="datetime"
-             id="{{form.next_update.id}}"
-             name="{{form.next_update.name}}"
-             aria-describedby="nextUpdateHelp"
-             placeholder="2023-01-01 12:34:56"/>
-       <div id="nextUpdateHelp" class="form-text">Next update is expected by
-         (%Y-%m-%d %H:%M:%S).</div>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Submit</button>
-
-  </form>
-  </div>
+  {% endif %}
 
 </div>
 {% endblock %}

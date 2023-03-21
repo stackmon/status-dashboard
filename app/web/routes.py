@@ -17,6 +17,7 @@ from app.models import Component
 from app.models import ComponentAttribute
 from app.models import Incident
 from app.models import IncidentStatus
+from app.models import auth_required
 from app.web import bp
 from app.web.forms import IncidentForm
 from app.web.forms import IncidentUpdateForm
@@ -29,30 +30,26 @@ from flask import session
 from flask import url_for
 
 
-@bp.route("/", methods=["GET", "POST"])
-@bp.route("/index", methods=["GET", "POST"])
+@bp.route("/", methods=["GET"])
+@bp.route("/index", methods=["GET"])
 def index():
+
     return render_template(
         "index.html",
-        title="Home",
+        title="Status Dashboard",
         components=Component,
         component_attributes=ComponentAttribute,
-        incidents=Incident
+        incidents=Incident,
     )
 
 
 @bp.route("/incidents", methods=["GET", "POST"])
-def new_incident():
-    if "user" not in session:
-        abort(401)
-    else:
-        print(session["user"])
-
+@auth_required
+def new_incident(current_user):
+    """Create new Incident"""
     all_components = Component.query.order_by(Component.name).all()
     form = IncidentForm()
-    form.incident_components.choices = [
-        (c.id, c) for c in all_components
-    ]
+    form.incident_components.choices = [(c.id, c) for c in all_components]
 
     if form.validate_on_submit():
         selected_components = [
@@ -78,47 +75,48 @@ def new_incident():
     )
 
 
-@bp.route("/incidents/<id>", methods=["GET"])
-def incident(id):
-    incident = Incident.query.filter_by(id=id).first_or_404()
-    form = IncidentUpdateForm(id)
+@bp.route("/incidents/<incident_id>", methods=["GET"])
+def incident(incident_id):
+    """Get incident by ID"""
+    incident = Incident.query.filter_by(id=incident_id).first_or_404()
+    form = None
+    if 'user' in session:
+        form = IncidentUpdateForm(id)
     return render_template(
         "incident.html", title="Incident", incident=incident, form=form
     )
 
 
-@bp.route("/incidents/<id>/update", methods=["POST"])
-def post_incident_update(id):
-    if "user" not in session:
-        abort(401)
-
-    form = IncidentUpdateForm(id)
+@bp.route("/incidents/<incident_id>/update", methods=["POST"])
+@auth_required
+def post_incident_update(incident_id):
+    """Post update to the Incident"""
+    form = IncidentUpdateForm(incident_id)
     if form.validate_on_submit():
         update = IncidentStatus(
-            incident_id=id,
+            incident_id=incident_id,
             text=form.update_text.data,
             status=form.update_status.data,
         )
         db.session.add(update)
         db.session.commit()
-    else:
-        print(f"Data validation failed {form.update_text.errors}")
-        print(f"Data validation failed {form.update_status.errors}")
-    return redirect(url_for("web.incident", id=id))
+    return redirect(url_for("web.incident", id=incident_id))
 
 
 @bp.route("/login/<name>")
 def login(name):
+    """Login user using XXX auth method"""
     client = oauth.create_client(name)
     if not client:
         abort(404)
 
-    redirect_uri = url_for("web.auth", name=name, _external=True)
+    redirect_uri = url_for("web.auth_callback", name=name, _external=True)
     return client.authorize_redirect(redirect_uri)
 
 
 @bp.route("/auth/<name>")
-def auth(name):
+def auth_callback(name):
+    """Auth callback"""
     client = oauth.create_client(name)
     if not client:
         abort(404)
@@ -131,12 +129,23 @@ def auth(name):
 
     current_app.logger.debug(user)
 
+    required_group = current_app.config.get("OPENID_REQUIRED_GROUP")
+
+    if required_group:
+        if required_group not in user["groups"]:
+            current_app.logger.info(
+                "Not logging in user %s due to lack of required groups"
+                % user.get("preferred_username", user.get("name"))
+            )
+            return redirect("/")
+
     session["user"] = user
     return redirect("/")
 
 
 @bp.route("/logout")
 def logout():
+    """Logout user"""
     # remove the username from the session if it's there
     session.pop("user", None)
     return redirect("/")

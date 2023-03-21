@@ -59,9 +59,7 @@ def register(app):
                     #
                     # component attribute category
                     #
-                    reg_attr = ComponentAttribute(
-                        name="region", value=region
-                    )
+                    reg_attr = ComponentAttribute(name="region", value=region)
                     db.session.add(reg_attr)
 
                     # Service type attribute
@@ -81,8 +79,8 @@ def register(app):
             impact=IncidentImpactEnum.outage,
             start_date=datetime.datetime.now(),
             components=[
-                components['EU-DE']["ecs"],
-                components['EU-DE']["vpc"]
+                components["EU-DE"]["ecs"],
+                components["EU-DE"]["vpc"],
             ],
         )
         db.session.add(inc1)
