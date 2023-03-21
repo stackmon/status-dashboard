@@ -6,7 +6,7 @@ StatusDashboard can be configured through the environment variables.
 
 * `SDB_SECRET_KEY` - Secret Key of the Flask application used for encryption
 
-* `SDB_SQLALCHEMY_DATABASE_URI` - database URI
+* `SDB_SQLALCHEMY_DATABASE_URI`/`SDB_DATABASE_URI` - database URI
 
 * `SDB_GITHUB_CLIENT_ID`
 

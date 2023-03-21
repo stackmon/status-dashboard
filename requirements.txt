@@ -1,7 +1,8 @@
-Flask # BSD-3-Clause
-Flask-SQLAlchemy # BSD-3-Clause
-Flask-Migrate # MIT
-Flask-Wtf # BSD-3-Clause
-authlib # BSD-3-Clause
+Flask>2.0 # BSD-3-Clause
+Flask-Caching>2.0 # BSD
+Flask-SQLAlchemy>3.0 # BSD-3-Clause
+Flask-Migrate>4.0 # MIT
+Flask-Wtf>=1.1 # BSD-3-Clause
+authlib>=1.2 # BSD-3-Clause
 # Requests is an unlisted dependency of authlib
-requests # Apache-2.0
+requests>=2.28 # Apache-2.0
