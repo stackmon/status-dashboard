@@ -41,19 +41,15 @@ def register(app):
     @bootstrap.command()
     def provision():
         """Fill database with initial data"""
-        import otc_metadata.services
 
-        data = otc_metadata.services.Services()
         components = {}
-        for region in ["EU-DE", "EU-NL", "Swiss"]:
+        for region in ["Region1", "Region2"]:
             components[region] = dict()
-            for cat in data.service_categories:
-                for srv in data.services_by_category(cat["name"]):
-                    #
-                    # component attribute region
-                    #
+            for cat in range(1, 10):
+                for srv in range(1, 10):
                     cat_attr = ComponentAttribute(
-                        name="category", value=cat["title"]
+                        name="category",
+                        value=f"Group{cat}"
                     )
                     db.session.add(cat_attr)
                     #
@@ -64,23 +60,26 @@ def register(app):
 
                     # Service type attribute
                     type_attr = ComponentAttribute(
-                        name="type", value=srv["service_type"]
+                        name="type",
+                        value=f"type{cat}-{srv}"
                     )
                     db.session.add(type_attr)
 
                     db_srv = Component(
-                        name=srv["service_title"],
-                        attributes=[cat_attr, reg_attr],
+                        name=f"Component {srv}",
+                        attributes=[
+                            cat_attr,
+                            reg_attr],
                     )
                     db.session.add(db_srv)
-                    components[region][srv["service_type"]] = db_srv
+                    components[region][f"type{cat}-{srv}"] = db_srv
         inc1 = Incident(
             text="Test incident",
             impact=IncidentImpactEnum.outage,
             start_date=datetime.datetime.now(),
             components=[
-                components["EU-DE"]["ecs"],
-                components["EU-DE"]["vpc"],
+                components["Region1"]["type1-2"],
+                components["Region1"]["type2-3"],
             ],
         )
         db.session.add(inc1)
@@ -89,6 +88,9 @@ def register(app):
             impact=IncidentImpactEnum.maintenance,
             start_date=datetime.datetime.now()
             - datetime.timedelta(minutes=30),
+            components=[
+                components["Region1"]["type3-4"],
+            ],
         )
         db.session.add(inc2)
         inc3 = Incident(

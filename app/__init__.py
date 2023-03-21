@@ -44,11 +44,11 @@ def create_app(test_config=None):
         # load the test config if passed in
         app.config.from_mapping(test_config)
 
-    if (
-        "SQLALCHEMY_DATABASE_URI" not in app.config
-        and "DATABASE_URI" in app.config
-    ):
-        app.config["SQLALCHEMY_DATABASE_URI"] = app.config["DATABASE_URI"]
+    # if (
+    #     "SQLALCHEMY_DATABASE_URI" not in app.config
+    #     and "DATABASE_URI" in app.config
+    # ):
+    #     app.config["SQLALCHEMY_DATABASE_URI"] = app.config["DATABASE_URI"]
     if "SQLALCHEMY_DATABASE_URI" not in app.config:
         # TODO(gtema): sooner or later this should be dropped
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///example.sqlite"
