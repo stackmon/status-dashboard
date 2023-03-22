@@ -1,0 +1,49 @@
+components:
+  - name: Component11
+    attributes:
+      region: Region1
+      category: Cat1
+  - name: Component12
+    attributes:
+      region: Region1
+      category: Cat1
+  - name: Component13
+    attributes:
+      region: Region1
+      category: Cat1
+  - name: Component21
+    attributes:
+      region: Region1
+      category: Cat2
+  - name: Component22
+    attributes:
+      region: Region1
+      category: Cat2
+  - name: Component23
+    attributes:
+      region: Region1
+      category: Cat2
+  - name: Component31
+    attributes:
+      region: Region1
+      category: Cat3
+  - name: Component32
+    attributes:
+      region: Region1
+      category: Cat3
+  - name: Component33
+    attributes:
+      region: Region2
+      category: Cat3
+  - name: Component31
+    attributes:
+      region: Region2
+      category: Cat4
+  - name: Component32
+    attributes:
+      region: Region2
+      category: Cat4
+  - name: Component33
+    attributes:
+      region: Region2
+      category: Cat4

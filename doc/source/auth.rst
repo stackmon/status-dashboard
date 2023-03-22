@@ -46,6 +46,9 @@ variables should be set to their corresponding values. ISSUER_URL normally
 should be pointing to the tenan on the identity server and
 `{ISSUER_URL}/.well-known/openid-configuration` should be resolvable.
 
+When `SDB_OPENID_REQUIRED_GROUP` variable is set user will be authorized only
+when member of the specified group (for Keycloak i.e. `/status-dashboard`)
+
 Routes
 ------
 
