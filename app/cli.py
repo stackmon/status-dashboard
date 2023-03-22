@@ -28,11 +28,11 @@ def register(app):
     @bootstrap.command()
     def purge():
         """Purge current configuration"""
-        db.session.query(Component).delete()
         db.session.query(ComponentAttribute).delete()
-        db.session.query(Incident).delete()
-        db.session.query(IncidentStatus).delete()
         db.session.query(IncidentComponentRelation).delete()
+        db.session.query(Component).delete()
+        db.session.query(IncidentStatus).delete()
+        db.session.query(Incident).delete()
         db.session.commit()
 
     @bootstrap.command()
