@@ -90,6 +90,35 @@ class Component(db.Model):
             )
         )
 
+    @staticmethod
+    def find_by_name_and_attributes(name, attributes):
+        """Find existing component by name and set of attributes
+
+        Perform lookup and search for all components matching target name. For
+        the results compare their attributes. When there is a full match -
+        return it. Otherwise compare whether target attributes build a subset
+        of existing component.
+
+        :param str name: Component name.
+        :param dict attributes: Attributes as dictionary
+
+        :returns: `Component` entity when found, None otherwise
+        """
+        comps_by_name = Component.query.where(Component.name == name).all()
+        for comp in comps_by_name:
+            comp_attrs = comp.get_attributes_as_dict()
+            if comp_attrs == attributes:
+                # Shortcut - just return
+                return comp
+            if all(
+                    comp_attrs.get(key, None) == val
+                    for key, val in attributes.items()
+            ):
+                # Target attributes build a subset of current attributes -
+                # a pretty good candidate when not much attributes were passed
+                return comp
+        return None
+
 
 class ComponentAttribute(db.Model):
     """Component Attribute model"""
@@ -130,6 +159,7 @@ class ComponentAttribute(db.Model):
 
 class IncidentImpactEnum(enum.Enum):
     """Incident Impact Enum"""
+
     maintenance = "maintenance"
     minor = "minor"
     major = "major"
@@ -138,6 +168,7 @@ class IncidentImpactEnum(enum.Enum):
 
 class Incident(db.Model):
     """Incident model"""
+
     __tablename__ = "incident"
     id = db.Column(db.Integer, primary_key=True, index=True)
     text = db.Column(db.String)
@@ -197,6 +228,7 @@ class Incident(db.Model):
 
 class IncidentStatus(db.Model):
     """Incident Updates"""
+
     id = db.Column(db.Integer, primary_key=True, index=True)
     incident_id = db.Column(
         db.Integer, db.ForeignKey("incident.id"), index=True
@@ -208,12 +240,13 @@ class IncidentStatus(db.Model):
 
 def auth_required(f):
     """Decorator to ensure authorized actions"""
+
     @wraps(f)
     def decorator(*args, **kwargs):
         # ensure the user object is in the session
-        if 'user' not in session:
+        if "user" not in session:
             return make_response(jsonify({"message": "Invalid token!"}), 401)
-        current_user = session.get('user')
+        current_user = session.get("user")
         required_group = current_app.config.get("OPENID_REQUIRED_GROUP")
 
         if required_group:
@@ -221,14 +254,14 @@ def auth_required(f):
                 current_app.logger.info(
                     "Not logging in user %s due to lack of required groups"
                     % current_user.get(
-                        "preferred_username",
-                        current_user.get("name")
+                        "preferred_username", current_user.get("name")
                     )
                 )
                 return make_response(
-                    jsonify(
-                        {"message": "Invalid User privileges!"}), 401)
+                    jsonify({"message": "Invalid User privileges!"}), 401
+                )
 
         # Return the user information attached to the token
         return f(current_user, *args, **kwargs)
+
     return decorator
