@@ -11,6 +11,7 @@
 # under the License.
 #
 import os
+import pathlib
 
 from authlib.integrations.flask_client import OAuth
 
@@ -21,6 +22,8 @@ from flask_caching import Cache
 from flask_migrate import Migrate
 
 from flask_sqlalchemy import SQLAlchemy
+
+import yaml
 
 
 db = SQLAlchemy()
@@ -53,6 +56,11 @@ def create_app(test_config=None):
         # TODO(gtema): sooner or later this should be dropped
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///example.sqlite"
 
+    config_file = pathlib.Path(app.instance_path, 'catalog.yaml')
+    if config_file.exists():
+        with open(config_file, 'r') as fd:
+            app.config['CATALOG'] = yaml.safe_load(fd)
+
     # ensure the instance folder exists
     try:
         os.makedirs(app.instance_path)
@@ -63,10 +71,6 @@ def create_app(test_config=None):
     db.init_app(app)
     migrate.init_app(app, db)
     oauth.init_app(app, cache=cache)
-
-    @app.before_first_request
-    def create_tables():
-        db.create_all()
 
     if (
         "GITHUB_CLIENT_ID" in app.config
@@ -109,4 +113,13 @@ def create_app(test_config=None):
 
     app.register_blueprint(web_bp)
 
+    with app.app_context():
+        db.create_all()
+        if "CATALOG" in app.config:
+            setup_components(db, app.config["CATALOG"])
+
     return app
+
+
+def setup_components(db, catalog):
+    pass
