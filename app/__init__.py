@@ -47,11 +47,11 @@ def create_app(test_config=None):
         # load the test config if passed in
         app.config.from_mapping(test_config)
 
-    # if (
-    #     "SQLALCHEMY_DATABASE_URI" not in app.config
-    #     and "DATABASE_URI" in app.config
-    # ):
-    #     app.config["SQLALCHEMY_DATABASE_URI"] = app.config["DATABASE_URI"]
+    if (
+        "SQLALCHEMY_DATABASE_URI" not in app.config
+        and "DATABASE_URI" in app.config
+    ):
+        app.config["SQLALCHEMY_DATABASE_URI"] = app.config["DATABASE_URI"]
     if "SQLALCHEMY_DATABASE_URI" not in app.config:
         # TODO(gtema): sooner or later this should be dropped
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///example.sqlite"
@@ -114,12 +114,7 @@ def create_app(test_config=None):
     app.register_blueprint(web_bp)
 
     with app.app_context():
+        # Ensure there is some DB when we start the app
         db.create_all()
-        if "CATALOG" in app.config:
-            setup_components(db, app.config["CATALOG"])
 
     return app
-
-
-def setup_components(db, catalog):
-    pass

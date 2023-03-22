@@ -11,14 +11,11 @@
 # under the License.
 #
 
-import datetime
-
 from app import db
 from app.models import Component
 from app.models import ComponentAttribute
 from app.models import Incident
 from app.models import IncidentComponentRelation
-from app.models import IncidentImpactEnum
 from app.models import IncidentStatus
 
 
@@ -42,124 +39,23 @@ def register(app):
     def provision():
         """Fill database with initial data"""
 
-        components = {}
-        for region in ["Region1", "Region2"]:
-            components[region] = dict()
-            for cat in range(1, 10):
-                for srv in range(1, 10):
-                    cat_attr = ComponentAttribute(
-                        name="category",
-                        value=f"Group{cat}"
-                    )
-                    db.session.add(cat_attr)
-                    #
-                    # component attribute category
-                    #
-                    reg_attr = ComponentAttribute(name="region", value=region)
-                    db.session.add(reg_attr)
+        if "CATALOG" not in app.config:
+            return
 
-                    # Service type attribute
-                    type_attr = ComponentAttribute(
-                        name="type",
-                        value=f"type{cat}-{srv}"
-                    )
-                    db.session.add(type_attr)
-
-                    db_srv = Component(
-                        name=f"Component {srv}",
-                        attributes=[
-                            cat_attr,
-                            reg_attr],
-                    )
-                    db.session.add(db_srv)
-                    components[region][f"type{cat}-{srv}"] = db_srv
-        inc1 = Incident(
-            text="Test incident",
-            impact=IncidentImpactEnum.outage,
-            start_date=datetime.datetime.now(),
-            components=[
-                components["Region1"]["type1-2"],
-                components["Region1"]["type2-3"],
-            ],
-        )
-        db.session.add(inc1)
-        inc2 = Incident(
-            text="Test Maintenance",
-            impact=IncidentImpactEnum.maintenance,
-            start_date=datetime.datetime.now()
-            - datetime.timedelta(minutes=30),
-            components=[
-                components["Region1"]["type3-4"],
-            ],
-        )
-        db.session.add(inc2)
-        inc3 = Incident(
-            text="Test Maintenance 2",
-            impact=IncidentImpactEnum.maintenance,
-            start_date=datetime.datetime.now()
-            - datetime.timedelta(minutes=30),
-        )
-        db.session.add(inc3)
-        db.session.add(
-            IncidentStatus(
-                incident=inc2,
-                timestamp=datetime.datetime.now()
-                - datetime.timedelta(minutes=5),
-                text="We have started working",
-                status="started",
-            )
-        )
-        db.session.add(
-            IncidentStatus(
-                incident=inc2,
-                timestamp=datetime.datetime.now(),
-                text="We have finished upgrade. Watching",
-                status="watching",
-            )
-        )
-        db.session.add(
-            IncidentStatus(
-                incident=inc3,
-                timestamp=datetime.datetime.now()
-                - datetime.timedelta(minutes=5),
-                text="We have started working",
-                status="started",
-            )
-        )
-        db.session.add(
-            IncidentStatus(
-                incident=inc3,
-                timestamp=datetime.datetime.now(),
-                text="We have finished upgrade. Watching",
-                status="watching",
-            )
-        )
-        db.session.add(
-            IncidentStatus(
-                incident=inc1,
-                timestamp=datetime.datetime.now()
-                - datetime.timedelta(minutes=30),
-                text="We are investigating issue reports",
-                status="investigating",
-            )
-        )
-        db.session.add(
-            IncidentStatus(
-                incident=inc1,
-                timestamp=datetime.datetime.now()
-                - datetime.timedelta(minutes=25),
-                text="We have identified an issue and working on resolution",
-                status="fixing",
-            )
-        )
-        db.session.add(
-            IncidentStatus(
-                incident=inc1,
-                timestamp=datetime.datetime.now()
-                - datetime.timedelta(minutes=20),
-                text="Fix is deployed. Component is recovering",
-                status="fix_deployed",
-            )
-        )
+        for target_component in app.config["CATALOG"]['components']:
+            target_attrs = target_component.get("attributes", {})
+            if not Component.find_by_name_and_attributes(
+                target_component["name"], target_attrs
+            ):
+                db_attrs = []
+                for (k, v) in target_attrs.items():
+                    db_attr = ComponentAttribute(name=k, value=v)
+                    db.session.add(db_attr)
+                    db_attrs.append(db_attr)
+                db_comp = Component(
+                    name=target_component["name"],
+                    attributes=db_attrs,
+                )
+                db.session.add(db_comp)
 
         db.session.commit()

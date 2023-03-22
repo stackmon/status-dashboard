@@ -111,8 +111,8 @@ class Component(db.Model):
                 # Shortcut - just return
                 return comp
             if all(
-                    comp_attrs.get(key, None) == val
-                    for key, val in attributes.items()
+                comp_attrs.get(key, None) == val
+                for key, val in attributes.items()
             ):
                 # Target attributes build a subset of current attributes -
                 # a pretty good candidate when not much attributes were passed

@@ -91,3 +91,31 @@ classDiagram
 ```
 
 A real data model is however represented in https://github.com/stackmon/status-dashboard/blob/main/app/models.py
+
+# Developing
+
+Flask requires environment variable `FLASK_APP` to be set to
+`status-dashboard.py` or this variable can be passed to every flask command
+invocation.
+
+## Environment
+
+In a regular case it is recommended to rely on tox for managing all virtual environments.
+
+`tox -e py3 --notest` will create new python virtual environment and install
+all project dependencies.
+
+Once environment is prepared it is required to source into it `source
+.tox/py3/bin/activate` before doing any further steps.
+
+## DB
+
+For the development builtin sqlite database is absolutely sufficient.
+
+`flask db upgrade` command with install default DB schema.
+
+## Data
+
+Test catalog data is placed in the `app/tests/config/catalog.yaml`. This file
+should be copied into the instance directory (`cwd/instance`) and command
+`flask bootstrap provision` should be executed. 
