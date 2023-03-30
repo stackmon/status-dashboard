@@ -13,6 +13,7 @@
 
 from marshmallow import Schema, fields, validate
 
+
 class ComponentSearchQueryArgs(Schema):
     name = fields.String()
     attribute_name = fields.String()

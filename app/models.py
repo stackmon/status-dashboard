@@ -22,8 +22,6 @@ from flask import jsonify
 from flask import make_response
 from flask import session
 
-#from app import db
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Enum
 from sqlalchemy import and_
 from sqlalchemy import select
@@ -211,9 +209,9 @@ class Incident(db.Model):
         for component in self.components:
             components.append(
                 {
-                "component_id": component.id,
-                "component_name": component.name,
-                "component_attributes": component.get_attributes_as_dict(),
+                    "component_id": component.id,
+                    "component_name": component.name,
+                    "component_attributes": component.get_attributes_as_dict(),
                 }
             )
         return components
@@ -234,9 +232,9 @@ class Incident(db.Model):
                 Incident.impact == "maintenance"
             )
         return Incident.query.filter(
-                Incident.end_date.is_(None),
-                Incident.impact != "maintenance"
-            )
+            Incident.end_date.is_(None),
+            Incident.impact != "maintenance"
+        )
 
     @staticmethod
     def get_open_for_component(component_id):
@@ -276,6 +274,7 @@ class Incident(db.Model):
             "components": self.get_components_as_list(),
             "impact": self.impact.value,
         }
+
 
 class IncidentStatus(db.Model):
     """Incident Updates"""

@@ -10,22 +10,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-
-from flask import Response, request, jsonify
-from flask.views import MethodView
-from flask_smorest import abort
 from datetime import datetime
 
-from app.models import db
-from app import oauth
-from app.models import Component
-from app.models import ComponentAttribute
-from app.models import Incident
-from app.models import auth_required
 from app.api import bp
+from app.models import Component
+
+from app.models import Incident
+from app.models import db
 from app.api.schemas.components import ComponentSchema
 from app.api.schemas.components import ComponentSearchQueryArgs
 from app.api.schemas.components import IncidentPostArgs
+
+from flask.views import MethodView
+
+from flask_smorest import abort
 
 
 @bp.route("/api/v1/components_status", methods=["GET", "POST"])
@@ -37,13 +35,15 @@ class ApiComponentsStatus(MethodView):
         attribute_name = search_args.get("attribute_name", None)
         attribute_value = search_args.get("attribute_value", None)
         attribute = {attribute_name: attribute_value}
-        if attribute_name != None and attribute_value != None:
-            target_component = Component.find_by_name_and_attributes(name, attribute)
+        if attribute_name is not None and attribute_value is not None:
+            target_component = Component.find_by_name_and_attributes(
+                name,
+                attribute
+            )
             if target_component is None:
-                abort (404, message="Component does not exist")
+                abort(404, message="Component does not exist")
             return [target_component]
         return Component.query.filter(Component.name.startswith(name)).all()
-
 
     @bp.arguments(ComponentSearchQueryArgs, location="query")
     @bp.arguments(IncidentPostArgs, location="form")
@@ -55,17 +55,20 @@ class ApiComponentsStatus(MethodView):
         attribute = {attribute_name: attribute_value}
         print(name)
         print(attribute)
-        if name != None and attribute_name != None and attribute_value != None:
-            target_component = Component.find_by_name_and_attributes(name, attribute)
+        if all(v is not None for v in [name, attribute_name, attribute_value]):
+            target_component = Component.find_by_name_and_attributes(
+                name,
+                attribute
+            )
             if target_component is None:
-                abort (404, message="Component does not exist")
+                abort(404, message="Component does not exist")
             incident = Incident(
-                text = form_args.get("text", None),
-                impact = form_args.get("impact", None),
-                start_date = datetime.now(),
-                components = [target_component],
+                text=form_args.get("text", None),
+                impact=form_args.get("impact", None),
+                start_date=datetime.now(),
+                components=[target_component],
             )
             db.session.add(incident)
             db.session.commit()
             return [target_component]
-        abort (404, message="Wrong arguments passed to")
+        abort(404, message="Wrong arguments passed to")

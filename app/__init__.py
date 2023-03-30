@@ -37,10 +37,8 @@ cache = Cache(config={"CACHE_TYPE": "SimpleCache"})
 
 
 def create_app(test_config=None):
-
     """Create and configure an instance of the Flask application."""
-    app = Flask(__name__, instance_relative_config=True)
-    
+    app = Flask(__name__, instance_relative_config=True)    
     app.config.from_object(DefaultConfiguration)
 
     api = Api(app)
@@ -118,11 +116,9 @@ def create_app(test_config=None):
 
     from app.web import bp as web_bp
     from app.api import bp as api_bp
-    #from app.api.routes import initialize_routes
 
     app.register_blueprint(web_bp)
     app.register_blueprint(api_bp)
-    #initialize_routes(api)
 
     with app.app_context():
         # Ensure there is some DB when we start the app
