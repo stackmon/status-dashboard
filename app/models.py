@@ -27,7 +27,6 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Enum
 from sqlalchemy import and_
 from sqlalchemy import select
-from app import db
 
 
 class IncidentComponentRelation(db.Model):
@@ -226,6 +225,18 @@ class Incident(db.Model):
     @staticmethod
     def closed():
         return Incident.query.filter(Incident.end_date.is_not(None))
+
+    @staticmethod
+    def get_active(incident_type="maintenance"):
+        if incident_type == "maintenance":
+            return Incident.query.filter(
+                Incident.end_date.is_(None),
+                Incident.impact == "maintenance"
+            )
+        return Incident.query.filter(
+                Incident.end_date.is_(None),
+                Incident.impact != "maintenance"
+            )
 
     @staticmethod
     def get_open_for_component(component_id):

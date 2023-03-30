@@ -7,7 +7,7 @@ url = "http://127.0.0.1:5000/api/v1/incidents"
 data = {
     "text": "Test incident API",
     "impact": "maintenance",
-     "components": ["1,22"]
+     "components": ["1,5"]
 }
 headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 

@@ -17,6 +17,7 @@ from flask_restful import Resource, reqparse
 from app import db
 from app.models import Component
 from app.models import Incident
+from app.models import IncidentImpactEnum
 
 
 def create_incident_parser():
@@ -96,6 +97,20 @@ class ApiIncidents(Resource):
             return {"message": f"Incident: {incident} has been posted"}, 200
         except ReqparseError as error:
             print(error)
+
+class ApiActiveMaintenance(Resource):
+    def get(self):
+        if request.method == "GET":
+            active_maintenance = Incident.get_active("maintenance")
+            return jsonify([maintenance.serialize for maintenance in active_maintenance])
+        return jsonify(message="Method not allowed"), 405
+
+class ApiActiveIncident(Resource):
+    def get(self):
+        if request.method == "GET":
+            active_incident = Incident.get_active("incident")
+            return jsonify([incident.serialize for incident in active_incident])
+        return jsonify(message="Method not allowed"), 405
 
 class ApiIncident(Resource):
     def get(self, incident_id):
