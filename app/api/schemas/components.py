@@ -11,13 +11,44 @@
 # under the License.
 #
 
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, validate
+
+class ComponentSearchQueryArgs(Schema):
+    name = fields.String()
+    attribute_name = fields.String()
+    attribute_value = fields.String()
+
+
+class IncidentPostArgs(Schema):
+    text = fields.String(required=False)
+    impact = fields.String(
+        required=True,
+        validate=validate.OneOf(
+            [
+                "maintenance",
+                "minor",
+                "major",
+                "outage"
+            ]
+        )
+    )
+
 
 class ComponentAttributeSchema(Schema):
     name = fields.String(required=True)
     value = fields.String(required=True)
 
+
+class IncidentSchema(Schema):
+    id = fields.Integer(dump_only=True)
+    text = fields.String(required=True)
+    impact = fields.String(required=True)
+    start_date = fields.Date(required=True)
+    end_date = fields.Date()
+
+
 class ComponentSchema(Schema):
     id = fields.Integer(dump_only=True)
     name = fields.String(required=True)
     attributes = fields.List(fields.Nested(ComponentAttributeSchema))
+    incidents = fields.List(fields.Nested(IncidentSchema))
