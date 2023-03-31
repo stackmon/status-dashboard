@@ -90,11 +90,20 @@ nav.navbar {
     background-color: var(--bs-red);
     border: 2px solid var(--bs-red);
 }
+.alert-outage .alert-link {
+    color: var(--bs-dark)
+}
 .alert-major {
     border: 2px solid var(--bs-orange);
 }
+.alert-major .alert-link {
+    color: var(--bs-orange)
+}
 .alert-minor {
-    border: 2px solid var(--bs-yellow);
+    border: 2px solid var(--bs-cyan);
+}
+.alert-minor .alert-link {
+    color: var(--bs-cyan)
 }
 .alert-maintenance {
     border: 2px solid var(--bs-blue);

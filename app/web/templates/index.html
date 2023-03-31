@@ -2,9 +2,50 @@
 
 {% block content %}
 <div class="container">
+  {% set open_incidents = incidents.open().all() %}
+  {% if open_incidents | length == 0 %}
+    <div class="alert alert-success" role="alert">
+      All systems running
+    </div>
+  {% else %}
+    {% for incident in open_incidents | sort(attribute='start_date', reverse = True) %}
+      <div class="alert alert-{{incident.impact.value}}" role="alert">
+          <h4 class="alert-heading">
+              <a class="alert-link"
+                  href="incidents/{{incident.id}}">{{incident.impact.value|capitalize}}: {{ incident.text }}</a>
+        </h4>
+        <h6>Affected Regions: {{
+            incident.get_attributes_by_key('region')
+            | join(', ')
+            }}</h6>
+        <h6>Affected Services: {{
+            incident.components.all()
+            | map(attribute='name')
+            | join(', ')
+            }}</h6>
+        <small>Start: {{ incident.start_date.strftime('%Y-%m-%dT%H:%M') }}</small>
+        <hr/>
+        <div class="container text-left">
+        {% for update in incident.updates %}
+          <div class="row">
+              <div class="col-md-2">
+                  <h6>{{ update.status }}</h6>
+                  <small>{{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+              </div>
+              <div class="col-md-10">
+                  {{ update.text }}
+              </div>
+              <hr/>
+           </div>
+        {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+<div class="container">
   {% set regions = component_attributes.get_unique_values('region') %}
   {% set all_components_with_incidents = components.query_all_with_active_incidents().all() %}
-  {% set open_incidents = incidents.open().first() %}
   <!-- Nav tabs -->
   <ul class="nav nav-tabs justify-content-center" id="myTab" role="tablist">
     {% for region in regions %}

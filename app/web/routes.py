@@ -70,6 +70,7 @@ def new_incident(current_user):
         )
         db.session.add(incident)
         db.session.commit()
+        return redirect("/")
     return render_template(
         "create_incident.html", title="Open Incident", form=form
     )
@@ -100,7 +101,7 @@ def post_incident_update(incident_id):
         )
         db.session.add(update)
         db.session.commit()
-    return redirect(url_for("web.incident", id=incident_id))
+    return redirect(url_for("web.incident", incident_id=incident_id))
 
 
 @bp.route("/login/<name>")

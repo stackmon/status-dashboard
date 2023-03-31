@@ -4,11 +4,11 @@
 <div class="container">
 
   <h4>{{ incident.text }}</h4>
-  <h6 class="alert-regions">Affected Regions: {{
+  <h6>Affected Regions: {{
       incident.get_attributes_by_key('region')
       | join(', ')
       }}</h6>
-  <h6 class="alert-services">Affected Services: {{
+  <h6>Affected Services: {{
       incident.components.all()
       | map(attribute='name')
       | unique
