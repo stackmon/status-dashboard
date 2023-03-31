@@ -19,7 +19,8 @@ class DefaultConfiguration:
     OPENAPI_URL_PREFIX = "/"
     OPENAPI_JSON_PATH = "api-spec.json"
     OPENAPI_REDOC_PATH = "/redoc"
-    OPENAPI_REDOC_URL = "https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"
+    OPENAPI_REDOC_URL = "https://cdn.jsdelivr.net/npm/redoc@next\
+                        /bundles/redoc.standalone.js"
 
     SECRET_KEY = "dev"
     SQLALCHEMY_ECHO = True

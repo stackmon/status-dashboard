@@ -13,6 +13,8 @@
 import os
 import pathlib
 
+from app.default_settings import DefaultConfiguration
+
 from authlib.integrations.flask_client import OAuth
 
 from flask import Flask
@@ -21,12 +23,11 @@ from flask_caching import Cache
 
 from flask_migrate import Migrate
 
+from flask_smorest import Api
+
 from flask_sqlalchemy import SQLAlchemy
 
 import yaml
-#from flask_restful import Api
-from flask_smorest import Api
-from app.default_settings import DefaultConfiguration
 
 
 db = SQLAlchemy()
@@ -35,13 +36,12 @@ oauth = OAuth()
 cache = Cache(config={"CACHE_TYPE": "SimpleCache"})
 
 
-
 def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
-    app = Flask(__name__, instance_relative_config=True)    
+    app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(DefaultConfiguration)
 
-    api = Api(app)
+    api = Api(app) # noqa
 
     app.config.from_prefixed_env(prefix="SDB")
 

@@ -13,13 +13,12 @@
 from datetime import datetime
 
 from app.api import bp
-from app.models import Component
-
-from app.models import Incident
-from app.models import db
 from app.api.schemas.components import ComponentSchema
 from app.api.schemas.components import ComponentSearchQueryArgs
 from app.api.schemas.components import IncidentPostArgs
+from app.models import Component
+from app.models import Incident
+from app.models import db
 
 from flask.views import MethodView
 
