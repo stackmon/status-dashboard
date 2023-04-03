@@ -41,7 +41,7 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(DefaultConfiguration)
 
-    api = Api(app) # noqa
+    api = Api(app)  # noqa
 
     app.config.from_prefixed_env(prefix="SDB")
 
@@ -61,10 +61,10 @@ def create_app(test_config=None):
         # TODO(gtema): sooner or later this should be dropped
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///example.sqlite"
 
-    config_file = pathlib.Path(app.instance_path, 'catalog.yaml')
+    config_file = pathlib.Path(app.instance_path, "catalog.yaml")
     if config_file.exists():
-        with open(config_file, 'r') as fd:
-            app.config['CATALOG'] = yaml.safe_load(fd)
+        with open(config_file, "r") as fd:
+            app.config["CATALOG"] = yaml.safe_load(fd)
 
     # ensure the instance folder exists
     try:

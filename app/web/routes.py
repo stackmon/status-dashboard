@@ -10,11 +10,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
+from datetime import datetime
 
 from app import oauth
 from app.models import Component
 from app.models import ComponentAttribute
 from app.models import Incident
+from app.models import IncidentImpactEnum
 from app.models import IncidentStatus
 from app.models import auth_required
 from app.models import db
@@ -76,32 +78,40 @@ def new_incident(current_user):
     )
 
 
-@bp.route("/incidents/<incident_id>", methods=["GET"])
+@bp.route("/incidents/<incident_id>", methods=["GET", "POST"])
 def incident(incident_id):
-    """Get incident by ID"""
+    """Manage incident by ID"""
     incident = Incident.query.filter_by(id=incident_id).first_or_404()
     form = None
-    if 'user' in session:
+    if "user" in session:
         form = IncidentUpdateForm(id)
+        # Update_status will contain choices based on the incident_type
+        form.update_status.choices = [
+            (k, v)
+            for (k, v) in current_app.config.get(
+                "MAINTENANCE_STATUSES"
+                if incident.impact == IncidentImpactEnum.maintenance
+                else "INCIDENT_STATUSES",
+                {},
+            ).items()
+        ]
+
+        if form.validate_on_submit():
+            new_status = form.update_status.data
+            update = IncidentStatus(
+                incident_id=incident_id,
+                text=form.update_text.data,
+                status=new_status,
+            )
+            db.session.add(update)
+            if new_status in ["completed", "resolved"]:
+                # Incident is completed
+                incident.end_date = datetime.now()
+            db.session.commit()
+
     return render_template(
         "incident.html", title="Incident", incident=incident, form=form
     )
-
-
-@bp.route("/incidents/<incident_id>/update", methods=["POST"])
-@auth_required
-def post_incident_update(incident_id):
-    """Post update to the Incident"""
-    form = IncidentUpdateForm(incident_id)
-    if form.validate_on_submit():
-        update = IncidentStatus(
-            incident_id=incident_id,
-            text=form.update_text.data,
-            status=form.update_status.data,
-        )
-        db.session.add(update)
-        db.session.commit()
-    return redirect(url_for("web.incident", incident_id=incident_id))
 
 
 @bp.route("/login/<name>")

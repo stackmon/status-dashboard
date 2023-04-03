@@ -11,6 +11,7 @@
 # under the License.
 #
 
+
 class DefaultConfiguration:
     API_TITLE = "Status Dashboard API"
     API_VERSION = "v1"
@@ -20,3 +21,16 @@ class DefaultConfiguration:
     SECRET_KEY = "dev"
     SQLALCHEMY_ECHO = False
     JSON_SORT_KEYS = True
+
+    MAINTENANCE_STATUSES = {
+        "scheduled": "Maintenance scheduled",
+        "in progress": "Maintenance is in progress",
+        "completed": "Maintenance is successfully completed",
+    }
+
+    INCIDENT_STATUSES = {
+        "analyzing": "Analyzing incident (problem not known yet)",
+        "fixing": "Fixing incident(problem identified, working on fix)",
+        "observing": "Observing fix (fix deployed, watching recovery)",
+        "resolved": "Incident Resolved (service is fully available. Done)",
+    }

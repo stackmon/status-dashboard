@@ -42,7 +42,7 @@ def register(app):
         if "CATALOG" not in app.config:
             return
 
-        for target_component in app.config["CATALOG"]['components']:
+        for target_component in app.config["CATALOG"]["components"]:
             target_attrs = target_component.get("attributes", {})
             if not Component.find_by_name_and_attributes(
                 target_component["name"], target_attrs

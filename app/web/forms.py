@@ -17,41 +17,50 @@ from wtforms import DateTimeField
 from wtforms import SelectField
 from wtforms import SubmitField
 from wtforms import TextAreaField
-from wtforms.validators import DataRequired
-from wtforms.validators import Length
+from wtforms import validators
 
 
 class IncidentUpdateForm(FlaskForm):
     update_text = TextAreaField(
-        "Update Message", validators=[DataRequired(), Length(min=10, max=200)]
-    )
-    update_status = SelectField(
-        "Update Status",
-        choices=[
-            ("scheduled", "Maintenance scheduled"),
-            ("in progress", "Maintenance is in progress"),
-            ("completed", "Maintenance is successfully completed"),
-            ("analyzing", "Analyzing incident (problem not known yet"),
-            ("fixing", "Fixing incident(problem identified, working on fix)"),
-            ("observing", "Observing fix (fix deployed, watching recovery)"),
-            (
-                "resolved",
-                "Incident Resolved (service is fully available. Done)",
-            ),
+        "Update Message",
+        validators=[
+            validators.DataRequired(),
+            validators.Length(min=10, max=200),
         ],
     )
-    next_update = DateTimeField("Next Update by", validators=[DataRequired()])
+    update_status = SelectField("Update Status")
+    next_update = DateTimeField("Next Update by")
     submit = SubmitField("Submit")
 
     def __init__(self, incident_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.incident_id = incident_id
 
+    def validate_next_update(self, field):
+        if (
+            self.update_status.data not in ["resolved", "completed"]
+            and field.data is None
+        ):
+            raise validators.ValidationError(
+                "Next update field is mandatory unless " "incident is resolved"
+            )
+        elif (
+            self.update_status.data in ["resolved", "completed"]
+            and field.data is None
+        ):
+            # Making field optional requres dropping "Not a valid datetime
+            # value." error as well
+            field.errors[:] = []
+            raise validators.StopValidation()
+
 
 class IncidentForm(FlaskForm):
     incident_text = TextAreaField(
         "Incident summary",
-        validators=[DataRequired(), Length(min=10, max=200)],
+        validators=[
+            validators.DataRequired(),
+            validators.Length(min=10, max=200),
+        ],
     )
     incident_impact = SelectField(
         "Incident Impact",
@@ -63,5 +72,7 @@ class IncidentForm(FlaskForm):
         ],
     )
     incident_components = SelectField("Affected services")
-    incident_start = DateTimeField("Start", validators=[DataRequired()])
+    incident_start = DateTimeField(
+        "Start", validators=[validators.DataRequired()]
+    )
     submit = SubmitField("Submit")

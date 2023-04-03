@@ -43,14 +43,7 @@ class ComponentSchema(Schema):
 class ComponentStatusArgsSchema(Schema):
     impact = fields.String(
         required=True,
-        validate=validate.OneOf(
-            [
-                "maintenance",
-                "minor",
-                "major",
-                "outage"
-            ]
-        )
+        validate=validate.OneOf(["maintenance", "minor", "major", "outage"]),
     )
     name = fields.String(required=True)
     attributes = fields.List(fields.Nested(ComponentAttributeSchema))

@@ -212,12 +212,12 @@ class Incident(db.Model):
                 Incident.start_date <= datetime.datetime.now(),
                 # not closed
                 Incident.end_date.is_(None),
-                Incident.impact == "maintenance"
+                Incident.impact == "maintenance",
             )
         return Incident.query.filter(
             Incident.start_date <= datetime.datetime.now(),
             Incident.end_date.is_(None),
-            Incident.impact != "maintenance"
+            Incident.impact != "maintenance",
         )
 
     @staticmethod
