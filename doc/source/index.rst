@@ -14,4 +14,5 @@ Status Dashboard for any possible usecase.
    config
    deployment
    auth
+   api
    customizing

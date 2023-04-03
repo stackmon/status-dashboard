@@ -11,7 +11,6 @@
 # under the License.
 #
 
-
 class DefaultConfiguration:
     API_TITLE = "Status Dashboard API"
     API_VERSION = "v1"
@@ -19,5 +18,5 @@ class DefaultConfiguration:
     OPENAPI_URL_PREFIX = "/"
     OPENAPI_JSON_PATH = "api-spec.json"
     SECRET_KEY = "dev"
-    SQLALCHEMY_ECHO = True
+    SQLALCHEMY_ECHO = False
     JSON_SORT_KEYS = True

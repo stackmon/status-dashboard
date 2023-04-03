@@ -118,7 +118,7 @@ def create_app(test_config=None):
     from app.api import bp as api_bp
 
     app.register_blueprint(web_bp)
-    app.register_blueprint(api_bp)
+    app.register_blueprint(api_bp, url_prefix="/api")
 
     with app.app_context():
         # Ensure there is some DB when we start the app

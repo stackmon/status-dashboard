@@ -20,21 +20,6 @@ class ComponentSearchQueryArgs(Schema):
     attribute_value = fields.String()
 
 
-class IncidentPostArgs(Schema):
-    text = fields.String(required=False)
-    impact = fields.String(
-        required=True,
-        validate=validate.OneOf(
-            [
-                "maintenance",
-                "minor",
-                "major",
-                "outage"
-            ]
-        )
-    )
-
-
 class ComponentAttributeSchema(Schema):
     name = fields.String(required=True)
     value = fields.String(required=True)
@@ -53,3 +38,19 @@ class ComponentSchema(Schema):
     name = fields.String(required=True)
     attributes = fields.List(fields.Nested(ComponentAttributeSchema))
     incidents = fields.List(fields.Nested(IncidentSchema))
+
+
+class ComponentStatusArgsSchema(Schema):
+    impact = fields.String(
+        required=True,
+        validate=validate.OneOf(
+            [
+                "maintenance",
+                "minor",
+                "major",
+                "outage"
+            ]
+        )
+    )
+    name = fields.String(required=True)
+    attributes = fields.List(fields.Nested(ComponentAttributeSchema))

@@ -200,13 +200,22 @@ class Incident(db.Model):
         return Incident.query.filter(Incident.end_date.is_not(None))
 
     @staticmethod
-    def get_active(incident_type="maintenance"):
-        if incident_type == "maintenance":
+    def get_active(impact=None):
+        """Return active incident
+
+        :param str impact: Query for incident of the specific impact type
+        :returns: `Incident`
+        """
+        if impact == "maintenance":
             return Incident.query.filter(
+                # already started
+                Incident.start_date <= datetime.datetime.now(),
+                # not closed
                 Incident.end_date.is_(None),
                 Incident.impact == "maintenance"
             )
         return Incident.query.filter(
+            Incident.start_date <= datetime.datetime.now(),
             Incident.end_date.is_(None),
             Incident.impact != "maintenance"
         )
