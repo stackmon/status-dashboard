@@ -42,8 +42,7 @@ class ApiComponentStatus(MethodView):
         attribute = {attribute_name: attribute_value}
         if attribute_name is not None and attribute_value is not None:
             target_component = Component.find_by_name_and_attributes(
-                name,
-                attribute
+                name, attribute
             )
             if target_component is None:
                 abort(404, message="Component does not exist")
@@ -69,11 +68,10 @@ class ApiComponentStatus(MethodView):
         impact = data.get("impact", "minor")
         attributes = dict()
         # Map attributes from {name:k, value:v} into k:v
-        for attr in data.get('attributes', []):
-            attributes[attr.get('name')] = attr.get('value')
+        for attr in data.get("attributes", []):
+            attributes[attr.get("name")] = attr.get("value")
         target_component = Component.find_by_name_and_attributes(
-            name,
-            attributes
+            name, attributes
         )
         if not target_component:
             abort(409, message="Component not found")
@@ -102,7 +100,7 @@ class ApiComponentStatus(MethodView):
                 return incident
             else:
                 # For the component incident is already open - do nothing
-                current_app.logging.debug(
+                current_app.logger.debug(
                     "Active incident for {component} - not opening new "
                     "incident"
                 )
@@ -114,7 +112,7 @@ class ApiComponentStatus(MethodView):
                 text=f"{impact} Incident",
                 impact=impact,
                 start_date=datetime.now(),
-                components=[target_component]
+                components=[target_component],
             )
             db.session.add(new_incident)
             db.session.commit()

@@ -38,27 +38,41 @@
 
   {% if form %}
     <div class="incident-update-form mt-4">
-      <form action="/incidents/{{incident.id}}/update" method="POST" novalidate>
+      <form action="/incidents/{{incident.id}}" method="POST" novalidate>
       {{ form.hidden_tag() }}
       <div class="mb-3">
         <label for="{{form.update_text.id}}" class="form-label">{{form.update_text.label}}</label>
-        <textarea class="form-control" 
+        <textarea class="form-control
+                         {% if form.update_text.errors %}is-invalid{% endif %}
+                         " 
                id="{{form.update_text.id}}"
                name="{{form.update_text.name}}"
                rows=3
                aria-describedby="updateTextHelp"></textarea>
          <div id="updateTextHelp" class="form-text">Please enter update message
         here.</div>
+        {% if form.update_text.errors %}
+        <div class="invalid-feedback">
+          <ul class="errors">
+            {% for error in form.update_text.errors %}
+               <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
       </div>
 
       <div class="mb-3">
         <label for="{{form.update_status.id}}" class="form-label">{{form.update_status.label}}</label>
         <select 
-            class="form-select form-select-sm mb-3"
+            class="form-select form-select-sm mb-3
+                   {% if form.update_status.errors %}is-invalid{% endif %}
+                    "
             aria-label=".form-select-sm" 
             id="{{form.update_status.id}}"
             name="{{form.update_status.name}}">
-          <option selected>Choose...</option>
+          <option>Choose...</option>
           {% for (k, v) in form.update_status.choices %}
           <option value="{{k}}">{{v}}</option>
           {% endfor %}
@@ -66,18 +80,38 @@
 
         <div id="updateStatusHelp" class="form-text">Please enter update status
         here.</div>
+        {% if form.update_status.errors %}
+        <div class="invalid-feedback">
+          <ul class="errors">
+            {% for error in form.update_status.errors %}
+               <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
 
       </div>
 
       <div class=mb-3">
         <label for="{{form.next_update.id}}" class="form-label">{{form.next_update.label}}</label>
-        <input class="form-control" type="datetime"
+        <input class="form-control
+                      {% if form.next_update.errors %}is-invalid{% endif %}
+                      " type="datetime"
                id="{{form.next_update.id}}"
                name="{{form.next_update.name}}"
                aria-describedby="nextUpdateHelp"
                placeholder="2023-01-01 12:34:56"/>
          <div id="nextUpdateHelp" class="form-text">Next update is expected by
            (%Y-%m-%d %H:%M:%S).</div>
+         {% if form.next_update.errors %}
+         <div class="invalid-feedback">
+           <ul class="errors">
+           {% for error in form.next_update.errors %}
+              <li>{{ error }}</li>
+           {% endfor %}
+           </ul>
+         </div>
+         {% endif %}
       </div>
 
       <button type="submit" class="btn btn-primary">Submit</button>
