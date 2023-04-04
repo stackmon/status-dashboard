@@ -12,6 +12,7 @@
 #
 from datetime import datetime
 
+from app.api import authorization
 from app.api import bp
 from app.api.schemas.components import ComponentSchema
 from app.api.schemas.components import ComponentSearchQueryArgs
@@ -25,6 +26,8 @@ from flask import current_app
 from flask.views import MethodView
 
 from flask_smorest import abort
+
+auth = authorization.auth
 
 
 @bp.route("/v1/component_status", methods=["GET", "POST"])
@@ -50,6 +53,7 @@ class ApiComponentStatus(MethodView):
         return Component.query.filter(Component.name.startswith(name)).all()
 
     @bp.arguments(ComponentStatusArgsSchema)
+    @auth.login_required
     @bp.response(201, IncidentSchema)
     def post(self, data):
         """Update component status
