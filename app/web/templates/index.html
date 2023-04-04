@@ -1,6 +1,19 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class=container>
+    {% for message in messages %}
+      <div class="alert alert-danger" role="alert">
+      {{ message }}
+      </div>
+    {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
 <div class="container">
   {% set open_incidents = incidents.get_all_active() %}
   {% if open_incidents | length == 0 %}

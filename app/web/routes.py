@@ -25,6 +25,7 @@ from app.web.forms import IncidentUpdateForm
 
 from flask import abort
 from flask import current_app
+from flask import flash
 from flask import redirect
 from flask import render_template
 from flask import session
@@ -147,6 +148,10 @@ def auth_callback(name):
     if required_group:
         if required_group not in user["groups"]:
             current_app.logger.info(
+                "Not logging in user %s due to lack of required groups"
+                % user.get("preferred_username", user.get("name"))
+            )
+            flash(
                 "Not logging in user %s due to lack of required groups"
                 % user.get("preferred_username", user.get("name"))
             )
