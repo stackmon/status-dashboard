@@ -109,6 +109,10 @@ nav.navbar {
     border: 2px solid var(--bs-blue);
 }
 
+.alert small {
+    font-color: var(--bs-text-secondary);
+}
+
 .bi {
     font-size: 1rem;
 }

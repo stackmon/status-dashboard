@@ -11,7 +11,8 @@
 # under the License.
 #
 
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema
+from marshmallow import fields
 
 
 class ComponentSearchQueryArgs(Schema):
@@ -28,7 +29,7 @@ class ComponentAttributeSchema(Schema):
 class IncidentSchema(Schema):
     id = fields.Integer(dump_only=True)
     text = fields.String(required=True)
-    impact = fields.String(required=True)
+    impact = fields.Integer(required=True)
     start_date = fields.Date(required=True)
     end_date = fields.Date()
 
@@ -41,9 +42,6 @@ class ComponentSchema(Schema):
 
 
 class ComponentStatusArgsSchema(Schema):
-    impact = fields.String(
-        required=True,
-        validate=validate.OneOf(["maintenance", "minor", "major", "outage"]),
-    )
+    impact = fields.Integer(required=True)
     name = fields.String(required=True)
     attributes = fields.List(fields.Nested(ComponentAttributeSchema))

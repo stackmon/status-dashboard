@@ -16,7 +16,6 @@ from app import oauth
 from app.models import Component
 from app.models import ComponentAttribute
 from app.models import Incident
-from app.models import IncidentImpactEnum
 from app.models import IncidentStatus
 from app.models import auth_required
 from app.models import db
@@ -52,6 +51,10 @@ def new_incident(current_user):
     all_components = Component.query.order_by(Component.name).all()
     form = IncidentForm()
     form.incident_components.choices = [(c.id, c) for c in all_components]
+    form.incident_impact.choices = [
+        (v.value, v.string)
+        for (_, v) in current_app.config["INCIDENT_IMPACTS"].items()
+    ]
 
     if form.validate_on_submit():
         selected_components = [
@@ -64,13 +67,13 @@ def new_incident(current_user):
             if comp.id in selected_components:
                 incident_components.append(comp)
 
-        incident = Incident(
+        new_incident = Incident(
             text=form.incident_text.data,
             impact=form.incident_impact.data,
             start_date=form.incident_start.data,
             components=incident_components,
         )
-        db.session.add(incident)
+        db.session.add(new_incident)
         db.session.commit()
         return redirect("/")
     return render_template(
@@ -90,7 +93,7 @@ def incident(incident_id):
             (k, v)
             for (k, v) in current_app.config.get(
                 "MAINTENANCE_STATUSES"
-                if incident.impact == IncidentImpactEnum.maintenance
+                if incident.impact == 0
                 else "INCIDENT_STATUSES",
                 {},
             ).items()
