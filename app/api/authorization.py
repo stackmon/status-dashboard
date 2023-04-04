@@ -12,9 +12,11 @@
 #
 from functools import wraps
 
-from app.default_settings import DefaultConfiguration
+from flask import current_app
 
 from flask_httpauth import HTTPTokenAuth
+
+import jwt
 
 
 class ApiHTTPTokenAuth(HTTPTokenAuth):
@@ -40,10 +42,17 @@ class ApiHTTPTokenAuth(HTTPTokenAuth):
 
 auth = ApiHTTPTokenAuth(scheme="Bearer")
 
-tokens = DefaultConfiguration.API_SECRETS
-
 
 @auth.verify_token
 def verify_token(token):
-    if token in tokens:
-        return tokens[token]
+    secret_key = current_app.config["SECRET_KEY"]
+    api_payload_key = current_app.config["API_PAYLOAD_KEY"]
+    try:
+        data = jwt.decode(token, secret_key,
+                          algorithms=["HS256"])
+    except:     # noqa:E722
+        return False
+    if api_payload_key in data:
+        current_app.logger.debug("decoded token contains API payload key")
+        return data[api_payload_key]
+    current_app.logger.debug("Incorrect api_payload_key in the token")

@@ -2,26 +2,30 @@
 API
 ===
 
+Status Dashboard application comes with an API for opening incidents from
+monitoring by posting component statuses.
+
+
 Authorization for API requests
 ==============================
 
-Authorizations for API requests based on the token usage
-and authorization are available in the default configuration file: "app/default_settings.py"
+Authorizations for API requests based on the JWT usage
+"SECRET_KEY" and "API_PAYLOAD_KEY" is defined in the app.config
 
-Where value "stackmon" is default username for the API authorization
-and key "<some_key>" is token for the API authorization
+Authorization will be passed If the "API_PAYLOAD_KEY" from the token's payload equals "API_PAYLOAD_KEY" from the app.config
+and secret_key from the token equals "SECRET_KEY"
+
+You should encode the "SECRET_KEY" to get the token
 example:
 
-.. code-block::
-  
-  class DefaultConfiguration:
-    ...
-    API_SECRETS = {"cb90b8818b55466bcdb07f69d42420": "stackmon"}
-    ...
+.. code-block:: python3
 
+>>> key = "dev"
+>>> payload = {API_PAYLOAD_KEY: "some_value"}
+>>> encoded = jwt.encode(payload, secret_key, algorithm="HS256")
+>>> print(encoded)
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwYXlsb2FkIjoiU09NRV9QQVlMT0FEIn0.oLj3UE3cQaviTpjOn0J6v0KE_wvPowyk2MAyN_s00_8
 
-Status Dashboard application comes with an API for opening incidents from
-monitoring by posting component statuses.
 
 Get components
 ==============
@@ -31,7 +35,7 @@ Getting information about current components with assiciated incidents
 .. code-block::
 
    curl http://localhost:5000/api/v1/component_status -X GET \
-        -H 'Authorization: Bearer cb90b8818b55466bcdb07f69d42420'
+        -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
 
 
 Update component status
@@ -56,6 +60,6 @@ Push information from monitoring system about component status.
 .. code-block:: console
 
    curl http://localhost:5000/api/v1/component_status -X POST \
-        -H 'Authorization: Bearer cb90b8818b55466bcdb07f69d42420' \
+        -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' \
         -H 'content-type:application/json' \
         -d '{"impact": "minor", "name": "Component 1", "attributes":[{"name":"region","value":"Reg1"}]}'
