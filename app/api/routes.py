@@ -70,6 +70,10 @@ class ApiComponentStatus(MethodView):
         """
         name = data.get("name", None)
         impact = data.get("impact", "minor")
+        if impact not in current_app.config["INCIDENT_IMPACTS"].keys():
+            return abort(
+                400, message="Incident impact is not allowed by configuration"
+            )
         attributes = dict()
         # Map attributes from {name:k, value:v} into k:v
         for attr in data.get("attributes", []):
@@ -78,9 +82,9 @@ class ApiComponentStatus(MethodView):
             name, attributes
         )
         if not target_component:
-            abort(409, message="Component not found")
+            abort(400, message="Component not found")
         current_app.logger.debug(target_component)
-        maintenance = Incident.get_active(impact="maintenance").first()
+        maintenance = Incident.get_active_maintenance().first()
         if maintenance:
             current_app.logger.debug(maintenance)
             if target_component in maintenance.components:
@@ -108,12 +112,12 @@ class ApiComponentStatus(MethodView):
                     "Active incident for {component} - not opening new "
                     "incident"
                 )
-                return None
+                return incident
         else:
             # No active incidents - open new
             current_app.logger.debug("No active incidents - opening new one")
             new_incident = Incident(
-                text=f"{impact} Incident",
+                text="Incident",
                 impact=impact,
                 start_date=datetime.now(),
                 components=[target_component],

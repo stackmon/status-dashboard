@@ -12,7 +12,6 @@
 #
 
 import datetime
-import enum
 from functools import wraps
 
 from app import db
@@ -22,7 +21,6 @@ from flask import jsonify
 from flask import make_response
 from flask import session
 
-from sqlalchemy import Enum
 from sqlalchemy import and_
 from sqlalchemy import select
 
@@ -157,15 +155,6 @@ class ComponentAttribute(db.Model):
         ]
 
 
-class IncidentImpactEnum(enum.Enum):
-    """Incident Impact Enum"""
-
-    maintenance = "maintenance"
-    minor = "minor"
-    major = "major"
-    outage = "outage"
-
-
 class Incident(db.Model):
     """Incident model"""
 
@@ -174,7 +163,7 @@ class Incident(db.Model):
     text = db.Column(db.String)
     start_date = db.Column(db.DateTime)
     end_date = db.Column(db.DateTime)
-    impact = db.Column(Enum(IncidentImpactEnum))
+    impact = db.Column(db.SmallInteger)
     components = db.relationship(
         "Component",
         secondary=IncidentComponentRelation.__table__,
@@ -200,24 +189,29 @@ class Incident(db.Model):
         return Incident.query.filter(Incident.end_date.is_not(None))
 
     @staticmethod
-    def get_active(impact=None):
-        """Return active incident
+    def get_active_maintenance():
+        """Return active maintenances
 
-        :param str impact: Query for incident of the specific impact type
         :returns: `Incident`
         """
-        if impact == "maintenance":
-            return Incident.query.filter(
-                # already started
-                Incident.start_date <= datetime.datetime.now(),
-                # not closed
-                Incident.end_date.is_(None),
-                Incident.impact == "maintenance",
-            )
+        return Incident.query.filter(
+            # already started
+            Incident.start_date <= datetime.datetime.now(),
+            # not closed
+            Incident.end_date.is_(None),
+            Incident.impact == 0,
+        )
+
+    @staticmethod
+    def get_active():
+        """Return active incident
+
+        :returns: `Incident`
+        """
         return Incident.query.filter(
             Incident.start_date <= datetime.datetime.now(),
             Incident.end_date.is_(None),
-            Incident.impact != "maintenance",
+            Incident.impact != 0,
         )
 
     @staticmethod

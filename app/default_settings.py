@@ -12,6 +12,13 @@
 #
 
 
+class Impact:
+    def __init__(self, value, key, string):
+        self.value = value
+        self.key = key
+        self.string = string
+
+
 class DefaultConfiguration:
     API_TITLE = "Status Dashboard API"
     API_VERSION = "v1"
@@ -22,6 +29,19 @@ class DefaultConfiguration:
     SECRET_KEY = "dev"
     SQLALCHEMY_ECHO = False
     JSON_SORT_KEYS = True
+
+    # Incident impacts map
+    # key - integer to identify impact and compare "severity"
+    # value - tuple of
+    #    - impact alias - used in the css
+    #    - string description of the impact
+    # NOTE: Maintenance must have key 0
+    INCIDENT_IMPACTS = {
+        0: Impact(0, "maintenance", "Scheduled maintenance"),
+        1: Impact(1, "minor", "Minor incident (i.e. performance impact)"),
+        2: Impact(2, "major", "Major incident"),
+        3: Impact(3, "outage", "Service outage"),
+    }
 
     MAINTENANCE_STATUSES = {
         "scheduled": "Maintenance scheduled",

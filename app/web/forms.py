@@ -62,15 +62,7 @@ class IncidentForm(FlaskForm):
             validators.Length(min=10, max=200),
         ],
     )
-    incident_impact = SelectField(
-        "Incident Impact",
-        choices=[
-            ("maintenance", "Scheduled maintenance"),
-            ("minor", "Minor incident (i.e. performance impact)"),
-            ("major", "Major incident"),
-            ("outage", "Service outage"),
-        ],
-    )
+    incident_impact = SelectField("Incident Impact")
     incident_components = SelectField("Affected services")
     incident_start = DateTimeField(
         "Start", validators=[validators.DataRequired()]

@@ -9,11 +9,13 @@
     </div>
   {% else %}
     {% for incident in open_incidents | sort(attribute='start_date', reverse = True) %}
-      <div class="alert alert-{{incident.impact.value}}" role="alert">
+      {% set impact = config['INCIDENT_IMPACTS'][incident.impact] %}
+      <div class="alert alert-{{impact.key}}" role="alert">
           <h4 class="alert-heading">
               <a class="alert-link"
-                  href="incidents/{{incident.id}}">{{incident.impact.value|capitalize}}: {{ incident.text }}</a>
+                  href="incidents/{{incident.id}}"> {{ incident.text }}</a>
         </h4>
+	<h6>Impact: {{ impact.string }}</h6>
         <h6>Affected Regions: {{
             incident.get_attributes_by_key('region')
             | join(', ')
@@ -23,14 +25,14 @@
             | map(attribute='name')
             | join(', ')
             }}</h6>
-        <small>Start: {{ incident.start_date.strftime('%Y-%m-%dT%H:%M') }}</small>
+        <small class="text-secondary">Started: {{ incident.start_date.strftime('%Y-%m-%dT%H:%M') }}</small>
         <hr/>
         <div class="container text-left">
         {% for update in incident.updates %}
           <div class="row">
               <div class="col-md-2">
                   <h6>{{ update.status }}</h6>
-                  <small>{{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                  <small class="text-secondary">Posted {{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
               </div>
               <div class="col-md-10">
                   {{ update.text }}
@@ -113,7 +115,7 @@
       <i class="bi sd-available"></i>
     {% else %}
       <a href="/incidents/{{incident.id}}" title="Open Incident">
-        <i class="bi sd-{{incident.impact.value}}"></i>
+        <i class="bi sd-{{config['INCIDENT_IMPACTS'][incident.impact].key}}"></i>
       </a>
     {% endif %}
 {% endmacro -%}
