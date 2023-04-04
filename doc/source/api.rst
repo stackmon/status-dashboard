@@ -2,6 +2,24 @@
 API
 ===
 
+Authorization for API requests
+==============================
+
+Authorizations for API requests based on the token usage
+and authorization are available in the default configuration file: "app/default_settings.py"
+
+Where value "stackmon" is default username for the API authorization
+and key "<some_key>" is token for the API authorization
+example:
+
+.. code-block::
+  
+  class DefaultConfiguration:
+    ...
+    API_SECRETS = {"cb90b8818b55466bcdb07f69d42420": "stackmon"}
+    ...
+
+
 Status Dashboard application comes with an API for opening incidents from
 monitoring by posting component statuses.
 
@@ -12,7 +30,8 @@ Getting information about current components with assiciated incidents
 
 .. code-block::
 
-   curl http://localhost:5000/api/v1/component_status -X GET
+   curl http://localhost:5000/api/v1/component_status -X GET \
+        -H 'Authorization: Bearer cb90b8818b55466bcdb07f69d42420'
 
 
 Update component status
@@ -36,4 +55,7 @@ Push information from monitoring system about component status.
 
 .. code-block:: console
 
-   curl http://localhost:5000/api/v1/component_status X POST -H 'content-type:application/json' -d '{"impact": "minor", "name": "Component 1", "attributes":[{"name":"region","value":"Reg1"}]}'
+   curl http://localhost:5000/api/v1/component_status -X POST \
+        -H 'Authorization: Bearer cb90b8818b55466bcdb07f69d42420' \
+        -H 'content-type:application/json' \
+        -d '{"impact": "minor", "name": "Component 1", "attributes":[{"name":"region","value":"Reg1"}]}'

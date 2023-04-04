@@ -16,8 +16,6 @@ from app.default_settings import DefaultConfiguration
 
 from flask_httpauth import HTTPTokenAuth
 
-import jwt
-
 
 class ApiHTTPTokenAuth(HTTPTokenAuth):
     def login_required(self, func):
@@ -42,23 +40,10 @@ class ApiHTTPTokenAuth(HTTPTokenAuth):
 
 auth = ApiHTTPTokenAuth(scheme="Bearer")
 
-secret_key = DefaultConfiguration.SECRET_KEY
-users = ["stackmon",]
-for user in users:
-    token = jwt.encode(
-        {"username": user},
-        secret_key,
-        algorithm="HS256"
-    )
-    print("*** token for {}: {}\n".format(user, token))
+tokens = DefaultConfiguration.API_SECRETS
 
 
 @auth.verify_token
 def verify_token(token):
-    try:
-        data = jwt.decode(token, secret_key,
-                          algorithms=["HS256"])
-    except:     # noqa:E722
-        return False
-    if "username" in data:
-        return data["username"]
+    if token in tokens:
+        return tokens[token]

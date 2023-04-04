@@ -15,6 +15,7 @@
 class DefaultConfiguration:
     API_TITLE = "Status Dashboard API"
     API_VERSION = "v1"
+    API_SECRETS = {"cb90b8818b55466bcdb07f69d42420": "stackmon"}
     OPENAPI_VERSION = "3.1.0"
     OPENAPI_URL_PREFIX = "/"
     OPENAPI_JSON_PATH = "api-spec.json"
