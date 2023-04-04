@@ -20,7 +20,7 @@ example:
 
 .. code-block:: python3
 
->>> key = "dev"
+>>> secret_key = "dev"
 >>> payload = {API_PAYLOAD_KEY: "some_value"}
 >>> encoded = jwt.encode(payload, secret_key, algorithm="HS256")
 >>> print(encoded)
@@ -56,6 +56,8 @@ Push information from monitoring system about component status.
   component will be added into the list of affected components of the incident
 
 - when there is no active incident - a new incident will be opened
+
+This method requires authorization to be used.
 
 .. code-block:: console
 

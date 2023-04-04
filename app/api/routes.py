@@ -33,7 +33,6 @@ auth = authorization.auth
 @bp.route("/v1/component_status", methods=["GET", "POST"])
 class ApiComponentStatus(MethodView):
     @bp.arguments(ComponentSearchQueryArgs, location="query")
-    @auth.login_required
     @bp.response(200, ComponentSchema(many=True))
     def get(self, search_args):
         """Get components
