@@ -8,13 +8,13 @@
         </h2>
 
         <ul class="list-group list-group-flush">
-          {% for (component, incident) in all_components_with_incidents %}
+          {% for component in all_components_with_incidents %}
             {% with attrs = component.get_attributes_as_dict() %}
             {% if 'region' in attrs and attrs['region'] == region and 'category' in attrs and attrs['category'] == cat %}
                 <li class="list-group-item d-flex justify-content-between
                        align-items-center">
                     {{ component.name }}
-                    {{ component_status_widget(incident) }}
+                    {{ component_status_widget(component.incidents) }}
                 </li>
             {% endif %}
             {% endwith %}

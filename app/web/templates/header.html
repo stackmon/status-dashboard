@@ -5,7 +5,7 @@
       <a class="navbar-brand brand-wide p-0 md-2" href="{{ base_url }}">
         <img src="{{ url_for('static', filename='images/logo.svg') }}" />
       </a>
-      <div class="navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-collapse justify-content-end" id="navbarNavAltMarkup">
         <div class="navbar-nav">
 {% if 'user' in session %}
           <a class="nav-link" aria-current="page" href="#">Home</a>

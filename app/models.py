@@ -12,81 +12,103 @@
 #
 
 import datetime
-from functools import wraps
+from typing import List
 
 from app import db
 
-from flask import current_app
-from flask import jsonify
-from flask import make_response
-from flask import session
-
-from sqlalchemy import and_
+from sqlalchemy import Column
+from sqlalchemy import ForeignKey
+from sqlalchemy import Index
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import Table
+from sqlalchemy import func
 from sqlalchemy import select
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import PropComparator
+from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
+from sqlalchemy.orm import with_loader_criteria
 
 
-class IncidentComponentRelation(db.Model):
-    """Incident to Component relation"""
+class Base(DeclarativeBase):
+    """Base declarative class"""
 
-    __tablename__ = "incident_component_relation"
-    id = db.Column(db.Integer, primary_key=True)
-    incident_id = db.Column(db.Integer, db.ForeignKey("incident.id"))
-    component_id = db.Column(db.Integer, db.ForeignKey("component.id"))
-    db.Index("inc_comp_rel", incident_id, component_id)
+    pass
 
 
-class Component(db.Model):
+"""Incident to Component relation"""
+IncidentComponentRelation = Table(
+    "incident_component_relation",
+    Base.metadata,
+    Column("incident_id", ForeignKey("incident.id"), primary_key=True),
+    Column("component_id", ForeignKey("component.id"), primary_key=True),
+    Index("inc_comp_rel", "incident_id", "component_id", unique=True),
+)
+
+
+class Component(Base):
     """Component model"""
 
-    id = db.Column(db.Integer, primary_key=True, index=True)
-    name = db.Column(db.String)
-    attributes = db.relationship(
-        "ComponentAttribute",
-        lazy="joined",  # makes sense to fetch immediately
+    __tablename__ = "component"
+
+    id = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String())
+    attributes: Mapped[List["ComponentAttribute"]] = relationship(
+        back_populates="component"
     )
-    incidents = db.relationship(
-        "Incident",
-        secondary=IncidentComponentRelation.__table__,
-        lazy="select",  # fetch only on demand
+
+    incidents: Mapped[List["Incident"]] = relationship(
+        secondary=IncidentComponentRelation, back_populates="components"
     )
 
     def __repr__(self):
         return "<Component {}:{}>".format(self.id, self.name)
 
+    @staticmethod
+    def all():
+        """Query all components with attributes"""
+        return (
+            db.session.scalars(
+                select(Component)
+                .options(joinedload(Component.attributes))
+                .order_by(Component.name)
+            )
+            .unique()
+            .all()
+        )
+
+    @staticmethod
+    def all_with_active_incidents():
+        """Query all components joined with active incidents for the component
+
+        :returns: Components with attributes and incidents populated
+        """
+        return (
+            db.session.scalars(
+                select(Component, Incident)
+                .options(joinedload(Component.attributes))
+                .options(
+                    joinedload(Component.incidents),
+                    with_loader_criteria(
+                        Incident,
+                        PropComparator.and_(
+                            Incident.end_date.is_(None),
+                            Incident.start_date <= datetime.datetime.now(),
+                        ),
+                    ),
+                )
+                .order_by(Component.name)
+            )
+            .unique()
+            .all()
+        )
+
     def get_attributes_as_dict(self):
         """Return component attributes as dicionary"""
         return {attr.name: attr.value for attr in self.attributes}
-
-    def get_open_incidents(self, incidents=None):
-        """Return open incidents"""
-        return Incident.get_open_for_component(self.id)
-
-    @staticmethod
-    def query_all_with_active_incidents():
-        """Query all components joined with active incidents for the component
-
-        :returns: tuple with 1st element - Component,
-            2nd elemenet - Incident
-        """
-        return (
-            db.session.query(Component, Incident)
-            .join(
-                IncidentComponentRelation,
-                and_(
-                    IncidentComponentRelation.component_id == Component.id,
-                ),
-                isouter=True,
-            )
-            .join(
-                Incident,
-                and_(
-                    IncidentComponentRelation.incident_id == Incident.id,
-                    Incident.start_date <= datetime.datetime.now(),
-                    Incident.end_date.is_(None),
-                ),
-                isouter=True,
-            )
-        )
 
     @staticmethod
     def find_by_name_and_attributes(name, attributes):
@@ -102,7 +124,9 @@ class Component(db.Model):
 
         :returns: `Component` entity when found, None otherwise
         """
-        comps_by_name = Component.query.where(Component.name == name).all()
+        comps_by_name = db.session.scalars(
+            select(Component).where(Component.name == name)
+        ).all()
         for comp in comps_by_name:
             comp_attrs = comp.get_attributes_as_dict()
             if comp_attrs == attributes:
@@ -118,19 +142,15 @@ class Component(db.Model):
         return None
 
 
-class ComponentAttribute(db.Model):
+class ComponentAttribute(Base):
     """Component Attribute model"""
 
     __tablename__ = "component_attribute"
-    __table_args__ = (
-        db.UniqueConstraint("component_id", "name", name="u_attr_comp"),
-    )
-    id = db.Column(db.Integer, primary_key=True, index=True)
-    component_id = db.Column(
-        db.Integer, db.ForeignKey("component.id"), index=True
-    )
-    name = db.Column(db.String)
-    value = db.Column(db.String)
+    id = mapped_column(Integer, primary_key=True, index=True)
+    component_id = mapped_column(ForeignKey("component.id"), index=True)
+    name: Mapped[str] = mapped_column(String(30))
+    value: Mapped[str] = mapped_column(String(50))
+    component: Mapped[Component] = relationship(back_populates="attributes")
 
     def __repr__(self):
         return "<ComponentAttribute {}={}>".format(self.name, self.value)
@@ -155,38 +175,39 @@ class ComponentAttribute(db.Model):
         ]
 
 
-class Incident(db.Model):
+class Incident(Base):
     """Incident model"""
 
     __tablename__ = "incident"
-    id = db.Column(db.Integer, primary_key=True, index=True)
-    text = db.Column(db.String)
-    start_date = db.Column(db.DateTime)
-    end_date = db.Column(db.DateTime)
-    impact = db.Column(db.SmallInteger)
-    components = db.relationship(
-        "Component",
-        secondary=IncidentComponentRelation.__table__,
-        back_populates="incidents",
-        lazy="dynamic",
+    id = mapped_column(Integer, primary_key=True, index=True)
+    text: Mapped[str] = mapped_column(String())
+    start_date: Mapped[datetime.datetime] = mapped_column(
+        insert_default=func.now()
     )
-    updates = db.relationship(
-        "IncidentStatus",
-        backref="incident",
-        lazy="dynamic",
+    end_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    impact: Mapped[int] = mapped_column(db.SmallInteger)
+
+    components: Mapped[List["Component"]] = relationship(
+        back_populates="incidents", secondary=IncidentComponentRelation
+    )
+
+    updates: Mapped[List["IncidentStatus"]] = relationship(
+        back_populates="incident",
         order_by="desc(IncidentStatus.timestamp)",
     )
 
     def __repr__(self):
-        return "<Incident {}>".format(self.text)
+        return "<Incident {}:{}>".format(self.id, self.text)
 
     @staticmethod
-    def open():
-        return Incident.query.filter(Incident.end_date.is_(None))
-
-    @staticmethod
-    def closed():
-        return Incident.query.filter(Incident.end_date.is_not(None))
+    def get_all_active():
+        """Return active incidents and maintenances"""
+        return db.session.scalars(
+            select(Incident).filter(
+                Incident.end_date.is_(None),
+                Incident.start_date <= datetime.datetime.now(),
+            )
+        ).all()
 
     @staticmethod
     def get_active_maintenance():
@@ -194,89 +215,55 @@ class Incident(db.Model):
 
         :returns: `Incident`
         """
-        return Incident.query.filter(
-            # already started
-            Incident.start_date <= datetime.datetime.now(),
-            # not closed
-            Incident.end_date.is_(None),
-            Incident.impact == 0,
-        )
+        return db.session.scalars(
+            select(Incident).filter(
+                # already started
+                Incident.start_date <= datetime.datetime.now(),
+                # not closed
+                Incident.end_date.is_(None),
+                Incident.impact == 0,
+            )
+        ).first()
 
     @staticmethod
     def get_active():
         """Return active incident
 
-        :returns: `Incident`
+        :returns: `Incident`s
         """
-        return Incident.query.filter(
-            Incident.start_date <= datetime.datetime.now(),
-            Incident.end_date.is_(None),
-            Incident.impact != 0,
-        )
+        return db.session.scalars(
+            select(Incident).filter(
+                # already started
+                Incident.start_date <= datetime.datetime.now(),
+                # not closed
+                Incident.end_date.is_(None),
+                Incident.impact != 0,
+            )
+        ).all()
 
     @staticmethod
-    def get_open_for_component(component_id):
-        open_incident_for_component = (
-            db.session.query(Incident)
-            .join(
-                IncidentComponentRelation,
-                and_(
-                    Incident.id == IncidentComponentRelation.incident_id,
-                    IncidentComponentRelation.component_id == component_id,
-                ),
-            )
-            .join(
-                Component,
-                IncidentComponentRelation.component_id == Component.id,
-            )
-            .filter(
-                Incident.end_date.is_(None),
-            )
-            .all()
-        )
-        return open_incident_for_component
+    def get_by_id(incident_id):
+        return db.session.scalars(
+            select(Incident).where(Incident.id == incident_id)
+        ).first()
 
     def get_attributes_by_key(self, attr_key):
         """Get Incident component attribute by key"""
-        return {c.get_attributes_as_dict()[attr_key] for c in self.components}
+        return set(
+            c.get_attributes_as_dict().get(attr_key, None)
+            for c in self.components
+        )
 
 
-class IncidentStatus(db.Model):
+class IncidentStatus(Base):
     """Incident Updates"""
 
-    id = db.Column(db.Integer, primary_key=True, index=True)
-    incident_id = db.Column(
-        db.Integer, db.ForeignKey("incident.id"), index=True
+    __tablename__ = "incident_status"
+    id = mapped_column(Integer, primary_key=True, index=True)
+    incident_id = mapped_column(ForeignKey("incident.id"), index=True)
+    incident: Mapped["Incident"] = relationship(back_populates="updates")
+    timestamp: Mapped[datetime.datetime] = mapped_column(
+        db.DateTime, insert_default=func.now()
     )
-    timestamp = db.Column(db.DateTime, default=datetime.datetime.now())
-    text = db.Column(db.String)
-    status = db.Column(db.String)
-
-
-def auth_required(f):
-    """Decorator to ensure authorized actions"""
-
-    @wraps(f)
-    def decorator(*args, **kwargs):
-        # ensure the user object is in the session
-        if "user" not in session:
-            return make_response(jsonify({"message": "Invalid token!"}), 401)
-        current_user = session.get("user")
-        required_group = current_app.config.get("OPENID_REQUIRED_GROUP")
-
-        if required_group:
-            if required_group not in current_user["groups"]:
-                current_app.logger.info(
-                    "Not logging in user %s due to lack of required groups"
-                    % current_user.get(
-                        "preferred_username", current_user.get("name")
-                    )
-                )
-                return make_response(
-                    jsonify({"message": "Invalid User privileges!"}), 401
-                )
-
-        # Return the user information attached to the token
-        return f(current_user, *args, **kwargs)
-
-    return decorator
+    text: Mapped[str] = mapped_column(String())
+    status: Mapped[str] = mapped_column(String())
