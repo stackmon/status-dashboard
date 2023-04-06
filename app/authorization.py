@@ -13,6 +13,10 @@
 from functools import wraps
 
 from flask import current_app
+from flask import jsonify
+from flask import make_response
+from flask import session
+
 
 from flask_httpauth import HTTPTokenAuth
 
@@ -48,11 +52,39 @@ def verify_token(token):
     secret_key = current_app.config["SECRET_KEY"]
     api_payload_key = current_app.config["API_PAYLOAD_KEY"]
     try:
-        data = jwt.decode(token, secret_key,
-                          algorithms=["HS256"])
-    except:     # noqa:E722
+        data = jwt.decode(token, secret_key, algorithms=["HS256"])
+    except:  # noqa:E722
         return False
     if api_payload_key in data:
         current_app.logger.debug("decoded token contains API payload key")
         return data[api_payload_key]
     current_app.logger.debug("Incorrect api_payload_key in the token")
+
+
+def auth_required(f):
+    """Decorator to ensure authorized actions"""
+
+    @wraps(f)
+    def decorator(*args, **kwargs):
+        # ensure the user object is in the session
+        if "user" not in session:
+            return make_response(jsonify({"message": "Invalid token!"}), 401)
+        current_user = session.get("user")
+        required_group = current_app.config.get("OPENID_REQUIRED_GROUP")
+
+        if required_group:
+            if required_group not in current_user["groups"]:
+                current_app.logger.info(
+                    "Not logging in user %s due to lack of required groups"
+                    % current_user.get(
+                        "preferred_username", current_user.get("name")
+                    )
+                )
+                return make_response(
+                    jsonify({"message": "Invalid User privileges!"}), 401
+                )
+
+        # Return the user information attached to the token
+        return f(current_user, *args, **kwargs)
+
+    return decorator

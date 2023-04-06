@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container">
-  {% set open_incidents = incidents.open().all() %}
+  {% set open_incidents = incidents.get_all_active() %}
   {% if open_incidents | length == 0 %}
     <div class="alert alert-success" role="alert">
       All systems running
@@ -10,7 +10,7 @@
   {% else %}
     {% for incident in open_incidents | sort(attribute='start_date', reverse = True) %}
       {% set impact = config['INCIDENT_IMPACTS'][incident.impact] %}
-      <div class="alert alert-{{impact.key}}" role="alert">
+        <div class="alert alert-{{impact.key}}" role="alert">
           <h4 class="alert-heading">
               <a class="alert-link"
                   href="incidents/{{incident.id}}"> {{ incident.text }}</a>
@@ -21,7 +21,7 @@
             | join(', ')
             }}</h6>
         <h6>Affected Services: {{
-            incident.components.all()
+            incident.components
             | map(attribute='name')
             | join(', ')
             }}</h6>
@@ -42,12 +42,12 @@
         {% endfor %}
         </div>
       </div>
-    {% endfor %}
+     {% endfor %}
   {% endif %}
 
 <div class="container">
   {% set regions = component_attributes.get_unique_values('region') %}
-  {% set all_components_with_incidents = components.query_all_with_active_incidents().all() %}
+  {% set all_components_with_incidents = components.all_with_active_incidents() %}
   <!-- Nav tabs -->
   <ul class="nav nav-tabs justify-content-center" id="myTab" role="tablist">
     {% for region in regions %}
@@ -110,12 +110,13 @@
 </div>
 {% endblock %}
 
-{% macro component_status_widget(incident) -%}
-    {% if not incident %}
+{% macro component_status_widget(incidents) -%}
+    {% if not incidents %}
       <i class="bi sd-available"></i>
     {% else %}
-      <a href="/incidents/{{incident.id}}" title="Open Incident">
-        <i class="bi sd-{{config['INCIDENT_IMPACTS'][incident.impact].key}}"></i>
+    {% set incident=incidents[0] %}
+      <a href="/incidents/{{ incident.id }}" title="Open Incident">
+        <i class="bi sd-{{ config['INCIDENT_IMPACTS'][incident.impact].key }}"></i>
       </a>
-    {% endif %}
+      {% endif %}
 {% endmacro -%}

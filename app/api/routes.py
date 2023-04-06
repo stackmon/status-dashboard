@@ -12,7 +12,7 @@
 #
 from datetime import datetime
 
-from app.api import authorization
+from app import authorization
 from app.api import bp
 from app.api.schemas.components import ComponentSchema
 from app.api.schemas.components import ComponentSearchQueryArgs
@@ -50,7 +50,9 @@ class ApiComponentStatus(MethodView):
             if target_component is None:
                 abort(404, message="Component does not exist")
             return [target_component]
-        return Component.query.filter(Component.name.startswith(name)).all()
+        return db.session.scalars(
+            db.select(Component).filter(Component.name.startswith(name))
+        ).all()
 
     @bp.arguments(ComponentStatusArgsSchema)
     @auth.login_required
@@ -69,7 +71,7 @@ class ApiComponentStatus(MethodView):
         :returns IncidentSchema: Incident object
         """
         name = data.get("name", None)
-        impact = data.get("impact", "minor")
+        impact = data.get("impact", 1)
         if impact not in current_app.config["INCIDENT_IMPACTS"].keys():
             return abort(
                 400, message="Incident impact is not allowed by configuration"
@@ -84,7 +86,7 @@ class ApiComponentStatus(MethodView):
         if not target_component:
             abort(400, message="Component not found")
         current_app.logger.debug(target_component)
-        maintenance = Incident.get_active_maintenance().first()
+        maintenance = Incident.get_active_maintenance()
         if maintenance:
             current_app.logger.debug(maintenance)
             if target_component in maintenance.components:
@@ -93,8 +95,9 @@ class ApiComponentStatus(MethodView):
                     "new incident"
                 )
                 return maintenance
-        incident = Incident.get_active().first()
-        if incident:
+        incidents = Incident.get_active()
+        if incidents:
+            incident = incidents[0]
             current_app.logger.debug(incident)
             if target_component not in incident.components:
                 # Current active incident is not affecting target_component -

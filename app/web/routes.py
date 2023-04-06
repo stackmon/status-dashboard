@@ -12,12 +12,12 @@
 #
 from datetime import datetime
 
+from app import authorization
 from app import oauth
 from app.models import Component
 from app.models import ComponentAttribute
 from app.models import Incident
 from app.models import IncidentStatus
-from app.models import auth_required
 from app.models import db
 from app.web import bp
 from app.web.forms import IncidentForm
@@ -34,7 +34,6 @@ from flask import url_for
 @bp.route("/", methods=["GET"])
 @bp.route("/index", methods=["GET"])
 def index():
-
     return render_template(
         "index.html",
         title="Status Dashboard",
@@ -45,10 +44,10 @@ def index():
 
 
 @bp.route("/incidents", methods=["GET", "POST"])
-@auth_required
+@authorization.auth_required
 def new_incident(current_user):
     """Create new Incident"""
-    all_components = Component.query.order_by(Component.name).all()
+    all_components = Component.all()
     form = IncidentForm()
     form.incident_components.choices = [(c.id, c) for c in all_components]
     form.incident_impact.choices = [
@@ -84,7 +83,7 @@ def new_incident(current_user):
 @bp.route("/incidents/<incident_id>", methods=["GET", "POST"])
 def incident(incident_id):
     """Manage incident by ID"""
-    incident = Incident.query.filter_by(id=incident_id).first_or_404()
+    incident = Incident.get_by_id(incident_id)
     form = None
     if "user" in session:
         form = IncidentUpdateForm(id)

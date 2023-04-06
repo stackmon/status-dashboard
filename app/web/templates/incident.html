@@ -9,7 +9,7 @@
       | join(', ')
       }}</h6>
   <h6>Affected Services: {{
-      incident.components.all()
+      incident.components
       | map(attribute='name')
       | unique
       | join(', ')
