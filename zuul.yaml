@@ -9,13 +9,13 @@
       container_images:
         - context: .
           registry: quay.io
-          repository: opentelekomcloud/stackmon-status-dashboard
+          repository: stackmon/status-dashboard
           tags:
             &imagetag "{{ zuul.tag is defined | ternary([zuul.get('tag', '').split('.')[0], '.'.join(zuul.get('tag', '').split('.')[:2]), zuul.get('tag', '')], ['latest']) }}"
 
 - job:
     name: stackmon-status-dashboard-upload-image
-    parent: otcinfra-upload-container-images
+    parent: stackmon-upload-container-images
     vars: *status-dashboard_image_vars
 
 - project:
