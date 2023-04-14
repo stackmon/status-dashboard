@@ -37,7 +37,16 @@ class ApiComponentStatus(MethodView):
     def get(self, search_args):
         """Get components
 
-        Get configured components with related incidents
+        Query configured components with related incidents.
+
+        Example:
+
+        .. code-block:: console
+
+           curl http://localhost:5000/api/v1/component_status -X GET \\
+                -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6Ikp...'
+
+
         """
         name = search_args.get("name", "")
         attribute_name = search_args.get("attribute_name", None)
@@ -68,7 +77,19 @@ class ApiComponentStatus(MethodView):
           the list of affected components
         - no active incidents - create new one
 
-        :returns IncidentSchema: Incident object
+        This method requires authorization to be used.
+
+        .. code-block:: console
+
+           curl http://localhost:5000/api/v1/component_status -X POST \\
+                -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6pX...' \\
+                -H 'content-type:application/json' \\
+                -d '{"impact": "minor", "name": "Component 1", \\
+                "attributes":[{"name":"region","value":"Reg1"}]}'
+
+        :returns IncidentSchema:
+            :class:`~status_dashboard.api.schemas.components.IncidentSchema`
+            object
         """
         name = data.get("name", None)
         impact = data.get("impact", 1)

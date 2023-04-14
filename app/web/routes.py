@@ -119,7 +119,12 @@ def incident(incident_id):
 
 @bp.route("/login/<name>")
 def login(name):
-    """Login user using XXX auth method"""
+    """Login
+
+    Initialize user login process with chosen auth method
+
+    :param str auth: One of ['github', 'openid']
+    """
     client = oauth.create_client(name)
     if not client:
         abort(404)
@@ -130,7 +135,12 @@ def login(name):
 
 @bp.route("/auth/<name>")
 def auth_callback(name):
-    """Auth callback"""
+    """Auth callback
+
+    Callback invoked by the auth provider
+
+    :param str auth: One of ['github', 'openid']
+    """
     client = oauth.create_client(name)
     if not client:
         abort(404)
@@ -163,7 +173,10 @@ def auth_callback(name):
 
 @bp.route("/logout")
 def logout():
-    """Logout user"""
+    """Logout
+
+    Logout user
+    """
     # remove the username from the session if it's there
     session.pop("user", None)
     return redirect("/")

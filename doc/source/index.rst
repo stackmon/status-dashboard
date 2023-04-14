@@ -10,6 +10,7 @@ extension for custom needs. It is not pretending to be a fully feature-blown
 Status Dashboard for any possible usecase.
 
 .. toctree::
+   :hidden:
 
    config
    deployment
