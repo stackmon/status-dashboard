@@ -9,6 +9,10 @@ supported methods: GitHub and OpenIDConnect. Both methods delegate
 authentication to the identity provider and do not store and user information
 locally.
 
+Providers
+=========
+
+
 GitHub
 ------
 
@@ -49,13 +53,10 @@ should be pointing to the tenan on the identity server and
 When `SDB_OPENID_REQUIRED_GROUP` variable is set user will be authorized only
 when member of the specified group (for Keycloak i.e. `/status-dashboard`)
 
-Routes
-------
+Authorization Routes
+====================
 
 `StatusDashboard` implements following routes for the authorization:
 
-* `/login/<name>` (where `name` in [github, openid]) initialize login with the specified provider
-
-* `/auth/<name>` authentication callback
-
-* `/logout` logout user.
+.. autoflask:: status_dashboard:app
+   :endpoints: web.login, web.auth_callback, web.logout

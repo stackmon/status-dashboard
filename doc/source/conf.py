@@ -15,20 +15,21 @@ import os
 import sys
 import warnings
 
+sys.path.insert(0, os.path.abspath('../../'))
+
 # -- General configuration ----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinxcontrib.autohttp.flask'
 ]
 
 # openstackdocstheme options
 html_last_updated_fmt = '%Y-%m-%d %H:%M'
 html_theme = 'sphinx_rtd_theme'
 
-# TODO(shade) Set this to true once the build-openstack-sphinx-docs job is
-# updated to use sphinx-build.
 # When True, this will raise an exception that kills sphinx-build.
 enforcer_warnings_as_errors = False
 
@@ -44,7 +45,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'status-dashboard'
-copyright = u'2021, Various members of the OpenTelekomCloud'
+copyright = u'2023, Various members of the OpenTelekomCloud'
 
 # A few variables have to be set for the log-a-bug feature.
 #   gitsha: The SHA checksum of the bug description. Extracted from git log.
