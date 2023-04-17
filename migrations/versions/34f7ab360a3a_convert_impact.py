@@ -22,7 +22,8 @@ def upgrade():
         batch_op.alter_column('impact',
                existing_type=sa.VARCHAR(length=11),
                type_=sa.SmallInteger(),
-               existing_nullable=True)
+               existing_nullable=True,
+               postgresql_using=0)
 
     # ### end Alembic commands ###
 
