@@ -130,3 +130,5 @@ dmypy.json
 .stestr/
 
 dev.env
+app/tests/config/postgre/create_database.sh
+app/tests/config/postgre/postgre_create_pod.sh

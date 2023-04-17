@@ -141,6 +141,20 @@ class Component(Base):
                 return comp
         return None
 
+    @staticmethod
+    def find_by_attribute(attribute):
+        attr_name = list(attribute.keys())[0]
+        attr_value = attribute[attr_name]
+        return (
+            db.session.scalars(
+                select(Component).join(Component.attributes)
+                .filter(
+                    ComponentAttribute.name == attr_name,
+                    ComponentAttribute.value == attr_value
+                )
+            ).all()
+        )
+
 
 class ComponentAttribute(Base):
     """Component Attribute model"""

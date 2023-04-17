@@ -26,12 +26,19 @@ class ComponentAttributeSchema(Schema):
     value = fields.String(required=True)
 
 
+class IncidentStatusSchema(Schema):
+    text = fields.String(required=True)
+    status = fields.String(required=True)
+    timestamp = fields.Date(format="%Y-%m-%d %H:%M", dump_only=True)
+
+
 class IncidentSchema(Schema):
     id = fields.Integer(dump_only=True)
     text = fields.String(required=True)
     impact = fields.Integer(required=True)
-    start_date = fields.Date(required=True)
-    end_date = fields.Date()
+    start_date = fields.Date(format="%Y-%m-%d %H:%M", required=True)
+    end_date = fields.Date(format="%Y-%m-%d %H:%M")
+    updates = fields.List(fields.Nested(IncidentStatusSchema))
 
 
 class ComponentSchema(Schema):
@@ -44,4 +51,5 @@ class ComponentSchema(Schema):
 class ComponentStatusArgsSchema(Schema):
     impact = fields.Integer(required=True)
     name = fields.String(required=True)
+    text = fields.String(required=False, default="Incident")
     attributes = fields.List(fields.Nested(ComponentAttributeSchema))
