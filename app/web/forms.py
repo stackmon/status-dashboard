@@ -15,12 +15,20 @@ from flask_wtf import FlaskForm
 
 from wtforms import DateTimeField
 from wtforms import SelectField
+from wtforms import StringField
 from wtforms import SubmitField
 from wtforms import TextAreaField
 from wtforms import validators
 
 
 class IncidentUpdateForm(FlaskForm):
+    update_title = StringField(
+        "Incident title",
+        validators=[
+            validators.DataRequired(),
+            validators.Length(min=10, max=200),
+        ],
+    )
     update_text = TextAreaField(
         "Update Message",
         validators=[

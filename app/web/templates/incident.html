@@ -40,6 +40,30 @@
     <div class="incident-update-form mt-4">
       <form action="/incidents/{{incident.id}}" method="POST" novalidate>
       {{ form.hidden_tag() }}
+
+      <div class="mb-3">
+        <label for="{{form.update_title.id}}" class="form-label">{{form.update_title.label}}</label>
+        <input class="form-control
+                         {% if form.update_title.errors %}is-invalid{% endif %}
+                         "
+               id="{{form.update_title.id}}"
+               name="{{form.update_title.name}}"
+               type="text"
+               value="{{ incident.text }}"
+               aria-describedby="updateTextHelp"></input>
+         <div id="updateTextHelp" class="form-text">Please update the incident title if necessary.</div>
+        {% if form.update_title.errors %}
+        <div class="invalid-feedback">
+          <ul class="errors">
+            {% for error in form.update_title.errors %}
+               <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+      </div>
+
       <div class="mb-3">
         <label for="{{form.update_text.id}}" class="form-label">{{form.update_text.label}}</label>
         <textarea class="form-control

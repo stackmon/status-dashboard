@@ -110,6 +110,7 @@ def incident(incident_id):
             if new_status in ["completed", "resolved"]:
                 # Incident is completed
                 incident.end_date = datetime.now()
+            incident.text = form.update_title.data
             db.session.commit()
 
     return render_template(
