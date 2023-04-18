@@ -210,6 +210,15 @@ class Incident(Base):
         ).all()
 
     @staticmethod
+    def get_all_closed():
+        """Return closed incidents and maintenances"""
+        return db.session.scalars(
+            select(Incident).filter(
+                Incident.end_date.is_not(None),
+            )
+        ).all()
+
+    @staticmethod
     def get_active_maintenance():
         """Return active maintenances
 

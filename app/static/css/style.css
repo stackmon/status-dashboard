@@ -117,6 +117,33 @@ nav.navbar {
     font-size: 1rem;
 }
 
+.history {
+  border-left: 1px solid hsl(0, 0%, 90%);
+  position: relative;
+  list-style: none;
+}
+
+.history .history-item {
+  position: relative;
+}
+
+.history .history-item:after {
+  position: absolute;
+  display: block;
+  top: 0;
+}
+
+.history .history-icon {
+  position: absolute;
+  left: -48px;
+  border-radius: 50%;
+  height: 31px;
+  width: 31px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 
 /* Footer */
 footer.footer {

@@ -118,6 +118,15 @@ def incident(incident_id):
     )
 
 
+@bp.route("/history", methods=["GET"])
+def history():
+    return render_template(
+        "history.html",
+        title="Incident History",
+        incidents=Incident,
+    )
+
+
 @bp.route("/login/<name>")
 def login(name):
     """Login
