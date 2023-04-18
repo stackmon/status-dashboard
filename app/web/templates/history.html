@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+  <div class="mb-3">
+    <h1>Incident History</h1>
+  </div>
+
+  <div class="mb-3">
+  {% set past_incidents = incidents.get_all_closed() %}
+  {% if past_incidents | length == 0 %}
+    <div class="alert alert-success" role="alert">
+      No incidents yet.
+    </div>
+  {% else %}
+    <ul class="history">
+    {% for incident in past_incidents | sort(attribute='start_date', reverse = True) %}
+      {% set impact = config['INCIDENT_IMPACTS'][incident.impact] %}
+
+        <li class="history-item mb-5">
+          <span class="history-icon">
+            <i class="bi sd-{{impact.key}}"></i>
+          </span>
+
+          <h4><a class="link-dark" href="incidents/{{incident.id}}">
+            {{ incident.text }}</a></h4>
+          <p class="text-muted mb-2 fw-bold">
+            {{ incident.start_date.strftime('%d %b, %H:%M') }} -
+            {{ incident.end_date.strftime('%d %b, %H:%M')}}</p>
+          <p class="text-muted">This incident has been resolved.</p>
+        </li>
+     {% endfor %}
+     </ul>
+  {% endif %}
+  </div>
+{% endblock %}
