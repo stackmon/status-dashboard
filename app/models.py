@@ -219,6 +219,14 @@ class Incident(Base):
         ).all()
 
     @staticmethod
+    def get_history_by_months():
+        incident_dict = {}
+        for incident in Incident.get_all_closed():
+            incident_dict.setdefault(
+                incident.end_date.month, []).append(incident)
+        return incident_dict.values()
+
+    @staticmethod
     def get_active_maintenance():
         """Return active maintenances
 

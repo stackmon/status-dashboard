@@ -8,16 +8,19 @@
   </div>
 
   <div class="mb-3">
-  {% set past_incidents = incidents.get_all_closed() %}
+  {% set past_incidents = incidents.get_history_by_months() %}
   {% if past_incidents | length == 0 %}
     <div class="alert alert-success" role="alert">
       No incidents yet.
     </div>
   {% else %}
-    <ul class="history">
-    {% for incident in past_incidents | sort(attribute='start_date', reverse = True) %}
-      {% set impact = config['INCIDENT_IMPACTS'][incident.impact] %}
-
+    {% for incident_group in past_incidents
+      | sort(attribute='0.end_date', reverse = True) %}
+      <h3 class="mb-3">{{ incident_group[0].end_date.strftime('%B %Y') }}</h3>
+      <ul class="history">
+      {% for incident in incident_group
+        | sort(attribute='start_date', reverse = True) %}
+        {% set impact = config['INCIDENT_IMPACTS'][incident.impact] %}
         <li class="history-item mb-5">
           <span class="history-icon">
             <i class="bi sd-{{impact.key}}"></i>
@@ -30,8 +33,9 @@
             {{ incident.end_date.strftime('%d %b, %H:%M')}}</p>
           <p class="text-muted">This incident has been resolved.</p>
         </li>
-     {% endfor %}
-     </ul>
+      {% endfor %}
+      </ul>
+    {% endfor %}
   {% endif %}
   </div>
 {% endblock %}
