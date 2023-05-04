@@ -67,16 +67,17 @@
         }}</div>
     </div>
 
-    <div class=mb-3">
+    <div class="mb-3">
       <label for="{{form.incident_start.id}}" class="form-label">{{form.incident_start.label}}</label>
       <input class="form-control {{ ' is-invalid' if
                  form.incident_start.errors
-                        | length > 0 else '' }}" type="datetime"
+                        | length > 0 else '' }}" type="datetime-local"
              id="{{form.incident_start.id}}"
              name="{{form.incident_start.name}}"
-             aria-describedby="incidentStartHelp"
-             placeholder="2023-01-01 12:34:56"/>
-       <div id="nextUpdateHelp" class="form-text">Incident Start time (%Y-%m-%d %H:%M:%S).</div>
+             aria-describedby="incidentStartHelp"/>
+      <div id="nextUpdateHelp" class="form-text">
+        Select the incident start time.
+      </div>
       <div class="invalid-feedback">{{form.incident_start.errors | join(', ')
         }}</div>
     </div>

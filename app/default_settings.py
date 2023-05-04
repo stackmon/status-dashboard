@@ -51,7 +51,7 @@ class DefaultConfiguration:
 
     INCIDENT_STATUSES = {
         "analyzing": "Analyzing incident (problem not known yet)",
-        "fixing": "Fixing incident(problem identified, working on fix)",
+        "fixing": "Fixing incident (problem identified, working on fix)",
         "observing": "Observing fix (fix deployed, watching recovery)",
         "resolved": "Incident Resolved (service is fully available. Done)",
     }
