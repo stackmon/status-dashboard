@@ -11,13 +11,13 @@
     {% include 'css.html' ignore missing %}
   {% endblock %}
 </head>
-<body class="d-flex flex-column h-100">
+<body class="d-flex flex-column sticky-footer-wrapper min-vh-100">
 
   {% block header %}
     {% include 'header.html' ignore missing %}
   {% endblock %}
 
-  <main class="container" style="max-width:1200px">
+  <main class="container flex-fill" style="max-width:1200px">
   <!-- Start Main content -->
   {% block content %}
   {% endblock %}
