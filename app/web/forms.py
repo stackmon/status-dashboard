@@ -37,7 +37,7 @@ class IncidentUpdateForm(FlaskForm):
         ],
     )
     update_status = SelectField("Update Status")
-    next_update = DateTimeField("Next Update by")
+    next_update = DateTimeField("Next Update by", format='%Y-%m-%dT%H:%M')
     submit = SubmitField("Submit")
 
     def __init__(self, incident_id, *args, **kwargs):
@@ -73,6 +73,7 @@ class IncidentForm(FlaskForm):
     incident_impact = SelectField("Incident Impact")
     incident_components = SelectField("Affected services")
     incident_start = DateTimeField(
-        "Start", validators=[validators.DataRequired()]
+        "Start", validators=[validators.DataRequired()],
+        format='%Y-%m-%dT%H:%M'
     )
     submit = SubmitField("Submit")
