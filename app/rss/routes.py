@@ -19,7 +19,7 @@ from app.rss import bp
 
 from feedgen.feed import FeedGenerator
 
-from flask import Response
+from flask import make_response
 from flask import request
 
 import pytz
@@ -57,29 +57,39 @@ def rss():
     attr_name = "region"
     attr_value = region
     attribute = {attr_name: attr_value}
-    if not component_name and not region:
-        return (
-            "<html><body>"
-            "Status Dashboard RSS feed<br>"
-            "Please read the documentation to<br>"
-            "make correct request"
-            "</body></html>",
-            404
-        )
-    if component_name:
+    incorr_req = "<html><body>"\
+        "<b>Status Dashboard RSS feed</b><br>"\
+        "Please read the documentation to<br>"\
+        "make the correct request"\
+        "</body></html>"
+    if component_name and not region:
+        response = make_response(incorr_req)
+        response.headers["Content-Type"] = "text/html"
+        response.status_code = 404
+        return response
+    if component_name and region:
         component = Component.find_by_name_and_attributes(
             component_name,
             attribute
         )
         if not component:
-            return f"Component: {component_name} is not found", 404
+            content = f"Component: <b>{component_name}</b> is not found"
+            response = make_response(content)
+            response.headers["Content-Type"] = "text/html"
+            response.status_code = 404
+            return response
         components = [component]
-    else:
+    elif region and not component_name:
         components = Component.find_by_attribute(attribute)
         if not components:
-            return (f"Not components found for {region}<br>"
-                    f"Check the correctness of the request", 404
+            content = (
+                f"Not components found for <b>{region}</b><br>"
+                "Check the correctness of the request"
             )
+            response = make_response(content)
+            response.headers["Content-Type"] = "text/html"
+            response.status_code = 404
+            return response
     #
     # RSS feed generator
     # the generator uses a data dump according to the schema Component
@@ -111,70 +121,82 @@ def rss():
             fg.description(
                 f"{region} - Incidents"
             )
-    #
-    # This part is needed to be able to
-    # make a request without component_name
-    # and get all incidents for the specified region
-    #
-    incidents = []
-    for component in components:
-        component_data = ComponentSchema().dump(component)
-        incidents.extend(component_data["incidents"])
+        #
+        # This part is needed to be able to
+        # make a request without component_name
+        # and get all incidents for the specified region
+        #
+        incidents = []
+        for component in components:
+            component_data = ComponentSchema().dump(component)
+            incidents.extend(component_data["incidents"])
 
-    for incident in reversed(sorted_incidents(incidents)):
-        if incident["end_date"] is None or datetime.strptime(
-            incident["end_date"], "%Y-%m-%d %H:%M"
-        ) <= datetime.today():
-            fe = fg.add_entry()
-            fe.title(incident["text"])
-            start_date = tz.localize(
-                datetime.strptime(
-                    incident["start_date"],
-                    "%Y-%m-%d %H:%M"
-                )
-            )
-            if incident["end_date"]:
-                end_date = tz.localize(
+        for incident in reversed(sorted_incidents(incidents)):
+            if incident["end_date"] is None or datetime.strptime(
+                incident["end_date"], "%Y-%m-%d %H:%M"
+            ) <= datetime.today():
+                fe = fg.add_entry()
+                fe.title(incident["text"])
+                start_date = tz.localize(
                     datetime.strptime(
-                        incident["end_date"],
+                        incident["start_date"],
                         "%Y-%m-%d %H:%M"
                     )
                 )
-            else:
-                end_date = None
-            content_string = f"Incident impact: {incident['impact']}, \
-                    Incident start date: {start_date}, \
-                    incident end date: {end_date}"
-            #
-            # "updates" exist as a sublist for the incident,
-            # schemes are described in the file:
-            #  "app/api/schemas/components.py"
-            # look at the "class IncidentSchema(Schema):"
-            # and class "IncidentStatusSchema(Schema):"
-            #
-            if incident["updates"]:
-                for update in incident["updates"]:
-                    update_timestamp = tz.localize(
+                if incident["end_date"]:
+                    end_date = tz.localize(
                         datetime.strptime(
-                            update["timestamp"],
+                            incident["end_date"],
                             "%Y-%m-%d %H:%M"
                         )
                     )
-                content_string += f"\n \
-                                    <div class='update'> \
-                                    Update: {update['text']}, \
-                                    Update timestamp: {update_timestamp} \
-                                    </div>"
-                fe.pubDate(update_timestamp)
-            else:
-                fe.pubDate(start_date)
-            fe.content(f"<div class='item_desc'>{content_string}</div>")
+                else:
+                    end_date = None
+                content_string = f"Incident impact: {incident['impact']}, \
+                        Incident start date: {start_date}, \
+                        incident end date: {end_date}"
+                #
+                # "updates" exist as a sublist for the incident,
+                # schemes are described in the file:
+                #  "app/api/schemas/components.py"
+                # look at the "class IncidentSchema(Schema):"
+                # and class "IncidentStatusSchema(Schema):"
+                #
+                if incident["updates"]:
+                    for update in incident["updates"]:
+                        update_timestamp = tz.localize(
+                            datetime.strptime(
+                                update["timestamp"],
+                                "%Y-%m-%d %H:%M"
+                            )
+                        )
+                    content_string += f"\n \
+                                        <div class='update'> \
+                                        Update: {update['text']}, \
+                                        Update timestamp: {update_timestamp} \
+                                        </div>"
+                    fe.pubDate(update_timestamp)
+                else:
+                    fe.pubDate(start_date)
+                fe.content(f"<div class='item_desc'>{content_string}</div>")
 
-    rss_string = fg.rss_str(pretty=True).decode("utf-8")
-    rss_string = rss_string.replace("<span", "<div")
-    rss_string = rss_string.replace("</span>", "</div>")
-    rss_string = rss_string.replace(
-        "<pre",
-        '<pre style="white-space: pre-wrap; font-family: monospace"'
-    )
-    return Response(rss_string, mimetype="application/xml")
+        rss_string = fg.rss_str(pretty=True).decode("utf-8")
+        rss_string = rss_string.replace("<span", "<div")
+        rss_string = rss_string.replace("</span>", "</div>")
+        rss_string = rss_string.replace(
+            "<pre",
+            '<pre style="white-space: pre-wrap; font-family: monospace"'
+        )
+        response = make_response(rss_string)
+        response.headers["Content-Type"] = "application/xml"
+        return response
+    elif not region and not component_name:
+        response = make_response(incorr_req)
+        response.headers["Content-Type"] = "text/html"
+        response.status_code = 404
+        return response
+    else:
+        response = make_response(incorr_req)
+        response.headers["Content-Type"] = "text/html"
+        response.status_code = 404
+        return response
