@@ -88,10 +88,10 @@ class Component(Base):
         """
         return (
             db.session.scalars(
-                select(Component, Incident)
-                .options(joinedload(Component.attributes))
+                select(Component)
+                .options(joinedload(Component.attributes, innerjoin=True))
                 .options(
-                    joinedload(Component.incidents),
+                    joinedload(Component.incidents, innerjoin=False),
                     with_loader_criteria(
                         Incident,
                         PropComparator.and_(
