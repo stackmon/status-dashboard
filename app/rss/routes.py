@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-import os
 from datetime import datetime
 
 from app.api.schemas.components import ComponentSchema
@@ -19,21 +18,15 @@ from app.rss import bp
 
 from feedgen.feed import FeedGenerator
 
+from flask import escape
 from flask import make_response
 from flask import request
 
-import pytz
-
 
 def sorted_incidents(incidents):
-    none_end_date_list = []
     sorted_list = []
-    limited_incidents = []
     for incident in incidents:
-        if incident["end_date"] is None:
-            none_end_date_list.append(incident)
-        else:
-            sorted_list.append(incident)
+        sorted_list.append(incident)
     sorted_list = sorted(
         sorted_list,
         key=lambda x: datetime.strptime(
@@ -41,30 +34,23 @@ def sorted_incidents(incidents):
         ),
         reverse=True
     )
-    sorted_list = sorted_list[:9]
-    limited_incidents.extend(none_end_date_list)
-    limited_incidents.extend(sorted_list)
-    last_10_incidents = limited_incidents[:10]
+    last_10_incidents = sorted_list[:10]
     return last_10_incidents
 
 
 @bp.route("/rss/")
 def rss():
-    timezone = os.getenv("TZ", "UTC")
-    tz = pytz.timezone(timezone)
     region = request.args.get("mt", "")
     component_name = request.args.get("srv", "")
     attr_name = "region"
     attr_value = region
     attribute = {attr_name: attr_value}
-    incorr_req = "<html><body>"\
-        "<b>Status Dashboard RSS feed</b><br>"\
-        "Please read the documentation to<br>"\
-        "make the correct request"\
-        "</body></html>"
+    incorr_req = "Status Dashboard RSS feed\n"\
+        "Please read the documentation to\n"\
+        "make the correct request"
     if component_name and not region:
-        response = make_response(incorr_req)
-        response.headers["Content-Type"] = "text/html"
+        response = make_response(escape(incorr_req))
+        response.headers["Content-Type"] = "text/plain"
         response.status_code = 404
         return response
     if component_name and region:
@@ -73,9 +59,9 @@ def rss():
             attribute
         )
         if not component:
-            content = f"Component: <b>{component_name}</b> is not found"
-            response = make_response(content)
-            response.headers["Content-Type"] = "text/html"
+            content = f"Component: {component_name} is not found"
+            response = make_response(escape(content))
+            response.headers["Content-Type"] = "text/plain"
             response.status_code = 404
             return response
         components = [component]
@@ -83,11 +69,11 @@ def rss():
         components = Component.find_by_attribute(attribute)
         if not components:
             content = (
-                f"Not components found for <b>{region}</b><br>"
+                f"Not components found for {region}\n"
                 "Check the correctness of the request"
             )
-            response = make_response(content)
-            response.headers["Content-Type"] = "text/html"
+            response = make_response(escape(content))
+            response.headers["Content-Type"] = "text/plain"
             response.status_code = 404
             return response
     #
@@ -137,19 +123,15 @@ def rss():
             ) <= datetime.today():
                 fe = fg.add_entry()
                 fe.title(incident["text"])
-                start_date = tz.localize(
-                    datetime.strptime(
-                        incident["start_date"],
-                        "%Y-%m-%d %H:%M"
-                    )
-                )
+                start_date = datetime.strptime(
+                    incident["start_date"],
+                    "%Y-%m-%d %H:%M"
+                ).astimezone()
                 if incident["end_date"]:
-                    end_date = tz.localize(
-                        datetime.strptime(
-                            incident["end_date"],
-                            "%Y-%m-%d %H:%M"
-                        )
-                    )
+                    end_date = datetime.strptime(
+                        incident["end_date"],
+                        "%Y-%m-%d %H:%M"
+                    ).astimezone()
                 else:
                     end_date = None
                 content_string = f"Incident impact: {incident['impact']}, \
@@ -164,39 +146,29 @@ def rss():
                 #
                 if incident["updates"]:
                     for update in incident["updates"]:
-                        update_timestamp = tz.localize(
-                            datetime.strptime(
-                                update["timestamp"],
-                                "%Y-%m-%d %H:%M"
-                            )
-                        )
+                        update_timestamp = datetime.strptime(
+                            update["timestamp"],
+                            "%Y-%m-%d %H:%M"
+                        ).astimezone()
                     content_string += f"\n \
-                                        <div class='update'> \
                                         Update: {update['text']}, \
-                                        Update timestamp: {update_timestamp} \
-                                        </div>"
+                                        Update timestamp: {update_timestamp}"
                     fe.pubDate(update_timestamp)
                 else:
                     fe.pubDate(start_date)
-                fe.content(f"<div class='item_desc'>{content_string}</div>")
+                fe.content(f"{content_string}")
 
         rss_string = fg.rss_str(pretty=True).decode("utf-8")
-        rss_string = rss_string.replace("<span", "<div")
-        rss_string = rss_string.replace("</span>", "</div>")
-        rss_string = rss_string.replace(
-            "<pre",
-            '<pre style="white-space: pre-wrap; font-family: monospace"'
-        )
         response = make_response(rss_string)
         response.headers["Content-Type"] = "application/xml"
         return response
     elif not region and not component_name:
-        response = make_response(incorr_req)
-        response.headers["Content-Type"] = "text/html"
+        response = make_response(escape(incorr_req))
+        response.headers["Content-Type"] = "text/plain"
         response.status_code = 404
         return response
     else:
-        response = make_response(incorr_req)
-        response.headers["Content-Type"] = "text/html"
+        response = make_response(escape(incorr_req))
+        response.headers["Content-Type"] = "text/plain"
         response.status_code = 404
         return response

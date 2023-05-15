@@ -93,7 +93,7 @@ class ApiComponentStatus(MethodView):
         """
         name = data.get("name", None)
         impact = data.get("impact", 1)
-        text = data.get("text", None)
+        text = data.get("text", "Incident")
         if impact not in current_app.config["INCIDENT_IMPACTS"].keys():
             return abort(
                 400, message="Incident impact is not allowed by configuration"
@@ -142,7 +142,7 @@ class ApiComponentStatus(MethodView):
             # No active incidents - open new
             current_app.logger.debug("No active incidents - opening new one")
             new_incident = Incident(
-                text=text if text is not None else "Incident",
+                text=text,
                 impact=impact,
                 start_date=datetime.now(),
                 components=[target_component],
