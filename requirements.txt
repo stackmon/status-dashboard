@@ -12,4 +12,3 @@ marshmallow>=3.19.0 #MIT License
 PyJWT>=2.6.0 #MIT License
 flask_httpauth>= 4.7.0 #MIT License
 feedgen>=0.9.0 #BSD License
-pytz>=2023.3 #MIT License

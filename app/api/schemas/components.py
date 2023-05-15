@@ -51,5 +51,5 @@ class ComponentSchema(Schema):
 class ComponentStatusArgsSchema(Schema):
     impact = fields.Integer(required=True)
     name = fields.String(required=True)
-    text = fields.String(required=False, default="Incident")
+    text = fields.String(required=False, dump_default="Incident")
     attributes = fields.List(fields.Nested(ComponentAttributeSchema))
