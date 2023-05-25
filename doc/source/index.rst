@@ -17,3 +17,4 @@ Status Dashboard for any possible usecase.
    auth
    api
    customizing
+   rss

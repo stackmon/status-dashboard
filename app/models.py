@@ -222,8 +222,9 @@ class Incident(Base):
     def get_history_by_months():
         incident_dict = {}
         for incident in Incident.get_all_closed():
-            incident_dict.setdefault(
-                incident.end_date.month, []).append(incident)
+            incident_dict.setdefault(incident.end_date.month, []).append(
+                incident
+            )
         return incident_dict.values()
 
     @staticmethod
@@ -270,6 +271,27 @@ class Incident(Base):
             c.get_attributes_as_dict().get(attr_key, None)
             for c in self.components
         )
+
+    @staticmethod
+    def get_view_by_component_attribute(attr_name, attr_value):
+        """Get Incidents view by component attribute"""
+        return db.session.scalars(
+            select(Incident)
+            .options(joinedload(Incident.updates, innerjoin=False))
+            .options(
+                joinedload(Incident.components, innerjoin=True).joinedload(
+                    Component.attributes, innerjoin=True
+                ),
+                with_loader_criteria(
+                    ComponentAttribute,
+                    PropComparator.and_(
+                        ComponentAttribute.name == attr_name,
+                        ComponentAttribute.value == attr_value,
+                    ),
+                ),
+            )
+            .order_by(Incident.start_date.asc())
+        ).unique()
 
 
 class IncidentStatus(Base):
