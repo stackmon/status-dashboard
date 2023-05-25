@@ -23,7 +23,6 @@ from app.models import Incident
 
 
 class TestBase(TestCase):
-
     test_config = dict(
         TESTING=True, SQLALCHEMY_DATABASE_URI="sqlite:///:memory:"
     )
@@ -83,9 +82,9 @@ class TestRSS(TestBase):
         self.assertEqual(200, res.status_code)
         rss_content = res.get_data(as_text=True)
         self.assertIn("Component1 (Region1) - Incidents", rss_content)
-        self.assertIn("Incident impact: 1", rss_content)
+        self.assertIn("Incident impact: minor", rss_content)
         self.assertNotIn("Component2", rss_content)
-        self.assertNotIn("Incident impact: 2", rss_content)
+        self.assertNotIn("Incident impact: major", rss_content)
 
     def test_get_regandcomp_404(self):
         res = self.client.get(
@@ -96,17 +95,13 @@ class TestRSS(TestBase):
         self.assertIn("Component: Component11 is not found", rss_content)
 
     def test_get_region_200(self):
-        res = self.client.get(
-            "http://127.0.0.1:5000/rss/?mt=Region1"
-        )
+        res = self.client.get("http://127.0.0.1:5000/rss/?mt=Region1")
         self.assertEqual(200, res.status_code)
         rss_content = res.get_data(as_text=True)
         self.assertIn("Region1 - Incidents", rss_content)
 
     def test_get_region_404(self):
-        res = self.client.get(
-            "http://127.0.0.1:5000/rss/?mt=Region12"
-        )
+        res = self.client.get("http://127.0.0.1:5000/rss/?mt=Region12")
         self.assertEqual(404, res.status_code)
         rss_content = res.get_data(as_text=True)
-        self.assertIn("Not components found for Region12", rss_content)
+        self.assertIn("Region12 is not a supported region", rss_content)

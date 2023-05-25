@@ -10,32 +10,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-from datetime import datetime
 
-from app.api.schemas.components import ComponentSchema
 from app.models import Component
+from app.models import ComponentAttribute
+from app.models import Incident
 from app.rss import bp
 
 from feedgen.feed import FeedGenerator
 
+from flask import current_app
 from flask import escape
 from flask import make_response
 from flask import request
-
-
-def sorted_incidents(incidents):
-    sorted_list = []
-    for incident in incidents:
-        sorted_list.append(incident)
-    sorted_list = sorted(
-        sorted_list,
-        key=lambda x: datetime.strptime(
-            x["start_date"], "%Y-%m-%d %H:%M"
-        ),
-        reverse=True
-    )
-    last_10_incidents = sorted_list[:10]
-    return last_10_incidents
 
 
 @bp.route("/rss/")
@@ -45,130 +31,95 @@ def rss():
     attr_name = "region"
     attr_value = region
     attribute = {attr_name: attr_value}
-    incorr_req = "Status Dashboard RSS feed\n"\
-        "Please read the documentation to\n"\
+    incorr_req = (
+        "Status Dashboard RSS feed\n"
+        "Please read the documentation to\n"
         "make the correct request"
+    )
+    incidents = list()
     if component_name and not region:
-        response = make_response(escape(incorr_req))
-        response.headers["Content-Type"] = "text/plain"
-        response.status_code = 404
-        return response
+        return make_response(escape(incorr_req), 404)
     if component_name and region:
         component = Component.find_by_name_and_attributes(
-            component_name,
-            attribute
+            component_name, attribute
         )
         if not component:
-            content = f"Component: {component_name} is not found"
-            response = make_response(escape(content))
-            response.headers["Content-Type"] = "text/plain"
-            response.status_code = 404
-            return response
-        components = [component]
-    elif region and not component_name:
-        components = Component.find_by_attribute(attribute)
-        if not components:
-            content = (
-                f"Not components found for {region}\n"
-                "Check the correctness of the request"
+            content = f"Component: {escape(component_name)} is not found"
+            return make_response(escape(content), 404)
+        incidents = component.incidents
+    elif region:
+        supported_vals = ComponentAttribute.get_unique_values(attr_name)
+        if attr_value not in supported_vals:
+            return make_response(
+                f"{escape(attr_value)} is not a supported region", 404
             )
-            response = make_response(escape(content))
-            response.headers["Content-Type"] = "text/plain"
-            response.status_code = 404
-            return response
+        incidents = Incident.get_view_by_component_attribute(
+            attr_name, attr_value
+        ).fetchmany(size=10)
+    elif not region and not component_name:
+        return make_response(escape(incorr_req), 404)
     #
     # RSS feed generator
-    # the generator uses a data dump according to the schema Component
-    # as data, the schemas are described in the:
-    # "app/api/schemas/components.py"
-    #
-    if region:
-        fg = FeedGenerator()
-        if component_name:
-            fg.title(
-                f"{component_name} ({region}) - Incidents"
-            )
-            fg.link(
-                href=f"{request.url_root}"
-                f"rss/?mt={region}&srv={component_name}",
-                rel="self"
-            )
-            fg.description(
-                f"{region} - Incidents"
-            )
-        else:
-            fg.title(
-                f"{region} - Incidents"
-            )
-            fg.link(
-                href=f"{request.url_root}rss/?mt={region}",
-                rel="self"
-            )
-            fg.description(
-                f"{region} - Incidents"
-            )
-        #
-        # This part is needed to be able to
-        # make a request without component_name
-        # and get all incidents for the specified region
-        #
-        incidents = []
-        for component in components:
-            component_data = ComponentSchema().dump(component)
-            incidents.extend(component_data["incidents"])
-
-        for incident in reversed(sorted_incidents(incidents)):
-            if incident["end_date"] is None or datetime.strptime(
-                incident["end_date"], "%Y-%m-%d %H:%M"
-            ) <= datetime.today():
-                fe = fg.add_entry()
-                fe.title(incident["text"])
-                start_date = datetime.strptime(
-                    incident["start_date"],
-                    "%Y-%m-%d %H:%M"
-                ).astimezone()
-                if incident["end_date"]:
-                    end_date = datetime.strptime(
-                        incident["end_date"],
-                        "%Y-%m-%d %H:%M"
-                    ).astimezone()
-                else:
-                    end_date = None
-                content_string = f"Incident impact: {incident['impact']}, \
-                        Incident start date: {start_date}, \
-                        incident end date: {end_date}"
-                #
-                # "updates" exist as a sublist for the incident,
-                # schemes are described in the file:
-                #  "app/api/schemas/components.py"
-                # look at the "class IncidentSchema(Schema):"
-                # and class "IncidentStatusSchema(Schema):"
-                #
-                if incident["updates"]:
-                    for update in incident["updates"]:
-                        update_timestamp = datetime.strptime(
-                            update["timestamp"],
-                            "%Y-%m-%d %H:%M"
-                        ).astimezone()
-                    content_string += f"\n \
-                                        Update: {update['text']}, \
-                                        Update timestamp: {update_timestamp}"
-                    fe.pubDate(update_timestamp)
-                else:
-                    fe.pubDate(start_date)
-                fe.content(f"{content_string}")
-
-        rss_string = fg.rss_str(pretty=True).decode("utf-8")
-        response = make_response(rss_string)
-        response.headers["Content-Type"] = "application/xml"
-        return response
-    elif not region and not component_name:
-        response = make_response(escape(incorr_req))
-        response.headers["Content-Type"] = "text/plain"
-        response.status_code = 404
-        return response
+    fg = FeedGenerator()
+    if component_name:
+        fg.title(f"{component_name} ({region}) - Incidents | Status Dashboard")
+        fg.link(
+            href=f"{request.url_root}"
+            f"rss/?mt={region}&srv={component_name}",
+            rel="self",
+        )
+        fg.description(f"{region} - Incidents")
     else:
-        response = make_response(escape(incorr_req))
-        response.headers["Content-Type"] = "text/plain"
-        response.status_code = 404
-        return response
+        fg.title(f"{region} - Incidents | Status Dashboard")
+        fg.link(href=f"{request.url_root}rss/?mt={region}", rel="self")
+        fg.description(f"{region} - Incidents")
+    if incidents:
+        date_format = "%Y-%m-%d %H:%M %Z"
+        for incident in incidents:
+            fe = fg.add_entry()
+            fe.title(incident.text)
+            content = list()
+            if incident.updates:
+                for update in sorted(
+                    incident.updates,
+                    key=lambda update: update.timestamp,
+                    reverse=True,
+                ):
+                    # append empty line before every update
+                    content.append(
+                        f"<small>{update.timestamp.strftime(date_format)}"
+                        "</small><br>"
+                        f"<strong>{update.status} - </strong>{update.text}",
+                    )
+                    content.append("<br>")
+                fe.pubDate(update.timestamp.astimezone())
+            else:
+                fe.pubDate(incident.start_date.astimezone())
+            content.extend(
+                [
+                    "Incident impact: "
+                    + current_app.config["INCIDENT_IMPACTS"][
+                        incident.impact
+                    ].key,
+                    "Incident has started on: "
+                    f"{incident.start_date.strftime(date_format)}",
+                ]
+            )
+            if incident.end_date:
+                content.append(
+                    "Incident end date: "
+                    f"{incident.end_date.strftime(date_format)}"
+                )
+            content.append("<br>")
+            content.append(
+                "We apologize for the inconvenience and will share an update "
+                "once we have more information.",
+            )
+            # Join all content elements by a line break
+            fe.content("<br>".join(content))
+            fe.link(href=f"{request.url_root}incidents/{incident.id}")
+            fe.id(f"{request.url_root}incidents/{incident.id}")
+
+    response = make_response(fg.rss_str())
+    response.headers["Content-Type"] = "application/rss+xml"
+    return response
