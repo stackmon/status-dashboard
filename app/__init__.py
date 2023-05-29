@@ -120,9 +120,11 @@ def create_app(test_config=None):
 
     from app.web import bp as web_bp
     from app.api import bp as api_bp
+    from app.rss import bp as rss_bp
 
     app.register_blueprint(web_bp)
     app.register_blueprint(api_bp, url_prefix="/api")
+    app.register_blueprint(rss_bp)
 
     from app.websocket import websocket
 
