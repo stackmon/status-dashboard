@@ -118,14 +118,14 @@ def create_app(test_config=None):
     from app.api import bp as api_bp
     from app.rss import bp as rss_bp
     from app.websocket import bp as ws_bp
-    from app.websocket import sock
+    # from app.websocket import sock
 
     app.register_blueprint(web_bp)
     app.register_blueprint(api_bp, url_prefix="/api")
     app.register_blueprint(rss_bp)
-
     app.register_blueprint(ws_bp)
-    sock.init_app(app)
+
+    # sock.init_app(app)
 
     with app.app_context():
         # Ensure there is some DB when we start the app
