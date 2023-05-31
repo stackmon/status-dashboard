@@ -25,8 +25,6 @@ from flask_migrate import Migrate
 
 from flask_smorest import Api
 
-from flask_sock import Sock
-
 from flask_sqlalchemy import SQLAlchemy
 
 import yaml
@@ -44,8 +42,6 @@ def create_app(test_config=None):
     app.config.from_object(DefaultConfiguration)
 
     api = Api(app)  # noqa
-    sock = Sock(app)
-    sock.init_app(app)
 
     app.config.from_prefixed_env(prefix="SDB")
 
@@ -121,14 +117,15 @@ def create_app(test_config=None):
     from app.web import bp as web_bp
     from app.api import bp as api_bp
     from app.rss import bp as rss_bp
+    from app.websocket import bp as ws_bp
+    from app.websocket import sock
 
     app.register_blueprint(web_bp)
     app.register_blueprint(api_bp, url_prefix="/api")
     app.register_blueprint(rss_bp)
 
-    from app.websocket import websocket
-
-    sock.route("/ws")(websocket)
+    app.register_blueprint(ws_bp)
+    sock.init_app(app)
 
     with app.app_context():
         # Ensure there is some DB when we start the app
