@@ -18,6 +18,13 @@
     parent: stackmon-upload-container-images
     vars: *status-dashboard_image_vars
 
+- job:
+    name: websocket-status-dashboard-tests
+    parent: otc-tox-py310
+    description: Run tox -e websocket_tests in a pod
+    vars:
+      tox_envlist: websocket_tests
+
 - project:
     merge-mode: squash-merge
     default-branch: main
@@ -29,6 +36,7 @@
         - otc-tox-pep8
         - otc-tox-py38
         - stackmon-status-dashboard-build-image
+        - websocket-status-dashboard-tests
     check-post:
       jobs:
         - stackmon-status-dashboard-upload-image

@@ -1,0 +1,2 @@
+aiohttp>=3.8.4 #Apache 2
+websockets>=11.0.3 #BSD-3-Clause
