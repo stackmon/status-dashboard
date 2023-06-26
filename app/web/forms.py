@@ -26,7 +26,7 @@ class IncidentUpdateForm(FlaskForm):
         "Incident title",
         validators=[
             validators.DataRequired(),
-            validators.Length(min=10, max=200),
+            validators.Length(min=8, max=200),
         ],
     )
     update_text = TextAreaField(
@@ -67,7 +67,7 @@ class IncidentForm(FlaskForm):
         "Incident summary",
         validators=[
             validators.DataRequired(),
-            validators.Length(min=10, max=200),
+            validators.Length(min=8, max=200),
         ],
     )
     incident_impact = SelectField("Incident Impact")
