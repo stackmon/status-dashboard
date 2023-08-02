@@ -23,7 +23,7 @@ def upgrade():
                existing_type=sa.VARCHAR(length=11),
                type_=sa.SmallInteger(),
                existing_nullable=True,
-               postgresql_using=0)
+               postgresql_using="impact::smallint")
 
     # ### end Alembic commands ###
 
