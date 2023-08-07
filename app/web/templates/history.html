@@ -8,13 +8,13 @@
   </div>
 
   <div class="mb-3">
-  {% set past_incidents = incidents.get_history_by_months() %}
-  {% if past_incidents | length == 0 %}
+  {% set past_incidents = incidents.get_history_by_months(None) %}
+  {% if past_incidents.values() | length == 0 %}
     <div class="alert alert-success" role="alert">
       No incidents yet.
     </div>
   {% else %}
-    {% for incident_group in past_incidents
+    {% for incident_group in past_incidents.values()
       | sort(attribute='0.end_date', reverse = True) %}
       <h3 class="mb-3">{{ incident_group[0].end_date.strftime('%B %Y') }}</h3>
       <ul class="history">

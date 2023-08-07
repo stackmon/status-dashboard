@@ -23,6 +23,8 @@ from app.web import bp
 from app.web.forms import IncidentForm
 from app.web.forms import IncidentUpdateForm
 
+from dateutil.relativedelta import relativedelta
+
 from flask import abort
 from flask import current_app
 from flask import flash
@@ -124,6 +126,21 @@ def history():
         "history.html",
         title="Incident History",
         incidents=Incident,
+    )
+
+
+@bp.route("/sla", methods=["GET"])
+def sla():
+    time_now = datetime.now()
+    months = [time_now + relativedelta(months=-mon) for mon in range(6)]
+
+    return render_template(
+        "sla.html",
+        title="Component Availability",
+        components=Component,
+        component_attributes=ComponentAttribute,
+        incidents=Incident,
+        months=months,
     )
 
 
