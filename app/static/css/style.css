@@ -144,6 +144,36 @@ nav.navbar {
   justify-content: center;
 }
 
+.table-header {
+  top:4;
+  background-color: var(--bs-blue);
+  color: var(--bs-white);
+}
+
+.table thead > tr > th {
+  border: none;
+}
+
+.table thead > tr {
+  border: none;
+}
+
+tbody:nth-child(odd) {
+  background: var(--bs-gray) !important;
+}
+
+.bg-0 {
+  background-color: var(--bs-green) !important;
+}
+
+.bg-1 {
+  background-color: var(--bs-yellow) !important;
+}
+
+.bg-2 {
+  background-color: var(--bs-red) !important;
+}
+
 
 /* Footer */
 footer.footer {

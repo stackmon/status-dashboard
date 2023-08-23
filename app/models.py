@@ -16,6 +16,8 @@ from typing import List
 
 from app import db
 
+from dateutil.relativedelta import relativedelta
+
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import Index
@@ -111,6 +113,19 @@ class Component(Base):
         return {attr.name: attr.value for attr in self.attributes}
 
     @staticmethod
+    def count_components_by_attributes(attr_dict):
+        """Return the number of components that match specific attributes"""
+        counter = 0
+        for comp in Component.all():
+            comp_attrs = comp.get_attributes_as_dict()
+            if set(
+                comp_attrs.items()
+            ).intersection(set(
+                    attr_dict.items())) == set(attr_dict.items()):
+                counter += 1
+        return counter
+
+    @staticmethod
     def find_by_name_and_attributes(name, attributes):
         """Find existing component by name and set of attributes
 
@@ -140,6 +155,54 @@ class Component(Base):
                 # a pretty good candidate when not much attributes were passed
                 return comp
         return None
+
+    def calculate_sla(self):
+        """Calculate component availability on the month basis"""
+
+        time_now = datetime.datetime.now()
+        this_month_start = datetime.datetime(time_now.year, time_now.month, 1)
+
+        outages = [inc for inc in self.incidents
+                   if inc.impact == 3 and inc.end_date is not None]
+        outages_dict = Incident.get_history_by_months(outages)
+        outages_dict_sorted = dict(sorted(outages_dict.items()))
+
+        prev_month_minutes = 0
+
+        months = [this_month_start + relativedelta(months=-mon)
+                  for mon in range(6)]
+        sla_dict = {month: 1 for month in months}
+
+        for month_start, outage_group in outages_dict_sorted.items():
+            minutes_in_month = prev_month_minutes
+            outages_minutes = 0
+            prev_month_minutes = 0
+
+            if this_month_start.month == month_start.month:
+                minutes_in_month = (
+                    time_now - month_start
+                ).total_seconds() / 60
+            else:
+                next_month_start = month_start + relativedelta(months=1)
+                minutes_in_month = (
+                    next_month_start - month_start
+                ).total_seconds() / 60
+
+            for outage in outage_group:
+                outage_start = outage.start_date
+                if outage_start < month_start:
+                    diff = month_start - outage_start
+                    prev_month_minutes += diff.total_seconds() / 60
+                    outage_start = month_start
+
+                diff = outage.end_date - outage_start
+                outages_minutes += diff.total_seconds() / 60
+
+            sla_dict[month_start] = (
+                minutes_in_month - outages_minutes
+            ) / minutes_in_month
+
+        return sla_dict
 
 
 class ComponentAttribute(Base):
@@ -219,13 +282,19 @@ class Incident(Base):
         ).all()
 
     @staticmethod
-    def get_history_by_months():
+    def get_history_by_months(incident_list):
+        if incident_list is None:
+            incident_list = Incident.get_all_closed()
         incident_dict = {}
-        for incident in Incident.get_all_closed():
-            incident_dict.setdefault(incident.end_date.month, []).append(
-                incident
-            )
-        return incident_dict.values()
+        for incident in incident_list:
+            incident_dict.setdefault(
+                datetime.datetime(
+                    incident.end_date.year,
+                    incident.end_date.month,
+                    1),
+                []
+            ).append(incident)
+        return incident_dict
 
     @staticmethod
     def get_active_maintenance():
