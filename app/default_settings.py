@@ -23,6 +23,7 @@ class DefaultConfiguration:
     API_TITLE = "Status Dashboard API"
     API_VERSION = "v1"
     API_PAYLOAD_KEY = "stackmon"
+    PROMETHEUS_EXPORTER_ENABLED = True
     OPENAPI_VERSION = "3.1.0"
     OPENAPI_URL_PREFIX = "/"
     OPENAPI_JSON_PATH = "api-spec.json"

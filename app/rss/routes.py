@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-
+from app.exporter.requests import after_request, before_request
 from app.models import Component
 from app.models import ComponentAttribute
 from app.models import Incident
@@ -22,6 +22,16 @@ from flask import current_app
 from flask import escape
 from flask import make_response
 from flask import request
+
+
+@bp.before_request
+def before():
+    before_request()
+
+
+@bp.after_request
+def after(resp):
+    return after_request(resp)
 
 
 @bp.route("/rss/")

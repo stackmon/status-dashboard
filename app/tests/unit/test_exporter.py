@@ -19,7 +19,6 @@ from app.exporter.metrics import record_db_connection_status
 from app.exporter.metrics import record_request
 from app.exporter.metrics import record_request_duration
 from app.exporter.metrics import record_response_status
-from app.exporter.metrics import record_response_time
 from app.exporter.metrics import request_count
 from app.exporter.metrics import response_status_count
 from app.models import Base
@@ -122,34 +121,6 @@ class PrometheusExporterTestCase(TestBase):
         self.assertEqual(
             response_status_count.labels(status=status)._value.get(), count
         )
-
-    def test_record_response_time(self):
-        time = 1.5
-        record_response_time(time)
-
-        metric_samples = prometheus_registry.collect()
-        response_time_seconds_buckets = []
-        sum_response_time_metric = None
-        expected_bucket_value = 1.0
-        expected_sum_time = time
-        for metric in metric_samples:
-            for sample in metric.samples:
-                if sample.name == "http_response_time_seconds_bucket":
-                    response_time_seconds_buckets.append(sample)
-                elif (
-                    sample.name == "http_response_time_seconds_sum" and
-                    sample.value == time
-                ):
-                    sum_response_time_metric = sample
-
-        for sample in response_time_seconds_buckets:
-            if sample.labels.get("le") == "2.5":
-                le_2_5_bucket = sample
-                break
-
-        self.assertIsNotNone(le_2_5_bucket)
-        self.assertEqual(le_2_5_bucket.value, expected_bucket_value)
-        self.assertEqual(sum_response_time_metric.value, expected_sum_time)
 
     def test_record_db_connection_status_connected(self):
         record_db_connection_status(connected=True)

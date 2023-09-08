@@ -18,6 +18,7 @@ from app.api.schemas.components import ComponentSchema
 from app.api.schemas.components import ComponentSearchQueryArgs
 from app.api.schemas.components import ComponentStatusArgsSchema
 from app.api.schemas.components import IncidentSchema
+from app.exporter.requests import after_request, before_request
 from app.models import Component
 from app.models import Incident
 from app.models import db
@@ -28,6 +29,16 @@ from flask.views import MethodView
 from flask_smorest import abort
 
 auth = authorization.auth
+
+
+@bp.before_request
+def before():
+    before_request()
+
+
+@bp.after_request
+def after(resp):
+    return after_request(resp)
 
 
 @bp.route("/v1/component_status", methods=["GET", "POST"])

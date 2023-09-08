@@ -10,56 +10,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-import time
-
 from app.exporter import bp
-from app.exporter.metrics import (
-    record_db_connection_status,
-    record_request,
-    record_request_duration,
-    record_response_status,
-    record_response_time,
-)
+from app.exporter.metrics import record_db_connection_status
+from app.exporter.requests import after_request, before_request
 from app.models import db
 
 from flask import Response
 from flask import current_app
-from flask import request
+
 
 from prometheus_client import REGISTRY, generate_latest
 
 from sqlalchemy import text
-
-
-def before_request():
-    if current_app.config["PROMETHEUS_EXPORTER_ENABLED"]:
-        request.start_time = time.time()
-
-
-@bp.after_request
-def after_request(response):
-    if current_app.config["PROMETHEUS_EXPORTER_ENABLED"]:
-        method = request.method
-        endpoint = request.path
-        status = response.status_code
-
-        # Checking for an existing start_time attribute in a request
-        if hasattr(request, "start_time"):
-            duration = time.time() - request.start_time
-        else:
-            duration = 0.0
-
-        response_time = float(response.headers.get("X-Response-Time", 0.0))
-
-        record_request(method, endpoint, status)
-        record_request_duration(method, endpoint, status, duration)
-        record_response_status(status)
-        record_response_time(response_time)
-
-        connected = is_db_connected()
-        record_db_connection_status(connected)
-
-    return response
 
 
 def is_db_connected():
@@ -71,6 +33,19 @@ def is_db_connected():
             f"Error while checking database connection: {db_error}"
         )
         return False
+
+
+@bp.before_request
+def before():
+    before_request()
+    connected = is_db_connected()
+    record_db_connection_status(connected)
+
+
+@bp.after_request
+def after(resp):
+    response = after_request(resp)
+    return response
 
 
 @bp.route("/metrics", methods=["GET"])

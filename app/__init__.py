@@ -43,8 +43,6 @@ def create_app(test_config=None):
 
     api = Api(app)  # noqa
 
-    app.config["PROMETHEUS_EXPORTER_ENABLED"] = True
-
     app.config.from_prefixed_env(prefix="SDB")
 
     if test_config is None:

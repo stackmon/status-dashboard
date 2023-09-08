@@ -14,6 +14,7 @@ from datetime import datetime
 
 from app import authorization
 from app import oauth
+from app.exporter.requests import after_request, before_request
 from app.models import Component
 from app.models import ComponentAttribute
 from app.models import Incident
@@ -32,6 +33,16 @@ from flask import redirect
 from flask import render_template
 from flask import session
 from flask import url_for
+
+
+@bp.before_request
+def before():
+    before_request()
+
+
+@bp.after_request
+def after(resp):
+    return after_request(resp)
 
 
 @bp.route("/", methods=["GET"])

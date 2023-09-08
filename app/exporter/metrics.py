@@ -33,11 +33,6 @@ response_status_count = Counter(
     ['status'],
 )
 
-response_time_histogram = Histogram(
-    'http_response_time_seconds',
-    'HTTP Response Time in seconds',
-)
-
 db_connection_gauge = Gauge(
     'db_connection_status',
     'Database Connection Status (1 for connected, 0 for disconnected)',
@@ -58,10 +53,6 @@ def record_request_duration(method, endpoint, status, duration):
 
 def record_response_status(status):
     response_status_count.labels(status=status).inc()
-
-
-def record_response_time(time):
-    response_time_histogram.observe(time)
 
 
 def record_db_connection_status(connected):
