@@ -35,4 +35,4 @@ The exporter collects metrics:
   - 'Database Connection Status (1 for connected, 0 for disconnected)'
 
 metrics are available at the following endpoint:
-http://127.0.0.1:5000//metrics
+http://127.0.0.1:5000/metrics
