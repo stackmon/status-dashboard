@@ -6,7 +6,7 @@ Flask-Wtf>=1.1 # BSD-3-Clause
 authlib>=1.2 # BSD-3-Clause
 # Requests is an unlisted dependency of authlib
 requests>=2.28 # Apache-2.0
-pyyaml>=6.0 # MIT
+pyyaml>=6.0.1 # MIT
 flask_smorest>=0.41.0 # MIT License
 marshmallow>=3.19.0 #MIT License
 PyJWT>=2.6.0 #MIT License
