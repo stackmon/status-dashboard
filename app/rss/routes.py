@@ -22,7 +22,7 @@ from flask import current_app
 from flask import make_response
 from flask import request
 
-from markupsafe import Markup
+from markupsafe import escape
 
 
 @bp.route("/rss/")
@@ -39,28 +39,26 @@ def rss():
     )
     incidents = list()
     if component_name and not region:
-        return make_response(Markup.escape(incorr_req), 404)
+        return make_response(escape(incorr_req), 404)
     if component_name and region:
         component = Component.find_by_name_and_attributes(
             component_name, attribute
         )
         if not component:
-            content = (
-                f"Component: {Markup.escape(component_name)} is not found"
-            )
-            return make_response(Markup.escape(content), 404)
+            content = f"Component: {escape(component_name)} is not found"
+            return make_response(escape(content), 404)
         incidents = component.incidents
     elif region:
         supported_vals = ComponentAttribute.get_unique_values(attr_name)
         if attr_value not in supported_vals:
             return make_response(
-                f"{Markup.escape(attr_value)} is not a supported region", 404
+                f"{escape(attr_value)} is not a supported region", 404
             )
         incidents = Incident.get_view_by_component_attribute(
             attr_name, attr_value
         ).fetchmany(size=10)
     elif not region and not component_name:
-        return make_response(Markup.escape(incorr_req), 404)
+        return make_response(escape(incorr_req), 404)
     #
     # RSS feed generator
     fg = FeedGenerator()
