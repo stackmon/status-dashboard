@@ -18,3 +18,4 @@ Status Dashboard for any possible usecase.
    api
    customizing
    rss
+   websocket

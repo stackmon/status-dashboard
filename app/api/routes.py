@@ -150,3 +150,22 @@ class ApiComponentStatus(MethodView):
             db.session.add(new_incident)
             db.session.commit()
             return new_incident
+
+
+@bp.route("/v1/incidents", methods=["GET"])
+class ApiIncidents(MethodView):
+    @bp.response(200, IncidentSchema(many=True))
+    def get(self):
+        """Get all incidents
+
+        Retrieve a list of all incidents.
+
+        Example:
+
+        .. code-block:: console
+
+           curl http://localhost:5000/api/v1/incidents -X GET \\
+                -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6Ikp...'
+        """
+        incidents = db.session.scalars(db.select(Incident)).all()
+        return incidents
