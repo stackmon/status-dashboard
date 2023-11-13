@@ -23,5 +23,5 @@ COPY . /app
 # configure the container to run in an executed manner
 CMD ["gunicorn", "-b",  "0.0.0.0:5000", \
      "--access-logfile", "-", \
-     "-w", "2", \
+     "-w", "1", \
      "app:create_app()"]

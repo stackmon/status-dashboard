@@ -9,11 +9,11 @@
     <div class="mb-3">
       <label for="{{form.incident_text.id}}" class="form-label">{{form.incident_text.label}}</label>
       <textarea class="form-control {{ ' is-invalid' if form.incident_text.errors
-                        | length > 0 else '' }}" 
+                        | length > 0 else '' }}"
              id="{{form.incident_text.id}}"
              name="{{form.incident_text.name}}"
              rows=3
-             aria-describedby="incidentTextHelp"></textarea>
+             aria-describedby="incidentTextHelp">{{ form.incident_text.data if form.incident_text.data }}</textarea>
        <div id="incidentTextHelp" class="form-text">Please enter Incident
          summary here.</div>
        <div class="invalid-feedback">{{ form.incident_text.errors | join(', ')
@@ -24,16 +24,19 @@
     <div class="mb-3">
       <label for="{{form.incident_impact.id}}"
         class="form-label">{{form.incident_impact.label}}</label>
-      <select 
+      <select
           class="form-select form-select-sm mb-3 {{ ' is-invalid' if
                  form.incident_impact.errors
                         | length > 0 else '' }}"
-          aria-label=".form-select-sm" 
-          id="{{form.incident_impact.id}}" 
+          aria-label=".form-select-sm"
+          id="{{form.incident_impact.id}}"
           name="{{form.incident_impact.name}}">
-        <option selected>Choose...</option>
+        <option>Choose...</option>
         {% for (k, v) in form.incident_impact.choices %}
-        <option value="{{k}}">{{v}}</option>
+        <option
+        {% if form.incident_impact.data and k|string in form.incident_impact.data %} selected
+        {% endif %}
+        value="{{k}}">{{v}}</option>
         {% endfor %}
       </select>
       <div id="incidentImpactHelp" class="form-text">Please enter incident impact
@@ -45,19 +48,22 @@
     <div class="mb-3">
       <label for="{{form.incident_components.id}}"
         class="form-label">{{form.incident_components.label}}</label>
-      <select 
+      <select
           class="form-select form-select-sm mb-3 {{ ' is-invalid' if
                  form.incident_components.errors
                         | length > 0 else '' }}"
-          aria-label="multiple .form-select-sm" 
+          aria-label="multiple .form-select-sm"
           multiple
           size="10"
           id="{{form.incident_components.id}}"
           name="{{form.incident_components.name}}">
-        <option selected>Choose...</option>
+        <option>Choose...</option>
         {% for (k, v) in form.incident_components.choices %}
         {% with attrs = v.get_attributes_as_dict() %}
-        <option value="{{k}}">{{v.name}} (region: {{attrs['region']}})</option>
+        <option
+        {% if form.incident_components.data and k|string in form.incident_components.raw_data %} selected
+        {% endif %}
+        value="{{k}}">{{v.name}} (region: {{attrs['region']}})</option>
         {% endwith %}
         {% endfor %}
       </select>
@@ -74,6 +80,7 @@
                         | length > 0 else '' }}" type="datetime-local"
              id="{{form.incident_start.id}}"
              name="{{form.incident_start.name}}"
+             value="{{form.incident_start.data}}"
              aria-describedby="incidentStartHelp"/>
       <div id="nextUpdateHelp" class="form-text">
         Select the incident start time.

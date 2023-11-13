@@ -49,7 +49,7 @@
                id="{{form.update_title.id}}"
                name="{{form.update_title.name}}"
                type="text"
-               value="{{ incident.text }}"
+               value="{{ form.update_title.data if form.update_title.data else incident.text }}"
                aria-describedby="updateTextHelp"></input>
          <div id="updateTextHelp" class="form-text">Please update the incident title if necessary.</div>
         {% if form.update_title.errors %}
@@ -72,7 +72,7 @@
                id="{{form.update_text.id}}"
                name="{{form.update_text.name}}"
                rows=3
-               aria-describedby="updateTextHelp"></textarea>
+               aria-describedby="updateTextHelp">{{ form.update_text.data if form.update_text.data }}</textarea>
          <div id="updateTextHelp" class="form-text">Please enter update message
         here.</div>
         {% if form.update_text.errors %}
@@ -98,7 +98,10 @@
             name="{{form.update_status.name}}">
           <option>Choose...</option>
           {% for (k, v) in form.update_status.choices %}
-          <option value="{{k}}">{{v}}</option>
+          <option
+          {% if form.update_status.data and k|string in form.update_status.data %} selected
+          {% endif %}
+          value="{{k}}">{{v}}</option>
           {% endfor %}
         </select>
 
@@ -123,6 +126,7 @@
               type="datetime-local"
               id="{{form.next_update.id}}"
               name="{{form.next_update.name}}"
+              value="{{form.next_update.data}}"
               aria-describedby="nextUpdateHelp"/>
         <div id="nextUpdateHelp" class="form-text">
           Please provide the time for the next expected update.</div>

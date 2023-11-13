@@ -19,9 +19,10 @@ from app.rss import bp
 from feedgen.feed import FeedGenerator
 
 from flask import current_app
-from flask import escape
 from flask import make_response
 from flask import request
+
+from markupsafe import escape
 
 
 @bp.before_request

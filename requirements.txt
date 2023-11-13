@@ -1,15 +1,15 @@
-Flask>2.0 # BSD-3-Clause
-Flask-Caching>2.0 # BSD
-Flask-SQLAlchemy>3.0 # BSD-3-Clause
+Flask>=3.0.0 # BSD-3-Clause
+Flask-Caching>=2.1.0 # BSD
+Flask-SQLAlchemy>=3.1.1 # BSD-3-Clause
 Flask-Migrate>4.0 # MIT
-Flask-Wtf>=1.1 # BSD-3-Clause
+Flask-Wtf>=1.2.1 # BSD-3-Clause
 authlib>=1.2 # BSD-3-Clause
 # Requests is an unlisted dependency of authlib
 requests>=2.28 # Apache-2.0
-pyyaml>=6.0 # MIT
-flask_smorest>=0.41.0 # MIT License
+pyyaml>=6.0.1 # MIT
+flask_smorest>=0.42.2 # MIT License
 marshmallow>=3.19.0 #MIT License
 PyJWT>=2.6.0 #MIT License
-flask_httpauth>= 4.7.0 #MIT License
+flask_httpauth>= 4.8.0 #MIT License
 feedgen>=0.9.0 #BSD License
 prometheus_client>=0.17.1 #Apache Software License 2.0
