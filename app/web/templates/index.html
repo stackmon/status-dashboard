@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+{% block head %}
+    {{ super() }}
+    <meta http-equiv="refresh" content="{{ ref_interval }}">
+{% endblock %}
+
 {% block content %}
 
 {% with messages = get_flashed_messages() %}

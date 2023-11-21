@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- set the encoding of your site -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  {% block metatags %}
-  {% endblock %}
+  {% block head %}
+    <!-- set the encoding of your site -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block metatags %}
+    {% endblock %}
 
-  {% block css %}
-    {% include 'css.html' ignore missing %}
+    {% block css %}
+      {% include 'css.html' ignore missing %}
+    {% endblock %}
   {% endblock %}
 </head>
 <body class="d-flex flex-column sticky-footer-wrapper min-vh-100">

@@ -30,6 +30,7 @@ from flask import current_app
 from flask import flash
 from flask import redirect
 from flask import render_template
+from flask import request
 from flask import session
 from flask import url_for
 
@@ -37,13 +38,26 @@ from flask import url_for
 @bp.route("/", methods=["GET"])
 @bp.route("/index", methods=["GET"])
 def index():
+    ref_interval = session.get("ref_interval", None)
+    print(ref_interval)
+
     return render_template(
         "index.html",
         title="Status Dashboard",
         components=Component,
         component_attributes=ComponentAttribute,
         incidents=Incident,
+        ref_interval=ref_interval,
     )
+
+
+@bp.route("/ref_interval", methods=["POST"])
+def set_refresh_interval():
+    ref_interval = request.form.get("ref_interval", None)
+    if ref_interval is not None:
+        session["ref_interval"] = ref_interval
+
+    return redirect(url_for("web.index", ref_interval=ref_interval))
 
 
 @bp.route("/incidents", methods=["GET", "POST"])

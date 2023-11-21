@@ -7,6 +7,30 @@
       </a>
       <div class="navbar-collapse justify-content-end" id="navbarNavAltMarkup">
         <div class="navbar-nav">
+{% if request.path == '/index' or '/' %}
+          <div class="nav-item dropdown">
+            <form action="{{ url_for('web.set_refresh_interval') }}" method="post" class="d-flex align-items-center">
+              <i class="bi bi-arrow-clockwise me-2"></i>
+              <label for="ref_interval"></label>
+              <select name="ref_interval" id="ref_interval" class="dropdown-item" onchange="this.form.submit()">
+                <option value="None" {% if ref_interval == "None" %}selected{% endif %}>∅</option>
+                {% for interval, label in 
+                  [('3', '3s'), 
+                  ('10', '10s'), 
+                  ('30', '30s'), 
+                  ('60', '1m'), 
+                  ('300', '5m'), 
+                  ('600', '10m'), 
+                  ('900', '15m'), 
+                  ('1800', '30m'), 
+                  ('3600', '1h')] 
+                %}
+                  <option value="{{ interval }}" {% if ref_interval == interval %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </div>
+{% endif %}
           <a class="nav-link" aria-current="page" href="/">Home</a>
           <div class="nav-item dropdown">
           <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Menu</a>
