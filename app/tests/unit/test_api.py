@@ -22,6 +22,7 @@ from app.models import Component
 from app.models import ComponentAttribute
 from app.models import Incident
 
+
 import jwt
 
 
@@ -137,7 +138,10 @@ class TestComponentStatus(TestBase):
             self.assertEqual(maintenance_id, res.json["id"])
 
             self.assertEqual(0, len(Incident.get_active()))
-            self.assertIsNotNone(Incident.get_active_maintenance())
+            maintenance = Incident.get_active_maintenance()
+            self.assertIsNotNone(maintenance)
+            self.assertIsInstance(maintenance, Incident)
+            self.assertEqual(maintenance_id, maintenance.id)
 
     def test_post_active_maintenance_other_component(self):
         maintenance_id = None
@@ -170,7 +174,10 @@ class TestComponentStatus(TestBase):
             self.assertNotEqual(maintenance_id, res.json["id"])
 
             self.assertEqual(1, len(Incident.get_active()))
-            self.assertIsNotNone(Incident.get_active_maintenance())
+            maintenance = Incident.get_active_maintenance()
+            self.assertIsNotNone(maintenance)
+            self.assertIsInstance(maintenance, Incident)
+            self.assertEqual(maintenance_id, maintenance.id)
 
     def test_post_active_incident(self):
         inc_id = None
@@ -183,6 +190,7 @@ class TestComponentStatus(TestBase):
                     )
                 ],
                 impact=1,
+                system=True,
             )
             db.session.add(sot)
             db.session.commit()
@@ -204,3 +212,155 @@ class TestComponentStatus(TestBase):
 
             self.assertEqual(1, len(Incident.get_active()))
             self.assertEqual(inc_id, Incident.get_active()[0].id)
+
+    def test_post_incident_changing_impact(self):
+        inc_id = None
+        with self.app.app_context():
+            sot = Incident(
+                text="inc",
+                components=[
+                    Component.find_by_name_and_attributes(
+                        name="cmp1", attributes={"a1": "v1"}
+                    )
+                ],
+                impact=1,
+                system=True,
+            )
+            db.session.add(sot)
+            db.session.commit()
+            inc_id = sot.id
+
+            new_impact = 2
+
+            data = dict(
+                name="cmp1",
+                impact=new_impact,
+                attributes=[{"name": "a1", "value": "v1"}],
+            )
+            res = self.client.post(
+                "/api/v1/component_status",
+                data=json.dumps(data),
+                content_type="application/json",
+                headers=self.headers,
+            )
+            self.assertEqual(201, res.status_code)
+            self.assertEqual(inc_id, res.json["id"])
+            self.assertEqual(new_impact, res.json["impact"])
+            self.assertEqual(1, len(Incident.get_active()))
+            self.assertEqual(inc_id, Incident.get_active()[0].id)
+
+    def test_post_incident_creating_multiple(self):
+        with self.app.app_context():
+            impact1 = 1
+            impact2 = 2
+            data1 = dict(
+                name="cmp1",
+                impact=impact1,
+                attributes=[{"name": "a1", "value": "v1"}],
+            )
+            res1 = self.client.post(
+                "/api/v1/component_status",
+                data=json.dumps(data1),
+                content_type="application/json",
+                headers=self.headers,
+            )
+            data2 = dict(
+                name="cmp2",
+                impact=impact2,
+                attributes=[{"name": "a1", "value": "v1"}],
+            )
+            res2 = self.client.post(
+                "/api/v1/component_status",
+                data=json.dumps(data2),
+                content_type="application/json",
+                headers=self.headers,
+            )
+            incidents = Incident.get_active()
+            incident1 = next(
+                incident for incident in incidents
+                if incident.impact == impact1
+            )
+            incident2 = next(
+                incident for incident in incidents
+                if incident.impact == impact2
+            )
+            self.assertEqual(201, res1.status_code)
+            self.assertEqual(201, res2.status_code)
+            self.assertEqual(incident1.id, res1.json["id"])
+            self.assertEqual(incident2.id, res2.json["id"])
+            self.assertEqual(2, len(Incident.get_active()))
+
+    def test_post_incident_moving_component(self):
+        with self.app.app_context():
+            impact1 = 1
+            impact2 = 2
+            data1 = dict(
+                name="cmp1",
+                impact=impact1,
+                text="API INCIDENT 1",
+                attributes=[{"name": "a1", "value": "v1"}],
+            )
+            res1 = self.client.post(
+                "/api/v1/component_status",
+                data=json.dumps(data1),
+                content_type="application/json",
+                headers=self.headers,
+            )
+            data2 = dict(
+                name="cmp2",
+                impact=impact2,
+                text="API INCIDENT 2",
+                attributes=[{"name": "a1", "value": "v1"}],
+            )
+            res2 = self.client.post(
+                "/api/v1/component_status",
+                data=json.dumps(data2),
+                content_type="application/json",
+                headers=self.headers,
+            )
+            incidents = Incident.get_active()
+            incident1 = next(
+                incident for incident in incidents
+                if incident.impact == impact1
+            )
+            incident2 = next(
+                incident for incident in incidents
+                if incident.impact == impact2
+            )
+            self.assertEqual(201, res1.status_code)
+            self.assertEqual(201, res2.status_code)
+            self.assertEqual(incident1.id, res1.json["id"])
+            self.assertEqual(incident2.id, res2.json["id"])
+            self.assertEqual(2, len(Incident.get_active()))
+
+            data3 = dict(
+                name="cmp1",
+                impact=impact2,
+                attributes=[{"name": "a1", "value": "v1"}],
+            )
+            res3 = self.client.post(
+                "/api/v1/component_status",
+                data=json.dumps(data3),
+                content_type="application/json",
+                headers=self.headers,
+            )
+            self.assertEqual(201, res3.status_code)
+            self.assertEqual(1, len(Incident.get_active()))
+            self.assertEqual(impact2, res3.json["impact"])
+            incident_active = Incident.get_active()[0]
+            for inc in Incident.get_all_closed():
+                self.assertNotEqual(inc.id, res3.json["id"])
+            self.assertEqual(incident_active.id, res3.json["id"])
+            # Checking status updates
+            comp1 = Component.find_by_name_and_attributes(
+                name="cmp1", attributes={"a1": "v1"}
+            )
+            comp_name = comp1.name
+            res_updates = res3.json['updates']
+            for item in res_updates:
+                if comp_name in item.get("text", ""):
+                    break
+            else:
+                self.assertTrue(
+                    False, f"comp name {comp_name} not found in {res_updates}"
+                )
