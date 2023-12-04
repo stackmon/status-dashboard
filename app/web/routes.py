@@ -129,7 +129,7 @@ def history():
     )
 
 
-@bp.route("/sla", methods=["GET"])
+@bp.route("/availability", methods=["GET"])
 def sla():
     time_now = datetime.now()
     months = [time_now + relativedelta(months=-mon) for mon in range(6)]
