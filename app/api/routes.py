@@ -24,6 +24,7 @@ from app.models import IncidentStatus
 from app.models import db
 
 from flask import current_app
+from flask import request
 from flask.views import MethodView
 
 from flask_smorest import abort
@@ -161,6 +162,8 @@ class ApiComponentStatus(MethodView):
 
 
         """
+        ip_address = request.remote_addr
+        current_app.logger.debug(f"Request from IP address: {ip_address}")
         name = search_args.get("name", "")
         attribute_name = search_args.get("attribute_name", None)
         attribute_value = search_args.get("attribute_value", None)
@@ -220,6 +223,8 @@ class ApiComponentStatus(MethodView):
             :class:`~status_dashboard.api.schemas.components.IncidentSchema`
             object
         """
+        ip_address = request.remote_addr
+        current_app.logger.debug(f"Request from IP address: {ip_address}")
         name = data.get("name", None)
         impact = data.get("impact", 1)
         text = data.get("text", "Incident")
