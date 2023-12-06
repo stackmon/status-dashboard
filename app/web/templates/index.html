@@ -29,15 +29,18 @@
                   href="incidents/{{incident.id}}"> {{ incident.text }}</a>
         </h4>
 	<h6>Impact: {{ impact.string }}</h6>
-        <h6>Affected Regions: {{
+        <h6>Affected Region(s): {{
             incident.get_attributes_by_key('region')
             | join(', ')
             }}</h6>
-        <h6>Affected Services: {{
-            incident.components
-            | map(attribute='name')
-            | join(', ')
-            }}</h6>
+        <h6>Affected Service(s):
+            {% set comma = joiner(",") %}
+            {% for comp in incident.components %}
+            {% with attrs = comp.get_attributes_as_dict() %}
+              {{ comma() }} {{ comp.name }} ({{attrs['region']}})
+            {% endwith %}
+            {% endfor %}
+        </h6>
         <small class="text-secondary">Started: {{ incident.start_date.strftime('%Y-%m-%dT%H:%M') }}</small>
         <hr/>
         {% if incident.updates | length != 0 %}
