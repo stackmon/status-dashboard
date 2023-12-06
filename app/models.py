@@ -18,6 +18,7 @@ from app import db
 
 from dateutil.relativedelta import relativedelta
 
+from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import Index
@@ -249,6 +250,8 @@ class Incident(Base):
     )
     end_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     impact: Mapped[int] = mapped_column(db.SmallInteger)
+    # upgrade: system: Mapped[bool] = mapped_column(Boolean, default=False)
+    system: Mapped[bool] = mapped_column(Boolean, default=False)
 
     components: Mapped[List["Component"]] = relationship(
         back_populates="incidents", secondary=IncidentComponentRelation
@@ -313,10 +316,9 @@ class Incident(Base):
         ).first()
 
     @staticmethod
-    def get_active():
-        """Return active incident
-
-        :returns: `Incident`s
+    def get_active_m():
+        """Return active manually opened incidents
+        :returns: `Incident`s created by USER
         """
         return db.session.scalars(
             select(Incident).filter(
@@ -325,6 +327,23 @@ class Incident(Base):
                 # not closed
                 Incident.end_date.is_(None),
                 Incident.impact != 0,
+                Incident.system.is_(False),
+            )
+        ).all()
+
+    @staticmethod
+    def get_active():
+        """Return active incident
+        :returns: `Incident`s created by API
+        """
+        return db.session.scalars(
+            select(Incident).filter(
+                # already started
+                Incident.start_date <= datetime.datetime.now(),
+                # not closed
+                Incident.end_date.is_(None),
+                Incident.impact != 0,
+                Incident.system.is_(True),
             )
         ).all()
 

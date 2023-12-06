@@ -113,7 +113,7 @@ class TestIncident(TestBase):
             db.session.add(comp2)
             m1 = Incident(text="Maintenance1", impact="0")
             db.session.add(m1)
-            i1 = Incident(text="Incident1", impact="1")
+            i1 = Incident(text="Incident1", impact="1", system=True)
             db.session.add(i1)
             i2 = Incident(
                 text="Incident2",
