@@ -102,6 +102,10 @@ def new_incident(current_user):
             components=incident_components,
             system=False,
         )
+
+        if form.incident_impact.data == "0":
+            new_incident.end_date=form.incident_end.data
+
         db.session.add(new_incident)
         db.session.commit()
 

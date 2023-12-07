@@ -77,4 +77,24 @@ class IncidentForm(FlaskForm):
         "Start", validators=[validators.DataRequired()],
         format='%Y-%m-%dT%H:%M'
     )
+    incident_end = DateTimeField(
+        "End", format='%Y-%m-%dT%H:%M'
+    )
     submit = SubmitField("Submit")
+
+    def validate_incident_end(self, field):
+        if (
+            self.incident_impact.data == "0"
+            and field.data is None
+        ):
+            raise validators.ValidationError(
+                "Expected end date field is mandatory for maintenance"
+            )
+        elif (
+            self.incident_impact.data != "0"
+            and field.data is None
+        ):
+            # Making field optional requres dropping "Not a valid datetime
+            # value." error as well
+            field.errors[:] = []
+            raise validators.StopValidation()
