@@ -78,21 +78,25 @@ def handling_incidents(
     impacts,
     src_incident,
     dst_incident=None,
-    text=None
+    text=None,
+    comp_with_attrs=None
 ):
     if len(src_incident.components) == 1 and dst_incident:
-        current_app.logger.debug(f"Component moved to: '{dst_incident.text}'")
+        current_app.logger.debug(
+            f"{target_component} "
+            f"moved to: '{dst_incident.text}'"
+        )
         current_app.logger.debug(f"{src_incident.text} CLOSED")
         update_incident_status(
             src_incident,
             (
-                f"{target_component} moved to: '{dst_incident.text}', "
+                f"{comp_with_attrs} moved to: '{dst_incident.text}', "
                 "incident closed by system"
             )
         )
         update_incident_status(
             dst_incident,
-            f"{target_component} moved from {src_incident.text}"
+            f"{comp_with_attrs} moved from {src_incident.text}"
         )
         src_incident.end_date = datetime.now()
         dst_incident.components.append(target_component)
@@ -125,11 +129,11 @@ def handling_incidents(
         )
         update_incident_status(
             src_incident,
-            f"{target_component} moved to {dst_incident.text}"
+            f"{comp_with_attrs} moved to {dst_incident.text}"
         )
         update_incident_status(
             dst_incident,
-            f"{target_component} moved from {src_incident.text}"
+            f"{comp_with_attrs} moved from {src_incident.text}"
         )
         src_incident.components.remove(target_component)
         dst_incident.components.append(target_component)
@@ -139,9 +143,17 @@ def handling_incidents(
         current_app.logger.debug(
             "No active incidents with requested impact - opening new one"
         )
+        current_app.logger.debug(
+            f"{target_component} moved from {src_incident.text} to new one"
+        )
+        update_incident_status(
+            src_incident,
+            f"{comp_with_attrs} moved to new incident"
+        )
+        src_incident.components.remove(target_component)
         return create_new_incident(target_component, impact, text)
     else:
-        current_app.logger.debug("Unexpected ERROR")
+        current_app.logger.error("Unexpected ERROR")
 
 
 @bp.route("/v1/component_status", methods=["GET", "POST"])
@@ -239,6 +251,16 @@ class ApiComponentStatus(MethodView):
         target_component = Component.find_by_name_and_attributes(
             name, attributes
         )
+
+        comp_name = target_component.name
+        comp_attributes = target_component.attributes
+        comp_attributes_str = ", ".join(
+            [
+                f"{attr.name}: {attr.value}" for attr in comp_attributes
+            ]
+        )
+        comp_with_attrs = f"{comp_name} ({comp_attributes_str})"
+
         if not target_component:
             abort(400, message="Component not found")
         current_app.logger.debug(target_component)
@@ -298,7 +320,8 @@ class ApiComponentStatus(MethodView):
                                 impacts,
                                 incident,
                                 incident_match,
-                                text
+                                text,
+                                comp_with_attrs,
                             )
                         )
                     else:
