@@ -109,10 +109,10 @@ def new_incident(current_user):
             for comp in incident_components:
                 if comp in inc.components:
                     messages_to.append(
-                        f"{comp.as_string('region')} moved to {new_incident}"
+                        f"{comp} moved to {new_incident}"
                     )
                     messages_from.append(
-                        f"{comp.as_string('region')} moved from {inc}"
+                        f"{comp} moved from {inc}"
                     )
                     if len(inc.components) > 1:
                         inc.components.remove(comp)
@@ -195,11 +195,11 @@ def separate_incident(current_user, incident_id, component_id):
 
     update_incident(
         incident,
-        f"{component.as_string('region')} moved to {new_incident}"
+        f"{component} moved to {new_incident}"
     )
     update_incident(
         new_incident,
-        f"{component.as_string('region')} moved from {incident}"
+        f"{component} moved from {incident}"
     )
     db.session.commit()
     return redirect("/")
