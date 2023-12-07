@@ -124,7 +124,7 @@ def incident(incident_id):
 def history():
     return render_template(
         "history.html",
-        title="Incident History",
+        title="Event History",
         incidents=Incident,
     )
 
