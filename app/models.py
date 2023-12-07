@@ -68,10 +68,13 @@ class Component(Base):
     )
 
     def __repr__(self):
+        return "<Component {}: {}>".format(self.id, self.name)
+
+    def as_string(self, attr_key):
         return "<Component {}: {} ({})>".format(
             self.id,
             self.name,
-            self.get_attributes_as_dict()["region"]
+            self.get_attributes_as_dict()[attr_key]
         )
 
     @staticmethod
