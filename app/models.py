@@ -309,6 +309,7 @@ class Incident(Base):
         return db.session.scalars(
             select(Incident).filter(
                 Incident.end_date.is_not(None),
+                Incident.end_date < datetime.datetime.now()
             )
         ).all()
 
