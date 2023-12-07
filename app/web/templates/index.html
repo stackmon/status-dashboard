@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 
+{% block title %}
+    {% include 'index_title.html' ignore missing %}
+{% endblock %}
+
 {% block content %}
+
+{% block title_name %}
+    {% include 'title_name.html' ignore missing %}
+{% endblock %}
 
 {% with messages = get_flashed_messages() %}
   {% if messages %}

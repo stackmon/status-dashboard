@@ -9,6 +9,9 @@
   {% block title %}
     <title>{{ title }}</title>
   {% endblock %}
+  {% block icon %}
+    {% include 'icon.html' ignore missing %}
+  {% endblock %}
 
   {% block css %}
     {% include 'css.html' ignore missing %}
