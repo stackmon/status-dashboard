@@ -205,6 +205,12 @@ class Component(Base):
 
         return sla_dict
 
+    @staticmethod
+    def get_by_id(component_id):
+        return db.session.scalars(
+            select(Component).where(Component.id == component_id)
+        ).first()
+
 
 class ComponentAttribute(Base):
     """Component Attribute model"""

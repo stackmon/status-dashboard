@@ -3,19 +3,45 @@
 {% block content %}
 <div class="container">
 
-  <h4><i class="bi sd-{{ config['INCIDENT_IMPACTS'][incident.impact].key }}"></i> {{ incident.text }}</h4>
+  <h4><i class="bi sd-{{ config['INCIDENT_IMPACTS'][incident.impact].key }}"></i>
+    {{ incident.text }}</h4>
   <h6>Impact: {{ config['INCIDENT_IMPACTS'][incident.impact].string }}</h6>
+  {% set regions = incident.get_attributes_by_key('region') %}
   <h6>Affected Region(s): {{
-      incident.get_attributes_by_key('region')
+      regions
       | join(', ')
       }}</h6>
   <h6>Affected Service(s):
-      {% set comma = joiner(",") %}
-      {% for comp in incident.components %}
-      {% with attrs = comp.get_attributes_as_dict() %}
-        {{ comma() }} {{ comp.name }} ({{attrs['region']}})
-      {% endwith %}
-      {% endfor %}
+      {% set comma = joiner() %}
+      {% for comp in incident.components -%}
+      {% with attrs = comp.get_attributes_as_dict() -%}
+        {{- comma() }}
+      {% if 'user' in session
+        and not incident.end_date
+        and incident.components|length > 1 -%}
+          <a class="link-dark"
+            href="#"
+            id="dropdownMenuLink"
+            data-bs-toggle="dropdown">{{ comp.name }}
+              {%- if regions|length > 1 %}
+                ({{attrs['region']}})
+              {%- endif %}</a>
+
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+            <a class="dropdown-item"
+            href="{{ url_for('web.separate_incident',
+              incident_id=incident.id,
+              component_id=comp.id) }}">Separate into a new incident</a>
+          </div>
+
+      {% else -%}
+        {{ comp.name }}
+        {%- if regions|length > 1 %}
+          ({{attrs['region']}})
+        {%- endif %}
+      {%- endif %}
+      {%- endwith %}
+      {%- endfor %}
   </h6>
   <small>Incident began at {{ incident.start_date.strftime('%Y-%m-%dT%H:%M') }}
     {% if incident.end_date %}
@@ -64,14 +90,38 @@
           </ul>
         </div>
         {% endif %}
-
       </div>
+
+    <div class="mb-3">
+      <label for="{{form.update_impact.id}}"
+        class="form-label">{{form.update_impact.label}}</label>
+      <select
+          class="form-select form-select-sm mb-3 {{ ' is-invalid' if
+                 form.update_impact.errors
+                        | length > 0 else '' }}"
+          aria-label=".form-select-sm"
+          id="{{form.update_impact.id}}"
+          name="{{form.update_impact.name}}">
+        <option>Choose...</option>
+        {% for (k, v) in form.update_impact.choices %}
+        <option
+        {% if (not form.update_impact.data and k == incident.impact) or
+        (form.update_impact.data and k|string in form.update_impact.data) %} selected
+        {% endif %}
+        value="{{k}}">{{v}}</option>
+        {% endfor %}
+      </select>
+      <div id="incidentImpactHelp" class="form-text">Please enter incident impact
+        here.</div>
+      <div class="invalid-feedback">{{form.update_impact.errors | join(', ')
+        }}</div>
+    </div>
 
       <div class="mb-3">
         <label for="{{form.update_text.id}}" class="form-label">{{form.update_text.label}}</label>
         <textarea class="form-control
                          {% if form.update_text.errors %}is-invalid{% endif %}
-                         " 
+                         "
                id="{{form.update_text.id}}"
                name="{{form.update_text.name}}"
                rows=3
@@ -92,11 +142,11 @@
 
       <div class="mb-3">
         <label for="{{form.update_status.id}}" class="form-label">{{form.update_status.label}}</label>
-        <select 
+        <select
             class="form-select form-select-sm mb-3
                    {% if form.update_status.errors %}is-invalid{% endif %}
                     "
-            aria-label=".form-select-sm" 
+            aria-label=".form-select-sm"
             id="{{form.update_status.id}}"
             name="{{form.update_status.name}}">
           <option>Choose...</option>
