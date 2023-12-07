@@ -256,7 +256,7 @@ class ApiComponentStatus(MethodView):
         comp_attributes = target_component.attributes
         comp_attributes_str = ", ".join(
             [
-                f"{attr.name}: {attr.value}" for attr in comp_attributes
+                f"{attr.value}" for attr in comp_attributes
             ]
         )
         comp_with_attrs = f"{comp_name} ({comp_attributes_str})"
