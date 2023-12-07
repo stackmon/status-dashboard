@@ -68,7 +68,14 @@ class Component(Base):
     )
 
     def __repr__(self):
-        return "<Component {}:{}>".format(self.id, self.name)
+        return "<Component {}: {}>".format(self.id, self.name)
+
+    def as_string(self, attr_key):
+        return "<Component {}: {} ({})>".format(
+            self.id,
+            self.name,
+            self.get_attributes_as_dict()[attr_key]
+        )
 
     @staticmethod
     def all():
@@ -205,6 +212,12 @@ class Component(Base):
 
         return sla_dict
 
+    @staticmethod
+    def get_by_id(component_id):
+        return db.session.scalars(
+            select(Component).where(Component.id == component_id)
+        ).first()
+
 
 class ComponentAttribute(Base):
     """Component Attribute model"""
@@ -263,7 +276,7 @@ class Incident(Base):
     )
 
     def __repr__(self):
-        return "<Incident {}:{}>".format(self.id, self.text)
+        return "<Incident {}: {}>".format(self.id, self.text)
 
     @staticmethod
     def get_all_active():

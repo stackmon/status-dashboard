@@ -36,6 +36,7 @@ class IncidentUpdateForm(FlaskForm):
             validators.Length(min=10, max=200),
         ],
     )
+    update_impact = SelectField("Incident Impact")
     update_status = SelectField("Update Status")
     next_update = DateTimeField("Next Update by", format='%Y-%m-%dT%H:%M')
     submit = SubmitField("Submit")
