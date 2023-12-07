@@ -104,7 +104,7 @@ def new_incident(current_user):
         )
 
         if form.incident_impact.data == "0":
-            new_incident.end_date=form.incident_end.data
+            new_incident.end_date = form.incident_end.data
 
         db.session.add(new_incident)
         db.session.commit()
@@ -164,16 +164,18 @@ def incident(incident_id):
         ]
 
         if form.validate_on_submit():
+            new_impact = form.update_impact.data
             new_status = form.update_status.data
             update_incident(incident, form.update_text.data, new_status)
             if new_status in ["completed", "resolved"]:
                 # Incident is completed
+                new_impact = incident.impact
                 incident.end_date = datetime.now()
                 current_app.logger.debug(
                     f"{incident} closed by {get_user_string(session['user'])}"
                 )
             incident.text = form.update_title.data
-            incident.impact = form.update_impact.data
+            incident.impact = new_impact
             incident.system = False
             db.session.commit()
 
