@@ -68,7 +68,11 @@ class Component(Base):
     )
 
     def __repr__(self):
-        return "<Component {}:{}>".format(self.id, self.name)
+        return "<Component {}: {} ({})>".format(
+            self.id,
+            self.name,
+            self.get_attributes_as_dict()["region"]
+        )
 
     @staticmethod
     def all():
@@ -269,7 +273,7 @@ class Incident(Base):
     )
 
     def __repr__(self):
-        return "<Incident {}:{}>".format(self.id, self.text)
+        return "<Incident {}: {}>".format(self.id, self.text)
 
     @staticmethod
     def get_all_active():

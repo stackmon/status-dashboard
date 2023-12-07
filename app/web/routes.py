@@ -46,13 +46,21 @@ def index():
     )
 
 
-def update_incident(incident_id, text, status="SYSTEM"):
+def get_user_string(user):
+    return f"{user['name']} ({user['email']})"
+
+
+@authorization.auth_required
+def update_incident(current_user, incident, text, status="SYSTEM"):
     update = IncidentStatus(
-        incident_id=incident_id,
+        incident_id=incident.id,
         text=text,
         status=status,
     )
     db.session.add(update)
+    current_app.logger.debug(
+        f"Changes in {incident} by {get_user_string(current_user)}: {text}"
+    )
 
 
 @bp.route("/incidents", methods=["GET", "POST"])
@@ -90,6 +98,10 @@ def new_incident(current_user):
         db.session.add(new_incident)
         db.session.commit()
 
+        current_app.logger.debug(
+            f"{new_incident} opened by {get_user_string(current_user)}"
+        )
+
         messages_from = []
 
         for inc in active_incidents:
@@ -97,10 +109,10 @@ def new_incident(current_user):
             for comp in incident_components:
                 if comp in inc.components:
                     messages_to.append(
-                        f"{comp} manually moved to {new_incident}"
+                        f"{comp} moved to {new_incident}"
                     )
                     messages_from.append(
-                        f"{comp} manually moved from {inc}"
+                        f"{comp} moved from {inc}"
                     )
                     if len(inc.components) > 1:
                         inc.components.remove(comp)
@@ -108,9 +120,9 @@ def new_incident(current_user):
                         messages_to.append("Incident closed by system")
                         inc.end_date = datetime.now()
             if messages_to:
-                update_incident(inc.id, ', '.join(messages_to))
+                update_incident(inc, ', '.join(messages_to))
         if messages_from:
-            update_incident(new_incident.id, ', '.join(messages_from))
+            update_incident(new_incident, ', '.join(messages_from))
         db.session.commit()
         return redirect("/")
     return render_template(
@@ -142,10 +154,13 @@ def incident(incident_id):
 
         if form.validate_on_submit():
             new_status = form.update_status.data
-            update_incident(incident_id, form.update_text.data, new_status)
+            update_incident(incident, form.update_text.data, new_status)
             if new_status in ["completed", "resolved"]:
                 # Incident is completed
                 incident.end_date = datetime.now()
+                current_app.logger.debug(
+                    f"{incident} closed by {get_user_string(session['user'])}"
+                )
             incident.text = form.update_title.data
             incident.impact = form.update_impact.data
             incident.system = False
@@ -174,13 +189,17 @@ def separate_incident(current_user, incident_id, component_id):
     db.session.add(new_incident)
     db.session.commit()
 
+    current_app.logger.debug(
+        f"{new_incident} opened by {get_user_string(current_user)}"
+    )
+
     update_incident(
-        incident.id,
-        f"{component} manually moved to {new_incident}"
+        incident,
+        f"{component} moved to {new_incident}"
     )
     update_incident(
-        new_incident.id,
-        f"{component} manually moved from {incident}"
+        new_incident,
+        f"{component} moved from {incident}"
     )
     db.session.commit()
     return redirect("/")
