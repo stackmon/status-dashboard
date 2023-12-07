@@ -140,13 +140,29 @@
 
 {% endblock %}
 
-{% macro component_status_widget(incidents) -%}
-    {% if not incidents %}
-      <i class="bi sd-available"></i>
+{% macro component_status_widget(component) -%}
+    {% if not component.incidents %}
+      <i class="bi sd-available">
+      {% if component.planned_maintenance() %}
+      {% set planned=component.planned_maintenance() %}
+      <a href="/incidents/{{ planned.id }}" title="Planned Maintenance">
+        <i class="bi bi-circle"></i>
+        <i class="bi sd-planned-maintenance"></i>
+      </a>
+    {% endif %}</i>
     {% else %}
-    {% set incident=incidents[0] %}
+    {% set incident=incidents.get_prioritized_impact(component.incidents) %}
+    <div>
       <a href="/incidents/{{ incident.id }}" title="Open Incident">
         <i class="bi sd-{{ config['INCIDENT_IMPACTS'][incident.impact].key }}"></i>
       </a>
-      {% endif %}
+        {% if component.planned_maintenance() %}
+        {% set planned=component.planned_maintenance() %}
+        <a href="/incidents/{{ planned.id }}" title="Planned Maintenance">
+          <i class="bi bi-circle"></i>
+          <i class="bi sd-planned-maintenance"></i>
+        </a>
+    {% endif %}
+    </div>
+    {% endif %}
 {% endmacro -%}

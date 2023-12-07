@@ -25,6 +25,7 @@
       <label for="{{form.incident_impact.id}}"
         class="form-label">{{form.incident_impact.label}}</label>
       <select
+          onchange="maintenanceCheck(this);"
           class="form-select form-select-sm mb-3 {{ ' is-invalid' if
                  form.incident_impact.errors
                         | length > 0 else '' }}"
@@ -82,15 +83,54 @@
              name="{{form.incident_start.name}}"
              value="{{form.incident_start.data}}"
              aria-describedby="incidentStartHelp"/>
-      <div id="nextUpdateHelp" class="form-text">
+      <div id="incidentStartHelp" class="form-text">
         Select the incident start time.
       </div>
       <div class="invalid-feedback">{{form.incident_start.errors | join(', ')
         }}</div>
     </div>
 
+    <div id="maintenance_end" class="mb-3"
+      {% if form.incident_impact.data and "0" in form.incident_impact.data %}
+        style="display: block;"
+      {% else %}
+        style="display: none;"
+      {% endif %}>
+      <label for="{{form.incident_end.id}}" class="form-label">{{form.incident_end.label}}</label>
+      <input class="form-control
+                      {% if form.incident_end.errors %}is-invalid{% endif %}"
+             type="datetime-local"
+             id="{{form.incident_end.id}}"
+             name="{{form.incident_end.name}}"
+             value="{{form.incident_end.data}}"
+             aria-describedby="incidentEndHelp"/>
+      <div id="incidentEndHelp" class="form-text">
+        Select the maintenance expected end time.
+      </div>
+      {% if form.incident_end.errors %}
+        <div class="invalid-feedback">
+          <ul class="errors">
+          {% for error in form.incident_end.errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+      </div>
+
     <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+    function maintenanceCheck(elem) {
+    if (elem.value == 0) {
+        document.getElementById("maintenance_end").style.display = "block";
+    } else {
+        document.getElementById("maintenance_end").style.display = "none";
+    }
+}
+</script>
 {% endblock %}

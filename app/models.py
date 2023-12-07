@@ -26,6 +26,7 @@ from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import Table
 from sqlalchemy import func
+from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
@@ -105,7 +106,10 @@ class Component(Base):
                     with_loader_criteria(
                         Incident,
                         PropComparator.and_(
-                            Incident.end_date.is_(None),
+                            or_(
+                                Incident.end_date.is_(None),
+                                Incident.end_date > datetime.datetime.now()
+                            ),
                             Incident.start_date <= datetime.datetime.now(),
                         ),
                     ),
@@ -218,6 +222,14 @@ class Component(Base):
             select(Component).where(Component.id == component_id)
         ).first()
 
+    def planned_maintenance(self):
+        """Return a planned maintenance for
+        this component"""
+
+        for planned in Incident.get_planned_maintenances():
+            if self in planned.components:
+                return planned
+
 
 class ComponentAttribute(Base):
     """Component Attribute model"""
@@ -283,7 +295,10 @@ class Incident(Base):
         """Return active incidents and maintenances"""
         return db.session.scalars(
             select(Incident).filter(
-                Incident.end_date.is_(None),
+                or_(
+                    Incident.end_date.is_(None),
+                    Incident.end_date > datetime.datetime.now()
+                ),
                 Incident.start_date <= datetime.datetime.now(),
             )
         ).all()
@@ -294,6 +309,7 @@ class Incident(Base):
         return db.session.scalars(
             select(Incident).filter(
                 Incident.end_date.is_not(None),
+                Incident.end_date < datetime.datetime.now()
             )
         ).all()
 
@@ -327,6 +343,16 @@ class Incident(Base):
                 Incident.impact == 0,
             )
         ).first()
+
+    @staticmethod
+    def get_planned_maintenances():
+        """Return planned maintenances"""
+        return db.session.scalars(
+            select(Incident).filter(
+                Incident.start_date > datetime.datetime.now(),
+                Incident.impact == 0,
+            )
+        ).all()
 
     @staticmethod
     def get_active_m():
@@ -393,6 +419,16 @@ class Incident(Base):
             )
             .order_by(Incident.start_date.asc())
         ).unique()
+
+    @staticmethod
+    def get_prioritized_impact(incidents):
+        prioritized_inc = incidents[0]
+        for inc in incidents:
+            if inc.impact == 0:
+                return inc
+            if inc.impact > prioritized_inc.impact:
+                prioritized_inc = inc
+        return prioritized_inc
 
 
 class IncidentStatus(Base):
