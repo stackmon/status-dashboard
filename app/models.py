@@ -339,7 +339,10 @@ class Incident(Base):
                 # already started
                 Incident.start_date <= datetime.datetime.now(),
                 # not closed
-                Incident.end_date.is_(None),
+                or_(
+                    Incident.end_date.is_(None),
+                    Incident.end_date > datetime.datetime.now()
+                ),
                 Incident.impact == 0,
             )
         ).first()
