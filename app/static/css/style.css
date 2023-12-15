@@ -192,6 +192,10 @@ tbody:nth-child(odd) {
   background-color: var(--bs-red) !important;
 }
 
+.indent {
+  margin-left: 30px;
+}
+
 
 /* Footer */
 footer.footer {

@@ -5,6 +5,14 @@
 
   <h4><i class="bi sd-{{ config['INCIDENT_IMPACTS'][incident.impact].key }}"></i>
     {{ incident.text }}</h4>
+  {% if incident.impact == 0 %}
+  <p class="indent">
+  {{ (incident.updates | selectattr('status', 'equalto', 'description') | first).text }}
+  {% block add_message %}
+    {% include 'message.html' ignore missing %}
+  {% endblock %}
+  </p>
+  {% endif %}
   <h6>Impact: {{ config['INCIDENT_IMPACTS'][incident.impact].string }}</h6>
   {% set regions = incident.get_attributes_by_key('region') %}
   <h6>Affected Region(s): {{
@@ -58,7 +66,7 @@
   <hr/>
 
   <div class="container text-left">
-  {% for update in incident.updates %}
+  {% for update in incident.updates | rejectattr('status', 'equalto', 'description') | list %}
     <div class="row">
         <div class="col-md-2">
             <h6>{{ update.status }}</h6>
