@@ -27,8 +27,23 @@ You should encode the "SECRET_KEY" to get the token
    >>> payload = {"status_dashboard": "dummy"}
    >>> encoded = jwt.encode(payload, secret_key, algorithm="HS256")
    >>> print(encoded)
-   eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwYXlsb2FkIjoiU09NRV9QQVlMT0FEIn0.oLj3UE3cQaviTpjOn0J6v0KE_wvPowyk2MAyN_s00_8
+   eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwYXlsb2FkIjoiU09NRV9Powyk2MN_s00_8
 
+API usage examples
+==================
+
+.. code-block:: console
+
+    $ curl http://localhost:5000/api/v1/component_status -X POST \
+      -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6pX...' \
+      -H 'content-type:application/json' \
+      -d '{"impact": "minor", "name": "Component 1", \
+      "attributes":[{"name":"region","value":"Reg1"}]}'
+
+.. code-block:: console
+
+    $ curl http://localhost:5000/api/v1/incidents -X GET \
+      -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6Ikp...'
 
 API v1
 ======
