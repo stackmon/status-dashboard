@@ -11,6 +11,8 @@
 # under the License.
 #
 import datetime
+import threading
+import time
 from unittest import TestCase
 
 from app import create_app
@@ -20,6 +22,8 @@ from app.models import Component
 from app.models import ComponentAttribute
 from app.models import Incident
 
+import redis
+
 
 class TestBase(TestCase):
 
@@ -28,6 +32,11 @@ class TestBase(TestCase):
     )
 
     def setUp(self):
+        self.redis_port = 6379
+        self.redis_password = "password"
+        self.start_redis_server()
+        print("STARTING redis server")
+        time.sleep(0.5)
         self.app = create_app(self.test_config)
         with self.app.app_context():
             Base.metadata.create_all(bind=db.engine)
@@ -37,6 +46,38 @@ class TestBase(TestCase):
         with self.app.app_context():
             db.session.remove()
             Base.metadata.drop_all(bind=db.engine)
+        print("STOPPING redis server")
+        self.stop_redis_server()
+
+    def start_redis_server(self):
+        self.redis_server = threading.Thread(target=self.run_redis)
+        self.redis_server.daemon = True
+        self.redis_server.start()
+        self.wait_for_redis()
+
+    def stop_redis_server(self):
+        self.redis_process.terminate()
+        self.redis_process.wait()
+
+    def run_redis(self):
+        import subprocess
+        self.redis_process = subprocess.Popen(
+            ['redis-server',
+             '--port', str(self.redis_port),
+             '--requirepass', self.redis_password]
+        )
+
+    def wait_for_redis(self):
+        while True:
+            try:
+                redis_client = redis.Redis(
+                    port=self.redis_port,
+                    password=self.redis_password
+                )
+                redis_client.ping()
+                break
+            except redis.ConnectionError:
+                time.sleep(0.2)
 
 
 class TestWeb(TestBase):

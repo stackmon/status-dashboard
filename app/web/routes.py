@@ -14,6 +14,7 @@ from datetime import datetime
 from datetime import timezone
 
 from app import authorization
+from app import cache
 from app import oauth
 from app.models import Component
 from app.models import ComponentAttribute
@@ -31,12 +32,19 @@ from flask import current_app
 from flask import flash
 from flask import redirect
 from flask import render_template
+from flask import request
 from flask import session
 from flask import url_for
 
 
 @bp.route("/", methods=["GET"])
 @bp.route("/index", methods=["GET"])
+@cache.cached(
+    timeout=30,
+    key_prefix=lambda: (f':{session["user"]["sub"]}'
+                        if "user" in session
+                        else ':shared_cache')
+)
 def index():
     return render_template(
         "index.html",
@@ -142,9 +150,16 @@ def new_incident(current_user):
 
 
 @bp.route("/incidents/<incident_id>", methods=["GET", "POST"])
+@cache.cached(
+    timeout=30,
+    key_prefix=lambda: f":{request.path}" if "user" not in session else ""
+)
 def incident(incident_id):
     """Manage incident by ID"""
     incident = Incident.get_by_id(incident_id)
+    if not incident:
+        abort(404)
+
     form = None
     if "user" in session:
         form = IncidentUpdateForm(id)
@@ -219,6 +234,7 @@ def separate_incident(current_user, incident_id, component_id):
 
 
 @bp.route("/history", methods=["GET"])
+@cache.cached(timeout=30)
 def history():
     return render_template(
         "history.html",
@@ -228,6 +244,7 @@ def history():
 
 
 @bp.route("/availability", methods=["GET"])
+@cache.cached(timeout=300)
 def sla():
     time_now = datetime.now()
     months = [time_now + relativedelta(months=-mon) for mon in range(6)]

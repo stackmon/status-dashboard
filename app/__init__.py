@@ -23,9 +23,13 @@ from flask_caching import Cache
 
 from flask_migrate import Migrate
 
+from flask_session import Session
+
 from flask_smorest import Api
 
 from flask_sqlalchemy import SQLAlchemy
+
+import redis
 
 import yaml
 
@@ -33,7 +37,24 @@ import yaml
 db = SQLAlchemy()
 migrate = Migrate()
 oauth = OAuth()
-cache = Cache(config={"CACHE_TYPE": "SimpleCache"})
+
+# Cache settings
+cache_config_options = [
+    "CACHE_TYPE",
+    "CACHE_KEY_PREFIX",
+    "CACHE_REDIS_HOST",
+    "CACHE_REDIS_PORT",
+    "CACHE_REDIS_URL",
+    "CACHE_REDIS_PASSWORD",
+    "CACHE_DEFAULT_TIMEOUT",
+]
+
+cache_config = {
+    option: os.getenv(f"SDB_{option}", getattr(DefaultConfiguration, option))
+    for option in cache_config_options
+}
+cache = Cache(config=cache_config)
+session = Session()
 
 
 def create_app(test_config=None):
@@ -44,6 +65,11 @@ def create_app(test_config=None):
     api = Api(app)  # noqa
 
     app.config.from_prefixed_env(prefix="SDB")
+    app.config['SESSION_REDIS'] = redis.StrictRedis(
+        host=os.getenv("SDB_REDIS_HOST", DefaultConfiguration.REDIS_HOST),
+        port=os.getenv("SDB_REDIS_PORT", DefaultConfiguration.REDIS_PORT),
+        password=os.getenv("SDB_REDIS_PASS", DefaultConfiguration.REDIS_PASS),
+    )
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -72,10 +98,23 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    cache.init_app(app)
+    # enabling redis caching
+    try:
+        r = redis.StrictRedis(
+            host=cache_config["CACHE_REDIS_HOST"],
+            port=cache_config["CACHE_REDIS_PORT"],
+            password=cache_config.get("CACHE_REDIS_PASSWORD"),
+        )
+        r.ping()
+        app.logger.debug("Connection to redis was successful")
+        cache.init_app(app)
+    except redis.ConnectionError:
+        app.logger.error("Error connecting to redis")
+
     db.init_app(app)
     migrate.init_app(app, db)
     oauth.init_app(app, cache=cache)
+    session.init_app(app)
 
     if (
         "GITHUB_CLIENT_ID" in app.config
@@ -125,5 +164,4 @@ def create_app(test_config=None):
     with app.app_context():
         # Ensure there is some DB when we start the app
         db.create_all()
-
     return app

@@ -11,6 +11,18 @@ flask --debug run
 
 flask db stamp head # to start the upgrade db models
 ```
+### Redis
+It needs to run with redis;  
+Environment variables can be configured using the "SDB" prefix.
+```
+"SDB_CACHE_TYPE"
+"SDB_CACHE_KEY_PREFIX"
+"SDB_CACHE_REDIS_HOST"
+"SDB_CACHE_REDIS_PORT"
+"SDB_CACHE_REDIS_URL"
+"SDB_CACHE_REDIS_PASSWORD"
+"SDB_CACHE_DEFAULT_TIMEOUT"
+```
 
 ## Bootstraping
 
