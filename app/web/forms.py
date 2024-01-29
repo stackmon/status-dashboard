@@ -14,6 +14,7 @@
 from flask_wtf import FlaskForm
 
 from wtforms import DateTimeField
+from wtforms import IntegerField
 from wtforms import SelectField
 from wtforms import StringField
 from wtforms import SubmitField
@@ -80,6 +81,7 @@ class IncidentForm(FlaskForm):
     incident_end = DateTimeField(
         "End", format='%Y-%m-%dT%H:%M'
     )
+    user_timezone = IntegerField("Timezone")
     submit = SubmitField("Submit")
 
     def validate_incident_end(self, field):

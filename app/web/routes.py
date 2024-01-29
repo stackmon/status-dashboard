@@ -11,7 +11,7 @@
 # under the License.
 #
 from datetime import datetime
-from datetime import timezone
+from datetime import timedelta
 
 from app import authorization
 from app import oauth
@@ -89,10 +89,8 @@ def new_incident(current_user):
             if comp.id in selected_components:
                 incident_components.append(comp)
 
-        start_timestamp = form.incident_start.data.timestamp()
-        start_time_utc = datetime.fromtimestamp(
-            start_timestamp,
-            tz=timezone.utc
+        start_time_utc = form.incident_start.data + timedelta(
+            minutes=form.user_timezone.data
         )
 
         new_incident = Incident(
@@ -104,7 +102,10 @@ def new_incident(current_user):
         )
 
         if form.incident_impact.data == "0":
-            new_incident.end_date = form.incident_end.data
+            end_time_utc = form.incident_end.data + timedelta(
+                minutes=form.user_timezone.data
+            )
+            new_incident.end_date = end_time_utc
 
         db.session.add(new_incident)
         db.session.commit()

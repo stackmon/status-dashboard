@@ -118,6 +118,13 @@
         {% endif %}
       </div>
 
+      <div>
+      <input id="{{form.user_timezone.id}}"
+             name="{{form.user_timezone.name}}"
+             type="hidden"
+             value=""/>
+      </div>
+
     <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 
@@ -125,6 +132,9 @@
 {% endblock %}
 {% block scripts %}
 <script>
+    var offset = new Date().getTimezoneOffset();
+    document.getElementById("{{form.user_timezone.id}}").value = offset;
+
     function maintenanceCheck(elem) {
     if (elem.value == 0) {
         document.getElementById("maintenance_end").style.display = "block";
