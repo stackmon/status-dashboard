@@ -1,25 +1,4 @@
 ---
-- project-template:
-    name: publish-otc-docs-pti-test
-    description: |
-      Runs normal `Open Telekom Cloud PTI documentation build jobs
-      following the project testing interface and publishes the result
-      using a promote job to https://docs.otc-service.com
-    check:
-      jobs:
-        - otc-tox-docs-test
-    gate:
-      jobs:
-        - otc-tox-docs-test
-    promote:
-      jobs:
-        - promote-otc-tox-docs
-
-- job:
-    name: otc-tox-docs-test
-    parent: otc-tox-docs
-    nodeset: ubuntu-jammy
-
 - job:
     name: stackmon-status-dashboard-build-image
     parent: otc-build-container-image
@@ -42,7 +21,7 @@
     merge-mode: squash-merge
     default-branch: main
     templates:
-      - publish-otc-docs-pti-test
+      - publish-otc-docs-pti
       - release-notes-jobs
     check:
       jobs:
