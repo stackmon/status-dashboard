@@ -1,4 +1,4 @@
 reno>=3.1.0 # Apache-2.0
 sphinx # BSD
-sphinx-rtd-theme
-sphinxcontrib-httpdomain>=1.8.0 # BSD
+sphinx-rtd-theme>=2.0.0 # MIT
+sphinxcontrib-httpdomain>=1.8.1 # BSD
