@@ -37,6 +37,7 @@ import yaml
 db = SQLAlchemy()
 migrate = Migrate()
 oauth = OAuth()
+session = Session()
 
 # Cache settings
 cache_config_options = [
@@ -48,13 +49,39 @@ cache_config_options = [
     "CACHE_REDIS_PASSWORD",
     "CACHE_DEFAULT_TIMEOUT",
 ]
-
 cache_config = {
-    option: os.getenv(f"SDB_{option}", getattr(DefaultConfiguration, option))
+    option: os.getenv(
+        f"SDB_{option}", DefaultConfiguration.__dict__.get(option))
     for option in cache_config_options
 }
-cache = Cache(config=cache_config)
-session = Session()
+
+
+def check_redis_connection(cache_config):
+    if (
+        "CACHE_TYPE" in cache_config
+        and cache_config["CACHE_TYPE"] == "RedisCache"
+    ):
+        try:
+            r = redis.StrictRedis(
+                host=cache_config.get("CACHE_REDIS_HOST", "localhost"),
+                port=cache_config.get("CACHE_REDIS_PORT", 6379),
+                password=cache_config.get("CACHE_REDIS_PASSWORD"),
+            )
+            r.ping()
+            return True
+        except redis.ConnectionError:
+            return False
+    return False
+
+
+if (
+    "CACHE_TYPE" in cache_config.keys()
+    and cache_config["CACHE_TYPE"] == "RedisCache"
+    and check_redis_connection(cache_config)
+):
+    cache = Cache(config=cache_config)
+else:
+    cache = Cache(config={"CACHE_TYPE": "SimpleCache"})
 
 
 def create_app(test_config=None):
@@ -65,11 +92,18 @@ def create_app(test_config=None):
     api = Api(app)  # noqa
 
     app.config.from_prefixed_env(prefix="SDB")
-    app.config['SESSION_REDIS'] = redis.StrictRedis(
-        host=os.getenv("SDB_REDIS_HOST", DefaultConfiguration.REDIS_HOST),
-        port=os.getenv("SDB_REDIS_PORT", DefaultConfiguration.REDIS_PORT),
-        password=os.getenv("SDB_REDIS_PASS", DefaultConfiguration.REDIS_PASS),
-    )
+    if (
+        "SESSION_TYPE" in app.config
+        and app.config["SESSION_TYPE"] == "redis"
+    ):
+        app.config["SESSION_REDIS"] = redis.StrictRedis(
+            host=os.getenv("SDB_REDIS_HOST",
+                           DefaultConfiguration.__dict__.get("REDIS_HOST")),
+            port=os.getenv("SDB_REDIS_PORT",
+                           DefaultConfiguration.__dict__.get("REDIS_PORT")),
+            password=os.getenv("SDB_REDIS_PASS",
+                               DefaultConfiguration.__dict__.get("REDIS_PASS"))
+        )
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -98,23 +132,13 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    # enabling redis caching
-    try:
-        r = redis.StrictRedis(
-            host=cache_config["CACHE_REDIS_HOST"],
-            port=cache_config["CACHE_REDIS_PORT"],
-            password=cache_config.get("CACHE_REDIS_PASSWORD"),
-        )
-        r.ping()
-        app.logger.debug("Connection to redis was successful")
-        cache.init_app(app)
-    except redis.ConnectionError:
-        app.logger.error("Error connecting to redis")
-
+    cache.init_app(app)
+    app.logger.debug(f"CACHE_TYPE: {cache.config['CACHE_TYPE']}")
     db.init_app(app)
     migrate.init_app(app, db)
     oauth.init_app(app, cache=cache)
-    session.init_app(app)
+    if "SESSION_TYPE" in app.config:
+        session.init_app(app)
 
     if (
         "GITHUB_CLIENT_ID" in app.config
@@ -133,6 +157,24 @@ def create_app(test_config=None):
             client_kwargs={"scope": "user"},
             userinfo_endpoint="https://api.github.com/user",
         )
+
+    # testing caching and redis connection
+    if app.debug:
+        cache_dict = app.extensions["cache"]
+        cache_obj = list(cache_dict.values())[0]
+        cache_obj.set("test_key", "test_value")
+        value = cache_obj.get("test_key")
+        if value == "test_value":
+            app.logger.debug(f"Caching works, test_key has value: '{value}'")
+            cache_obj.delete("test_key")
+
+        if check_redis_connection(cache_config):
+            app.logger.debug("Connection to redis was successful")
+            cache.init_app(app)
+        else:
+            app.logger.error("Error connecting to redis")
+    # end of testing caching and redis connection
+
     if (
         "OPENID_ISSUER_URL" in app.config
         and "OPENID_CLIENT_ID" in app.config

@@ -41,9 +41,9 @@ from flask import url_for
 @bp.route("/index", methods=["GET"])
 @cache.cached(
     timeout=30,
-    key_prefix=lambda: (f':{session["user"]["sub"]}'
+    key_prefix=lambda: (f"{session['user']['sub']}"
                         if "user" in session
-                        else ':shared_cache')
+                        else "shared_cache"),
 )
 def index():
     return render_template(
@@ -152,7 +152,7 @@ def new_incident(current_user):
 @bp.route("/incidents/<incident_id>", methods=["GET", "POST"])
 @cache.cached(
     timeout=30,
-    key_prefix=lambda: f":{request.path}" if "user" not in session else ""
+    key_prefix=lambda: f"{request.path}" if "user" not in session else ""
 )
 def incident(incident_id):
     """Manage incident by ID"""

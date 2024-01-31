@@ -30,22 +30,13 @@ class DefaultConfiguration:
     SQLALCHEMY_ECHO = False
     JSON_SORT_KEYS = True
     # session settings
-    SESSION_TYPE = "redis"
-    SESSION_KEY_PREFIX = 'redis_session:'
+    SESSION_KEY_PREFIX = 'sdb_session:'
     SESSION_PERMANENT = False
     SESSION_USE_SIGNER = True
-    # redis settings
-    REDIS_HOST = "localhost"
-    REDIS_PORT = 6379
-    REDIS_PASS = "password"
     # cache settings
-    CACHE_TYPE = "RedisCache"
-    CACHE_KEY_PREFIX = "redis_cache"
-    CACHE_REDIS_HOST = "localhost"
-    CACHE_REDIS_PORT = 6379
-    CACHE_REDIS_PASSWORD = "password"
-    CACHE_REDIS_URL = f"redis://:{REDIS_PASS}@{REDIS_HOST}:{REDIS_PORT}"
+    CACHE_KEY_PREFIX = "sdb_cache:"
     CACHE_DEFAULT_TIMEOUT = 30
+    CACHE_TYPE = "SimpleCache"
 
     # Incident impacts map
     # key - integer to identify impact and compare "severity"
