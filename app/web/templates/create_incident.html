@@ -46,6 +46,25 @@
         }}</div>
     </div>
 
+    <div id="maintenance_desc" class="mb-3"
+      {% if form.incident_impact.data and "0" in form.incident_impact.data %}
+        style="display: block;"
+      {% else %}
+        style="display: none;"
+      {% endif %}>
+      <label for="{{form.incident_desc.id}}" class="form-label">{{form.incident_desc.label}}</label>
+      <textarea class="form-control {{ ' is-invalid' if form.incident_desc.errors
+                        | length > 0 else '' }}"
+             id="{{form.incident_desc.id}}"
+             name="{{form.incident_desc.name}}"
+             rows=3
+             aria-describedby="incidentTextHelp">{{ form.incident_desc.data if form.incident_desc.data }}</textarea>
+       <div id="incidentTextHelp" class="form-text">Please enter maintenance description here.</div>
+       <div class="invalid-feedback">{{ form.incident_desc.errors | join(', ')
+         }}
+       </div>
+    </div>
+
     <div class="mb-3">
       <label for="{{form.incident_components.id}}"
         class="form-label">{{form.incident_components.label}}</label>
@@ -128,8 +147,10 @@
     function maintenanceCheck(elem) {
     if (elem.value == 0) {
         document.getElementById("maintenance_end").style.display = "block";
+        document.getElementById("maintenance_desc").style.display = "block";
     } else {
         document.getElementById("maintenance_end").style.display = "none";
+        document.getElementById("maintenance_desc").style.display = "none";
     }
 }
 </script>

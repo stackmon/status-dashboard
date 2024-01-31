@@ -109,6 +109,15 @@ def new_incident(current_user):
         db.session.add(new_incident)
         db.session.commit()
 
+        if form.incident_impact.data == "0" and form.incident_desc.data:
+            add_desc = IncidentStatus(
+                incident_id=new_incident.id,
+                text=form.incident_desc.data,
+                status="description",
+            )
+            db.session.add(add_desc)
+            db.session.commit()
+
         current_app.logger.debug(
             f"{new_incident} opened by {get_user_string(current_user)}"
         )

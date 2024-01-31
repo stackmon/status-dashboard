@@ -23,7 +23,7 @@
 {% endwith %}
 
 <div class="container">
-  {% set open_incidents = incidents.get_all_active() %}
+  {% set open_incidents = incidents.get_all_active() | rejectattr('impact', 'equalto', 0) | list %}
   {% if open_incidents | length == 0 %}
     <div class="alert alert-success" role="alert">
       All systems running
@@ -55,9 +55,9 @@
         </h6>
         <small class="text-secondary">Started: {{ incident.start_date.strftime('%Y-%m-%dT%H:%M') }}</small>
         <hr/>
-        {% if incident.updates | length != 0 %}
+        {% if incident.updates | rejectattr('status', 'equalto', 'description') | list | length != 0 %}
           <div class="container text-left">
-          {% set update = incident.updates[0] %}
+          {% set update = incident.updates | rejectattr('status', 'equalto', 'description') | list | first %}
             <div class="row">
                 <div class="col-md-2">
                     <h6>{{ update.status }}</h6>
@@ -119,6 +119,63 @@
        </div>
    {% endfor %}
  </div>
+</div>
+
+{% set open_maintenances = incidents.get_all_active() | selectattr('impact', 'equalto', 0) | list %}
+{% if open_maintenances | length > 0 %}
+<div class="container"><br/>
+    {% for incident in open_maintenances | sort(attribute='start_date', reverse = True) %}
+      {% set impact = config['INCIDENT_IMPACTS'][incident.impact] %}
+        <div class="alert alert-{{impact.key}}" role="alert">
+          <h4 class="alert-heading">
+              <a class="alert-link"
+                  href="incidents/{{incident.id}}"> {{ incident.text }}</a>
+        </h4>
+      <p class="indent">
+      {{ (incident.updates | selectattr('status', 'equalto', 'description') | first).text }}
+      {% block add_message %}
+        {% include 'message.html' ignore missing %}
+      {% endblock %}
+      </p>
+	<h6>Impact: {{ impact.string }}</h6>
+	{% set regions = incident.get_attributes_by_key('region') %}
+        <h6>Affected Region(s): {{
+            regions
+            | join(', ')
+            }}</h6>
+        <h6>Affected Service(s):
+            {% set comma = joiner() %}
+            {% for comp in incident.components -%}
+            {% with attrs = comp.get_attributes_as_dict() -%}
+            {{ comma() }}{{ comp.name }}
+            {%- if regions|length > 1 %}
+            ({{attrs['region']}})
+            {%- endif %}
+            {%- endwith %}
+            {%- endfor %}
+        </h6>
+        <small class="text-secondary">Started: {{ incident.start_date.strftime('%Y-%m-%dT%H:%M') }}</small>
+        <br/>
+        <small class="text-secondary">Planned end date: {{ incident.end_date.strftime('%Y-%m-%dT%H:%M') }}</small>
+        <hr/>
+        {% if incident.updates | rejectattr('status', 'equalto', 'description') | list | length != 0 %}
+          <div class="container text-left">
+          {% set update = incident.updates | rejectattr('status', 'equalto', 'description') | list | first %}
+            <div class="row">
+                <div class="col-md-2">
+                    <h6>{{ update.status }}</h6>
+                    <small class="text-secondary">Posted {{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                </div>
+                <div class="col-md-10">
+                    {{ update.text }}
+                </div>
+                <hr/>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+     {% endfor %}
+  {% endif %}
 </div>
 
 <div>

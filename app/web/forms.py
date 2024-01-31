@@ -71,6 +71,13 @@ class IncidentForm(FlaskForm):
             validators.Length(min=8, max=200),
         ],
     )
+    incident_desc = TextAreaField(
+        "Maintenance description",
+        validators=[
+            validators.Optional(),
+            validators.Length(min=8, max=500),
+        ],
+    )
     incident_impact = SelectField("Incident Impact")
     incident_components = SelectField("Affected services")
     incident_start = DateTimeField(
