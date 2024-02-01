@@ -11,7 +11,7 @@ flask --debug run
 
 flask db stamp head # to start the upgrade db models
 ```
-### Redis
+### Using redis for caching and storing sessions
 It needs to run with redis;  
 Environment variables can be configured using the "SDB" prefix.
 ```
@@ -22,6 +22,11 @@ Environment variables can be configured using the "SDB" prefix.
 "SDB_CACHE_REDIS_URL"
 "SDB_CACHE_REDIS_PASSWORD"
 "SDB_CACHE_DEFAULT_TIMEOUT"
+# session variables:
+"SDB_SESSION_TYPE"
+"SDB_REDIS_PASS"
+"SDB_REDIS_PORT"
+"SDB_REDIS_HOST"
 ```
 
 ## Bootstraping
