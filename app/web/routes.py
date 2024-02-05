@@ -39,12 +39,7 @@ from flask import url_for
 
 @bp.route("/", methods=["GET"])
 @bp.route("/index", methods=["GET"])
-@cache.cached(
-    timeout=30,
-    key_prefix=lambda: (f"{session['user']['sub']}"
-                        if "user" in session
-                        else "shared_cache"),
-)
+@cache.cached(unless=lambda: "user" in session)
 def index():
     return render_template(
         "index.html",
@@ -151,8 +146,8 @@ def new_incident(current_user):
 
 @bp.route("/incidents/<incident_id>", methods=["GET", "POST"])
 @cache.cached(
-    timeout=30,
-    key_prefix=lambda: f"{request.path}" if "user" not in session else ""
+    unless=lambda: "user" in session,
+    key_prefix=lambda: f"{request.path}",
 )
 def incident(incident_id):
     """Manage incident by ID"""
@@ -234,7 +229,7 @@ def separate_incident(current_user, incident_id, component_id):
 
 
 @bp.route("/history", methods=["GET"])
-@cache.cached(timeout=30)
+@cache.cached(unless=lambda: "user" in session)
 def history():
     return render_template(
         "history.html",
@@ -244,7 +239,10 @@ def history():
 
 
 @bp.route("/availability", methods=["GET"])
-@cache.cached(timeout=300)
+@cache.cached(
+    unless=lambda: "user" in session,
+    timeout=300,
+)
 def sla():
     time_now = datetime.now()
     months = [time_now + relativedelta(months=-mon) for mon in range(6)]
