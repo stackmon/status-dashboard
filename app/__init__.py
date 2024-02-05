@@ -167,12 +167,18 @@ def create_app(test_config=None):
         if value == "test_value":
             app.logger.debug(f"Caching works, test_key has value: '{value}'")
             cache_obj.delete("test_key")
-
-        if check_redis_connection(cache_config):
-            app.logger.debug("Connection to redis was successful")
-            cache.init_app(app)
-        else:
-            app.logger.error("Error connecting to redis")
+        # checking connection to redis
+        if (
+            ("SESSION_TYPE" in app.config
+             and app.config["SESSION_TYPE"] == "redis")
+            or ("CACHE_TYPE" in cache_config
+                and cache_config["CACHE_TYPE"] == "RedisCache")
+        ):
+            if check_redis_connection(cache_config):
+                app.logger.debug("Connection to redis was successful")
+                cache.init_app(app)
+            else:
+                app.logger.error("Error connecting to redis")
     # end of testing caching and redis connection
 
     if (
