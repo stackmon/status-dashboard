@@ -271,11 +271,10 @@ class Incident(Base):
     id = mapped_column(Integer, primary_key=True, index=True)
     text: Mapped[str] = mapped_column(String())
     start_date: Mapped[datetime.datetime] = mapped_column(
-        insert_default=func.now(),
-        index=True
+        insert_default=func.now()
     )
     end_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
-    impact: Mapped[int] = mapped_column(db.SmallInteger, index=True)
+    impact: Mapped[int] = mapped_column(db.SmallInteger)
     # upgrade: system: Mapped[bool] = mapped_column(Boolean, default=False)
     system: Mapped[bool] = mapped_column(Boolean, default=False)
 
