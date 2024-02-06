@@ -39,7 +39,9 @@ from flask import url_for
 
 @bp.route("/", methods=["GET"])
 @bp.route("/index", methods=["GET"])
-@cache.cached(unless=lambda: "user" in session)
+@cache.cached(unless=lambda: "user" in session,
+              key_prefix="/index"
+)
 def index():
     return render_template(
         "index.html",
