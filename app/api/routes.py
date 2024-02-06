@@ -168,7 +168,7 @@ def get_component_from_cache(cache_key):
 @bp.route("/v1/component_status", methods=["GET", "POST"])
 class ApiComponentStatus(MethodView):
     @bp.arguments(ComponentSearchQueryArgs, location="query")
-    @bp.response(200)  # , ComponentSchema(many=True))
+    @bp.response(200)
     def get(self, search_args):
         """Get components
 
