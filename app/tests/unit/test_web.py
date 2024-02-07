@@ -24,7 +24,9 @@ from app.models import Incident
 class TestBase(TestCase):
 
     test_config = dict(
-        TESTING=True, SQLALCHEMY_DATABASE_URI="sqlite:///:memory:"
+        TESTING=True,
+        SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
+        CACHE_TYPE="SimpleCache"
     )
 
     def setUp(self):
@@ -41,8 +43,7 @@ class TestBase(TestCase):
 
 class TestWeb(TestBase):
     def setUp(self):
-        super().setUp()
-
+        super(TestWeb, self).setUp()
         self.client = self.app.test_client()
 
         with self.app.app_context():
@@ -67,14 +68,14 @@ class TestWeb(TestBase):
             db.session.commit()
             self.incident_id = inc1.id
 
-    def test_get_root(self):
+    def test_01_get_root(self):
         res = self.client.get("/")
         self.assertEqual(200, res.status_code)
 
-    def test_get_incidents_no_auth(self):
+    def test_02_get_incidents_no_auth(self):
         res = self.client.get("/incidents")
         self.assertEqual(401, res.status_code)
 
-    def test_get_incident(self):
+    def test_03_get_incident(self):
         res = self.client.get(f"/incidents/{self.incident_id}")
         self.assertEqual(200, res.status_code)

@@ -29,6 +29,14 @@ class DefaultConfiguration:
     SECRET_KEY = "dev"
     SQLALCHEMY_ECHO = False
     JSON_SORT_KEYS = True
+    # session settings
+    SESSION_KEY_PREFIX = 'sdb_session:'
+    SESSION_PERMANENT = False
+    SESSION_USE_SIGNER = True
+    # cache settings
+    CACHE_KEY_PREFIX = "sdb_cache:"
+    CACHE_DEFAULT_TIMEOUT = 30
+    CACHE_TYPE = "SimpleCache"
 
     # Incident impacts map
     # key - integer to identify impact and compare "severity"

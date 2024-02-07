@@ -13,6 +13,7 @@
 from datetime import datetime
 
 from app import authorization
+from app import cache
 from app.api import bp
 from app.api.schemas.components import ComponentSchema
 from app.api.schemas.components import ComponentSearchQueryArgs
@@ -156,10 +157,18 @@ def handling_incidents(
         current_app.logger.error("Unexpected ERROR")
 
 
+def get_component_from_cache(cache_key):
+    cached_value = cache.get(cache_key)
+    if cached_value:
+        current_app.logger.debug(f"Cache hit for key: '{cache_key}'")
+        return cached_value
+    return None
+
+
 @bp.route("/v1/component_status", methods=["GET", "POST"])
 class ApiComponentStatus(MethodView):
     @bp.arguments(ComponentSearchQueryArgs, location="query")
-    @bp.response(200, ComponentSchema(many=True))
+    @bp.response(200)
     def get(self, search_args):
         """Get components
 
@@ -179,17 +188,37 @@ class ApiComponentStatus(MethodView):
         name = search_args.get("name", "")
         attribute_name = search_args.get("attribute_name", None)
         attribute_value = search_args.get("attribute_value", None)
-        attribute = {attribute_name: attribute_value}
+        if attribute_name and attribute_value:
+            attribute = {attribute_name: attribute_value}
+        else:
+            attribute = None
+        component_schema = ComponentSchema()
+        cache_key = (f"component_status:{name if name else 'all'}"
+                     f"{attribute if attribute else ''}"
+        )
+
+        cached_component = get_component_from_cache(cache_key)
+        if cached_component:
+            return [cached_component]
+
         if attribute_name is not None and attribute_value is not None:
             target_component = Component.find_by_name_and_attributes(
                 name, attribute
             )
             if target_component is None:
                 abort(404, message="Component does not exist")
-            return [target_component]
-        return db.session.scalars(
+            serialized_component = component_schema.dump(target_component)
+            cache.set(cache_key, serialized_component)
+            return [serialized_component]
+
+        components = db.session.scalars(
             db.select(Component).filter(Component.name.startswith(name))
         ).all()
+        if components is None:
+            abort(404, message="Component(s) does not (do not) exist")
+        serialized_components = component_schema.dump(components, many=True)
+        cache.set(cache_key, serialized_components)
+        return [serialized_components]
 
     @bp.arguments(ComponentStatusArgsSchema)
     @auth.login_required
