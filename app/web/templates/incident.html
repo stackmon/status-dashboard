@@ -59,14 +59,16 @@
   </h6>
 {% if incident.impact == 0 %}
   <small>
-    <b>Start date:</b> {{ incident.start_date.strftime('%Y-%m-%d %H:%M') }}<br/>
-    <b>Planned end date:</b> {{ incident.end_date.strftime('%Y-%m-%d %H:%M') | default('no') }}
+    <b>Start date:</b> {{ incident.start_date.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC<br/>
+    <b>Planned end date:</b> {{ incident.end_date.strftime('%Y-%m-%d %H:%M') | default('no') }}&nbsp;UTC
   </small>
 {% else %}
-  <small>Incident began at {{ incident.start_date.strftime('%Y-%m-%dT%H:%M') }}
+  <small>Incident began at
+    {{ incident.start_date.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC
     {% if incident.end_date %}
-  and ended at {{ incident.end_date.strftime('%Y-%m-%dT%H:%M') | default('no') }}
-  {% endif %}
+      and ended at
+      {{ incident.end_date.strftime('%Y-%m-%d %H:%M') | default('no') }}&nbsp;UTC
+    {% endif %}
   </small>
 {% endif %}
   <hr/>
@@ -76,7 +78,7 @@
     <div class="row">
         <div class="col-md-2">
             <h6>{{ update.status }}</h6>
-            <small>{{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+            <small>{{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC</small>
         </div>
         <div class="col-md-10">
             {{ update.text }}
