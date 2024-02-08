@@ -132,7 +132,13 @@
                   href="incidents/{{incident.id}}"> {{ incident.text }}</a>
         </h4>
       <p class="indent">
-      {{ (incident.updates | selectattr('status', 'equalto', 'description') | first).text }}
+      {% set desc = incident.updates
+        | selectattr('status', 'equalto', 'description')
+        | first
+        | default(None) %}
+      {% if desc %}
+        {{ desc.text }}
+      {% endif %}
       {% block add_message %}
         {% include 'message.html' ignore missing %}
       {% endblock %}
