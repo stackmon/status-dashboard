@@ -97,16 +97,25 @@
       <label for="{{form.incident_start.id}}" class="form-label">{{form.incident_start.label}}</label>
       <input class="form-control {{ ' is-invalid' if
                  form.incident_start.errors
-                        | length > 0 else '' }}" type="datetime-local"
+                        | length > 0 else '' }}"
+             type="datetime-local"
              id="{{form.incident_start.id}}"
              name="{{form.incident_start.name}}"
              value="{{form.incident_start.data}}"
-             aria-describedby="incidentStartHelp"/>
+             aria-describedby="incidentStartHelp"
+             onchange="startToUTC(this.value)"/>
       <div id="incidentStartHelp" class="form-text">
         Select the incident start time.
       </div>
       <div class="invalid-feedback">{{form.incident_start.errors | join(', ')
         }}</div>
+    </div>
+
+    <div>
+      <input type="hidden"
+             id="{{form.incident_start_utc.id}}"
+             name="{{form.incident_start_utc.name}}"
+             value="{{form.incident_start_utc.data}}"/>
     </div>
 
     <div id="maintenance_end" class="mb-3"
@@ -122,7 +131,8 @@
              id="{{form.incident_end.id}}"
              name="{{form.incident_end.name}}"
              value="{{form.incident_end.data}}"
-             aria-describedby="incidentEndHelp"/>
+             aria-describedby="incidentEndHelp"
+             onchange="endToUTC(this.value)"/>
       <div id="incidentEndHelp" class="form-text">
         Select the maintenance expected end time.
       </div>
@@ -137,6 +147,13 @@
         {% endif %}
       </div>
 
+      <div>
+      <input type="hidden"
+             id="{{form.incident_end_utc.id}}"
+             name="{{form.incident_end_utc.name}}"
+             value="{{form.incident_end_utc.data}}"/>
+      </div>
+
     <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 
@@ -144,6 +161,16 @@
 {% endblock %}
 {% block scripts %}
 <script>
+    function startToUTC(val) {
+      var start_local = new Date(val);
+      document.getElementById("{{form.incident_start_utc.id}}").value = start_local.toISOString().split('.')[0].replace('T', ' ');
+    }
+
+    function endToUTC(val) {
+      var end_local = new Date(val);
+      document.getElementById("{{form.incident_end_utc.id}}").value = end_local.toISOString().split('.')[0].replace('T', ' ');
+    }
+
     function maintenanceCheck(elem) {
     if (elem.value == 0) {
         document.getElementById("maintenance_end").style.display = "block";

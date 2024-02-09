@@ -11,7 +11,6 @@
 # under the License.
 #
 from datetime import datetime
-from datetime import timezone
 
 from app import authorization
 from app import cache
@@ -94,22 +93,16 @@ def new_incident(current_user):
             if comp.id in selected_components:
                 incident_components.append(comp)
 
-        start_timestamp = form.incident_start.data.timestamp()
-        start_time_utc = datetime.fromtimestamp(
-            start_timestamp,
-            tz=timezone.utc
-        )
-
         new_incident = Incident(
             text=form.incident_text.data,
             impact=form.incident_impact.data,
-            start_date=start_time_utc,
+            start_date=form.incident_start_utc.data,
             components=incident_components,
             system=False,
         )
 
         if form.incident_impact.data == "0":
-            new_incident.end_date = form.incident_end.data
+            new_incident.end_date = form.incident_end_utc.data
 
         db.session.add(new_incident)
         db.session.commit()
