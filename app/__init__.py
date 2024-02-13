@@ -23,8 +23,6 @@ from flask_caching import Cache
 
 from flask_migrate import Migrate
 
-from flask_session import Session
-
 from flask_smorest import Api
 
 from flask_sqlalchemy import SQLAlchemy
@@ -37,23 +35,6 @@ import yaml
 db = SQLAlchemy()
 migrate = Migrate()
 oauth = OAuth()
-session = Session()
-
-# Cache settings
-cache_config_options = [
-    "CACHE_TYPE",
-    "CACHE_KEY_PREFIX",
-    "CACHE_REDIS_HOST",
-    "CACHE_REDIS_PORT",
-    "CACHE_REDIS_URL",
-    "CACHE_REDIS_PASSWORD",
-    "CACHE_DEFAULT_TIMEOUT",
-]
-cache_config = {
-    option: os.getenv(
-        f"SDB_{option}", DefaultConfiguration.__dict__.get(option))
-    for option in cache_config_options
-}
 
 
 def check_redis_connection(cache_config):
@@ -74,6 +55,22 @@ def check_redis_connection(cache_config):
     return False
 
 
+# Cache settings
+cache_config_options = [
+    "CACHE_TYPE",
+    "CACHE_KEY_PREFIX",
+    "CACHE_REDIS_HOST",
+    "CACHE_REDIS_PORT",
+    "CACHE_REDIS_URL",
+    "CACHE_REDIS_PASSWORD",
+    "CACHE_DEFAULT_TIMEOUT",
+]
+cache_config = {
+    option: os.getenv(
+        f"SDB_{option}", DefaultConfiguration.__dict__.get(option))
+    for option in cache_config_options
+}
+
 if (
     "CACHE_TYPE" in cache_config.keys()
     and cache_config["CACHE_TYPE"] == "RedisCache"
@@ -92,18 +89,6 @@ def create_app(test_config=None):
     api = Api(app)  # noqa
 
     app.config.from_prefixed_env(prefix="SDB")
-    if (
-        "SESSION_TYPE" in app.config
-        and app.config["SESSION_TYPE"] == "redis"
-    ):
-        app.config["SESSION_REDIS"] = redis.StrictRedis(
-            host=os.getenv("SDB_REDIS_HOST",
-                           DefaultConfiguration.__dict__.get("REDIS_HOST")),
-            port=os.getenv("SDB_REDIS_PORT",
-                           DefaultConfiguration.__dict__.get("REDIS_PORT")),
-            password=os.getenv("SDB_REDIS_PASS",
-                               DefaultConfiguration.__dict__.get("REDIS_PASS"))
-        )
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -137,8 +122,6 @@ def create_app(test_config=None):
     db.init_app(app)
     migrate.init_app(app, db)
     oauth.init_app(app, cache=cache)
-    if "SESSION_TYPE" in app.config:
-        session.init_app(app)
 
     if (
         "GITHUB_CLIENT_ID" in app.config
@@ -169,10 +152,8 @@ def create_app(test_config=None):
             cache_obj.delete("test_key")
         # checking connection to redis
         if (
-            ("SESSION_TYPE" in app.config
-             and app.config["SESSION_TYPE"] == "redis")
-            or ("CACHE_TYPE" in cache_config
-                and cache_config["CACHE_TYPE"] == "RedisCache")
+            ("CACHE_TYPE" in cache_config
+             and cache_config["CACHE_TYPE"] == "RedisCache")
         ):
             if check_redis_connection(cache_config):
                 app.logger.debug("Connection to redis was successful")
