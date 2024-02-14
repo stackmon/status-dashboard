@@ -196,6 +196,10 @@ tbody:nth-child(odd) {
   margin-left: 30px;
 }
 
+.counter-red {
+  color: var(--bs-red)
+}
+
 
 /* Footer */
 footer.footer {
