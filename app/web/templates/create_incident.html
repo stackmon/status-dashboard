@@ -59,6 +59,14 @@
              name="{{form.incident_desc.name}}"
              rows=3
              aria-describedby="incidentTextHelp">{{ form.incident_desc.data if form.incident_desc.data }}</textarea>
+      <div id="count" class="form-text">
+        <span id="current"
+        {% if form.incident_desc.data and form.incident_desc.data|length > 500 %}
+          class="counter-red"
+        {% endif %}
+        >0</span>
+        <span id="maximum">/ 500</span>
+      </div>
        <div id="incidentTextHelp" class="form-text">Please enter maintenance description here.</div>
        <div class="invalid-feedback">{{ form.incident_desc.errors | join(', ')
          }}
@@ -179,6 +187,16 @@
         document.getElementById("maintenance_end").style.display = "none";
         document.getElementById("maintenance_desc").style.display = "none";
     }
-}
+  }
+  var desc = document.getElementById("{{form.incident_desc.id}}");
+  var current = document.getElementById("current");
+  current.innerHTML = desc.value.length;
+  desc.onkeyup = function () {
+    current.innerHTML = this.value.length;
+    if (this.value.length > 500) {
+      current.classList.add('counter-red');
+    }
+    else current.classList.remove('counter-red');
+  };
 </script>
 {% endblock %}
