@@ -25,6 +25,7 @@ from app.models import IncidentStatus
 from app.models import db
 
 from flask import current_app
+from flask import jsonify
 from flask import request
 from flask.views import MethodView
 
@@ -157,7 +158,7 @@ def handling_incidents(
         current_app.logger.error("Unexpected ERROR")
 
 
-def get_component_from_cache(cache_key):
+def get_elements_from_cache(cache_key):
     cached_value = cache.get(cache_key)
     if cached_value:
         current_app.logger.debug(f"Cache hit for key: '{cache_key}'")
@@ -167,6 +168,14 @@ def get_component_from_cache(cache_key):
 
 @bp.route("/v1/component_status", methods=["GET", "POST"])
 class ApiComponentStatus(MethodView):
+    @staticmethod
+    def get_request_info():
+        return (
+            f"Request method: {request.method}, "
+            f"Request path: {request.path}",
+            f"Client address: {request.remote_addr}"
+        )
+
     @bp.arguments(ComponentSearchQueryArgs, location="query")
     @bp.response(200)
     def get(self, search_args):
@@ -183,8 +192,9 @@ class ApiComponentStatus(MethodView):
 
 
         """
-        ip_address = request.remote_addr
-        current_app.logger.debug(f"Request from IP address: {ip_address}")
+        request_info = self.get_request_info()
+        current_app.logger.debug(request_info)
+
         name = search_args.get("name", "")
         attribute_name = search_args.get("attribute_name", None)
         attribute_value = search_args.get("attribute_value", None)
@@ -197,8 +207,9 @@ class ApiComponentStatus(MethodView):
                      f"{attribute if attribute else ''}"
         )
 
-        cached_component = get_component_from_cache(cache_key)
+        cached_component = get_elements_from_cache(cache_key)
         if cached_component:
+            current_app.logger.debug("The response was cached")
             return [cached_component]
 
         if attribute_name is not None and attribute_value is not None:
@@ -264,8 +275,9 @@ class ApiComponentStatus(MethodView):
             :class:`~status_dashboard.api.schemas.components.IncidentSchema`
             object
         """
-        ip_address = request.remote_addr
-        current_app.logger.debug(f"Request from IP address: {ip_address}")
+        request_info = self.get_request_info()
+        current_app.logger.debug(request_info)
+
         name = data.get("name", None)
         impact = data.get("impact", 1)
         text = data.get("text", "Incident")
@@ -365,6 +377,14 @@ class ApiComponentStatus(MethodView):
 
 @bp.route("/v1/incidents", methods=["GET"])
 class ApiIncidents(MethodView):
+    @staticmethod
+    def get_request_info():
+        return (
+            f"Request method: {request.method}, "
+            f"Request path: {request.path}",
+            f"Client address: {request.remote_addr}"
+        )
+
     @bp.response(200, IncidentSchema(many=True))
     def get(self):
         """Get all incidents
@@ -380,5 +400,20 @@ class ApiIncidents(MethodView):
 
 
         """
+        request_info = self.get_request_info()
+        current_app.logger.debug(request_info)
+
+        incident_schema = IncidentSchema()
+        cache_key = "all_incidents"
+        cached_incidents = get_elements_from_cache(cache_key)
+        if cached_incidents:
+            current_app.logger.debug("The response was cached")
+            return cached_incidents
+
         incidents = db.session.scalars(db.select(Incident)).all()
-        return incidents
+        if incidents is None:
+            abort(404, message="No incidents found")
+
+        serialized_incidents = incident_schema.dump(incidents, many=True)
+        cache.set(cache_key, jsonify(serialized_incidents))
+        return jsonify(serialized_incidents)
