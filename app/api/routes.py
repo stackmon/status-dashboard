@@ -98,6 +98,7 @@ def handling_incidents(
         )
         update_incident_status(
             dst_incident,
+            f"{datetime.now()}: "
             f"{comp_with_attrs} moved from {src_incident.text}"
         )
         src_incident.end_date = datetime.now()
@@ -117,7 +118,8 @@ def handling_incidents(
         update_incident_status(
             src_incident,
             (
-                f"Impact changed: from {impacts[src_incident.impact].key} "
+                f"{datetime.now()}: "
+                f"impact changed from {impacts[src_incident.impact].key} "
                 f"to {impacts[impact].key}"
             )
         )
@@ -135,6 +137,7 @@ def handling_incidents(
         )
         update_incident_status(
             dst_incident,
+            f"{datetime.now()}: "
             f"{comp_with_attrs} moved from {src_incident.text}"
         )
         src_incident.components.remove(target_component)
