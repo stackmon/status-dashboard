@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app import authorization
 from app import cache
@@ -34,6 +34,12 @@ from flask import render_template
 from flask import request
 from flask import session
 from flask import url_for
+
+
+def get_utc_timestamp():
+    """Return current UTC timestamp string compatible with PostgreSQL"""
+    current_time_utc = datetime.now(timezone.utc)
+    return current_time_utc.strftime('%Y-%m-%d %H:%M:%S.%f%z')
 
 
 @bp.route("/", methods=["GET"])
@@ -136,7 +142,7 @@ def new_incident(current_user):
                         inc.components.remove(comp)
                     else:
                         messages_to.append("Incident closed by system")
-                        inc.end_date = datetime.now()
+                        inc.end_date = get_utc_timestamp()
             if messages_to:
                 update_incident(inc, ', '.join(messages_to))
         if messages_from:
@@ -184,7 +190,7 @@ def incident(incident_id):
             if new_status in ["completed", "resolved"]:
                 # Incident is completed
                 new_impact = incident.impact
-                incident.end_date = datetime.now()
+                incident.end_date = get_utc_timestamp()
                 current_app.logger.debug(
                     f"{incident} closed by {get_user_string(session['user'])}"
                 )
@@ -248,7 +254,8 @@ def history():
     timeout=300,
 )
 def sla():
-    time_now = datetime.now()
+    time_now_str = get_utc_timestamp()
+    time_now = datetime.strptime(time_now_str, '%Y-%m-%d %H:%M:%S.%f%z')
     months = [time_now + relativedelta(months=-mon) for mon in range(6)]
 
     return render_template(

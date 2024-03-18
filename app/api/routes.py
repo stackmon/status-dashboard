@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app import authorization
 from app import cache
@@ -42,9 +42,29 @@ def inc_by_impact(incidents, impact):
     return incident_match
 
 
-def add_component_to_incident(target_component, incident):
+def update_incident_status(incident, text_status, status="SYSTEM"):
+    update = IncidentStatus(
+        incident_id=incident.id,
+        text=text_status,
+        status=status,
+    )
+    current_app.logger.debug(f"UPDATE_STATUS: {text_status}")
+    db.session.add(update)
+
+
+def add_component_to_incident(
+    target_component,
+    incident,
+    comp_with_attrs=None
+):
     current_app.logger.debug(
         f"Add {target_component} to the incident: {incident}"
+    )
+    update_incident_status(
+        incident,
+        (
+            f"{comp_with_attrs} added to {incident.text}"
+        )
     )
     incident.components.append(target_component)
     db.session.commit()
@@ -55,23 +75,13 @@ def create_new_incident(target_component, impact, text):
     new_incident = Incident(
         text=text,
         impact=impact,
-        start_date=datetime.now(),
+        start_date=datetime.now(timezone.utc),
         components=[target_component],
         system=True,
     )
     db.session.add(new_incident)
     db.session.commit()
     return new_incident
-
-
-def update_incident_status(incident, text_status, status="SYSTEM"):
-    update = IncidentStatus(
-        incident_id=incident.id,
-        text=text_status,
-        status=status,
-    )
-    current_app.logger.debug(f"UPDATE_STATUS: {text_status}")
-    db.session.add(update)
 
 
 def handling_incidents(
@@ -98,10 +108,11 @@ def handling_incidents(
         )
         update_incident_status(
             dst_incident,
-            f"{datetime.now()}: "
-            f"{comp_with_attrs} moved from {src_incident.text}"
+            (
+                f"{comp_with_attrs} moved from {src_incident.text}"
+            )
         )
-        src_incident.end_date = datetime.now()
+        src_incident.end_date = datetime.now(timezone.utc)
         dst_incident.components.append(target_component)
         db.session.commit()
         return dst_incident
@@ -118,7 +129,6 @@ def handling_incidents(
         update_incident_status(
             src_incident,
             (
-                f"{datetime.now()}: "
                 f"impact changed from {impacts[src_incident.impact].key} "
                 f"to {impacts[impact].key}"
             )
@@ -137,7 +147,6 @@ def handling_incidents(
         )
         update_incident_status(
             dst_incident,
-            f"{datetime.now()}: "
             f"{comp_with_attrs} moved from {src_incident.text}"
         )
         src_incident.components.remove(target_component)
@@ -340,7 +349,7 @@ class ApiComponentStatus(MethodView):
             incident_match = inc_by_impact(incidents, impact)
             if incident_match:
                 return add_component_to_incident(
-                    target_component, incident_match
+                    target_component, incident_match, comp_with_attrs
                 )
             else:
                 current_app.logger.debug(

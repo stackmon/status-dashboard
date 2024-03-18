@@ -10,8 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-import datetime
 import json
+from datetime import datetime, timedelta, timezone
 from unittest import TestCase
 
 
@@ -74,8 +74,8 @@ class TestComponentStatus(TestBase):
                     text="inc",
                     components=[comp1],
                     impact=1,
-                    end_date=datetime.datetime.now()
-                    - datetime.timedelta(days=1),
+                    end_date=datetime.now(timezone.utc)
+                    - timedelta(days=1),
                 )
             )
             db.session.commit()
