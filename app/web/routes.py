@@ -36,12 +36,6 @@ from flask import session
 from flask import url_for
 
 
-def get_utc_timestamp():
-    """Return current UTC timestamp string compatible with PostgreSQL"""
-    current_time_utc = datetime.now(timezone.utc)
-    return current_time_utc.strftime('%Y-%m-%d %H:%M:%S.%f%z')
-
-
 @bp.route("/", methods=["GET"])
 @bp.route("/index", methods=["GET"])
 @cache.cached(unless=lambda: "user" in session,
@@ -142,7 +136,7 @@ def new_incident(current_user):
                         inc.components.remove(comp)
                     else:
                         messages_to.append("Incident closed by system")
-                        inc.end_date = get_utc_timestamp()
+                        inc.end_date = datetime.now(timezone.utc)
             if messages_to:
                 update_incident(inc, ', '.join(messages_to))
         if messages_from:
@@ -190,7 +184,7 @@ def incident(incident_id):
             if new_status in ["completed", "resolved"]:
                 # Incident is completed
                 new_impact = incident.impact
-                incident.end_date = get_utc_timestamp()
+                incident.end_date = datetime.now(timezone.utc)
                 current_app.logger.debug(
                     f"{incident} closed by {get_user_string(session['user'])}"
                 )
@@ -254,8 +248,7 @@ def history():
     timeout=300,
 )
 def sla():
-    time_now_str = get_utc_timestamp()
-    time_now = datetime.strptime(time_now_str, '%Y-%m-%d %H:%M:%S.%f%z')
+    time_now = datetime.now(timezone.utc)
     months = [time_now + relativedelta(months=-mon) for mon in range(6)]
 
     return render_template(
