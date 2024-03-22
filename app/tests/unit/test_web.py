@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-import datetime
+from datetime import datetime, timedelta, timezone
 from unittest import TestCase
 
 from app import create_app
@@ -62,7 +62,7 @@ class TestWeb(TestBase):
                 text="inc",
                 components=[comp1],
                 impact=1,
-                end_date=datetime.datetime.now() - datetime.timedelta(days=1),
+                end_date=datetime.now(timezone.utc) - timedelta(days=1),
             )
             db.session.add(inc1)
             db.session.commit()
