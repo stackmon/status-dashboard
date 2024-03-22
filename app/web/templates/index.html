@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block metatags %}
+    <meta http-equiv="refresh" content="60">
+{% endblock %}
+
 {% block title %}
     {% include 'index_title.html' ignore missing %}
 {% endblock %}
