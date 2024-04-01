@@ -3,3 +3,5 @@ testrepository>=0.0.18 # Apache-2.0/BSD
 mock
 flake8
 flake8-import-order
+testcontainers
+psycopg2-binary
