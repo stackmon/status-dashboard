@@ -108,6 +108,9 @@ nav.navbar {
     background-color: var(--bs-red);
     border: 2px solid var(--bs-red);
 }
+.alert-outage .text-secondary {
+  color: var(--bs-white) !important;
+}
 .alert-outage .alert-link {
     color: var(--bs-dark)
 }

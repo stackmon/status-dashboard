@@ -47,7 +47,7 @@ def rss():
         if not component:
             content = f"Component: {escape(component_name)} is not found"
             return make_response(escape(content), 404)
-        incidents = component.incidents
+        incidents = list(reversed(component.incidents[-10:]))
     elif region:
         supported_vals = ComponentAttribute.get_unique_values(attr_name)
         if attr_value not in supported_vals:
