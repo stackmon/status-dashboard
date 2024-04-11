@@ -76,7 +76,7 @@ def rss():
         fg.description(f"{region} - Incidents")
     if incidents:
         date_format = "%Y-%m-%d %H:%M %Z"
-        for incident in incidents:
+        for incident in reversed(incidents):
             fe = fg.add_entry()
             fe.title(incident.text)
             content = list()

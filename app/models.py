@@ -420,7 +420,7 @@ class Incident(Base):
                     ),
                 ),
             )
-            .order_by(Incident.start_date.asc())
+            .order_by(Incident.start_date.desc())
         ).unique()
 
     @staticmethod
