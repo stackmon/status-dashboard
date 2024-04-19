@@ -142,7 +142,8 @@ def new_incident(current_user):
         if messages_from:
             update_incident(new_incident, ', '.join(messages_from))
         db.session.commit()
-        return redirect("/")
+        return (redirect("/") if new_incident.impact != 0
+                else redirect("/incidents/" + str(new_incident.id)))
     return render_template(
         "create_incident.html", title="Open Incident", form=form
     )
