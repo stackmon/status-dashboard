@@ -19,10 +19,6 @@
   {% block css %}
     {% include 'css.html' ignore missing %}
   {% endblock %}
-
-  {% block scripts %}
-    {% include 'scripts.html' ignore missing %}
-  {% endblock %}
 </head>
 
 <body class="d-flex flex-column sticky-footer-wrapper min-vh-100">
@@ -39,6 +35,10 @@
 
   {% block footer %}
     {% include 'footer.html' ignore missing %}
+  {% endblock %}
+
+  {% block scripts %}
+    {% include 'scripts.html' ignore missing %}
   {% endblock %}
 </body>
 </html>
