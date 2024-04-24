@@ -1,202 +1,202 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="container">
+<div class="container">
 
-        <form action="" method="POST" novalidate>
-            {{ form.hidden_tag() }}
+    <form action="" method="POST" novalidate>
+    {{ form.hidden_tag() }}
 
-            <div class="mb-3">
-                <label for="{{form.incident_text.id}}" class="form-label">{{form.incident_text.label}}</label>
-                <textarea class="form-control {{ ' is-invalid' if form.incident_text.errors
+    <div class="mb-3">
+      <label for="{{form.incident_text.id}}" class="form-label">{{form.incident_text.label}}</label>
+      <textarea class="form-control {{ ' is-invalid' if form.incident_text.errors
                         | length > 0 else '' }}"
-                          id="{{form.incident_text.id}}"
-                          name="{{form.incident_text.name}}"
-                          rows=3
-                          aria-describedby="incidentTextHelp">{{ form.incident_text.data if form.incident_text.data }}</textarea>
-                <div id="incidentTextHelp" class="form-text">Please enter Incident
-                    summary here.</div>
-                <div class="invalid-feedback">{{ form.incident_text.errors | join(', ')
-                        }}
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label for="{{form.incident_impact.id}}"
-                       class="form-label">{{form.incident_impact.label}}</label>
-                <select
-                        onchange="maintenanceCheck(this);"
-                        class="form-select form-select-sm mb-3 {{ ' is-invalid' if
-                 form.incident_impact.errors
-                        | length > 0 else '' }}"
-                        aria-label=".form-select-sm"
-                        id="{{form.incident_impact.id}}"
-                        name="{{form.incident_impact.name}}">
-                    <option>Choose...</option>
-                    {% for (k, v) in form.incident_impact.choices %}
-                        <option
-                                {% if form.incident_impact.data and k|string in form.incident_impact.data %} selected
-                                {% endif %}
-                                                                                                             value="{{k}}">{{v}}</option>
-                    {% endfor %}
-                </select>
-                <div id="incidentImpactHelp" class="form-text">Please enter incident impact
-                    here.</div>
-                <div class="invalid-feedback">{{form.incident_impact.errors | join(', ')
-                        }}</div>
-            </div>
-
-            <div id="maintenance_desc" class="mb-3"
-                    {% if form.incident_impact.data and "0" in form.incident_impact.data %}
-                 style="display: block;"
-                    {% else %}
-                 style="display: none;"
-                    {% endif %}>
-                <label for="{{form.incident_desc.id}}" class="form-label">{{form.incident_desc.label}}</label>
-                <textarea class="form-control {{ ' is-invalid' if form.incident_desc.errors
-                        | length > 0 else '' }}"
-                          id="{{form.incident_desc.id}}"
-                          name="{{form.incident_desc.name}}"
-                          rows=3
-                          aria-describedby="incidentTextHelp">{{ form.incident_desc.data if form.incident_desc.data }}</textarea>
-                <div id="count" class="form-text">
-        <span id="current"
-                {% if form.incident_desc.data and form.incident_desc.data|length > 500 %}
-              class="counter-red"
-                {% endif %}
-        >0</span>
-                    <span id="maximum">/ 500</span>
-                </div>
-                <div id="incidentTextHelp" class="form-text">Please enter maintenance description here.</div>
-                <div class="invalid-feedback">{{ form.incident_desc.errors | join(', ')
-                        }}
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label for="{{form.incident_components.id}}"
-                       class="form-label">{{form.incident_components.label}}</label>
-                <select
-                        class="form-select form-select-sm mb-3 {{ ' is-invalid' if
-                 form.incident_components.errors
-                        | length > 0 else '' }}"
-                        aria-label="multiple .form-select-sm"
-                        multiple
-                        size="10"
-                        id="{{form.incident_components.id}}"
-                        name="{{form.incident_components.name}}">
-                    <option>Choose...</option>
-                    {% for (k, v) in form.incident_components.choices %}
-                        {% with attrs = v.get_attributes_as_dict() %}
-                            <option
-                                    {% if form.incident_components.data and k|string in form.incident_components.raw_data %} selected
-                                    {% endif %}
-                                                                                                                             value="{{k}}">{{v.name}} (region: {{attrs['region']}})</option>
-                        {% endwith %}
-                    {% endfor %}
-                </select>
-                <div id="incidentServicesHelp" class="form-text">Please enter services
-                    affected.</div>
-                <div class="invalid-feedback">{{form.incident_components.errors | join(', ')
-                        }}</div>
-            </div>
-
-            <div class="mb-3">
-                <label for="{{form.incident_start.id}}" class="form-label">{{form.incident_start.label}}</label>
-                <input class="form-control {{ ' is-invalid' if
-                 form.incident_start.errors
-                        | length > 0 else '' }}"
-                       type="datetime-local"
-                       id="{{form.incident_start.id}}"
-                       name="{{form.incident_start.name}}"
-                       value="{{form.incident_start.data}}"
-                       aria-describedby="incidentStartHelp"
-                       onchange="startToUTC(this.value)"/>
-                <div id="incidentStartHelp" class="form-text">
-                    Select the incident start time.
-                </div>
-                <div class="invalid-feedback">{{form.incident_start.errors | join(', ')
-                        }}</div>
-            </div>
-
-            <div>
-                <input type="hidden"
-                       id="{{form.incident_start_utc.id}}"
-                       name="{{form.incident_start_utc.name}}"
-                       value="{{form.incident_start_utc.data}}"/>
-            </div>
-
-            <div id="maintenance_end" class="mb-3"
-                    {% if form.incident_impact.data and "0" in form.incident_impact.data %}
-                 style="display: block;"
-                    {% else %}
-                 style="display: none;"
-                    {% endif %}>
-                <label for="{{form.incident_end.id}}" class="form-label">{{form.incident_end.label}}</label>
-                <input class="form-control
-                      {% if form.incident_end.errors %}is-invalid{% endif %}"
-                       type="datetime-local"
-                       id="{{form.incident_end.id}}"
-                       name="{{form.incident_end.name}}"
-                       value="{{form.incident_end.data}}"
-                       aria-describedby="incidentEndHelp"
-                       onchange="endToUTC(this.value)"/>
-                <div id="incidentEndHelp" class="form-text">
-                    Select the maintenance expected end time.
-                </div>
-                {% if form.incident_end.errors %}
-                    <div class="invalid-feedback">
-                        <ul class="errors">
-                            {% for error in form.incident_end.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% endif %}
-            </div>
-
-            <div>
-                <input type="hidden"
-                       id="{{form.incident_end_utc.id}}"
-                       name="{{form.incident_end_utc.name}}"
-                       value="{{form.incident_end_utc.data}}"/>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-
+             id="{{form.incident_text.id}}"
+             name="{{form.incident_text.name}}"
+             rows=3
+             aria-describedby="incidentTextHelp">{{ form.incident_text.data if form.incident_text.data }}</textarea>
+       <div id="incidentTextHelp" class="form-text">Please enter Incident
+         summary here.</div>
+       <div class="invalid-feedback">{{ form.incident_text.errors | join(', ')
+         }}
+       </div>
     </div>
 
-    <script>
-        function startToUTC(val) {
-            var start_local = new Date(val);
-            document.getElementById("{{form.incident_start_utc.id}}").value = start_local.toISOString().split('.')[0].replace('T', ' ');
-        }
+    <div class="mb-3">
+      <label for="{{form.incident_impact.id}}"
+        class="form-label">{{form.incident_impact.label}}</label>
+      <select
+          onchange="maintenanceCheck(this);"
+          class="form-select form-select-sm mb-3 {{ ' is-invalid' if
+                 form.incident_impact.errors
+                        | length > 0 else '' }}"
+          aria-label=".form-select-sm"
+          id="{{form.incident_impact.id}}"
+          name="{{form.incident_impact.name}}">
+        <option>Choose...</option>
+        {% for (k, v) in form.incident_impact.choices %}
+        <option
+        {% if form.incident_impact.data and k|string in form.incident_impact.data %} selected
+        {% endif %}
+        value="{{k}}">{{v}}</option>
+        {% endfor %}
+      </select>
+      <div id="incidentImpactHelp" class="form-text">Please enter incident impact
+        here.</div>
+      <div class="invalid-feedback">{{form.incident_impact.errors | join(', ')
+        }}</div>
+    </div>
 
-        function endToUTC(val) {
-            var end_local = new Date(val);
-            document.getElementById("{{form.incident_end_utc.id}}").value = end_local.toISOString().split('.')[0].replace('T', ' ');
-        }
+    <div id="maintenance_desc" class="mb-3"
+      {% if form.incident_impact.data and "0" in form.incident_impact.data %}
+        style="display: block;"
+      {% else %}
+        style="display: none;"
+      {% endif %}>
+      <label for="{{form.incident_desc.id}}" class="form-label">{{form.incident_desc.label}}</label>
+      <textarea class="form-control {{ ' is-invalid' if form.incident_desc.errors
+                        | length > 0 else '' }}"
+             id="{{form.incident_desc.id}}"
+             name="{{form.incident_desc.name}}"
+             rows=3
+             aria-describedby="incidentTextHelp">{{ form.incident_desc.data if form.incident_desc.data }}</textarea>
+      <div id="count" class="form-text">
+        <span id="current"
+        {% if form.incident_desc.data and form.incident_desc.data|length > 500 %}
+          class="counter-red"
+        {% endif %}
+        >0</span>
+        <span id="maximum">/ 500</span>
+      </div>
+       <div id="incidentTextHelp" class="form-text">Please enter maintenance description here.</div>
+       <div class="invalid-feedback">{{ form.incident_desc.errors | join(', ')
+         }}
+       </div>
+    </div>
 
-        function maintenanceCheck(elem) {
-            if (elem.value == 0) {
-                document.getElementById("maintenance_end").style.display = "block";
-                document.getElementById("maintenance_desc").style.display = "block";
-            } else {
-                document.getElementById("maintenance_end").style.display = "none";
-                document.getElementById("maintenance_desc").style.display = "none";
-            }
-        }
-        var desc = document.getElementById("{{form.incident_desc.id}}");
-        var current = document.getElementById("current");
-        current.innerHTML = desc.value.length;
-        desc.onkeyup = function () {
-            current.innerHTML = this.value.length;
-            if (this.value.length > 500) {
-                current.classList.add('counter-red');
-            }
-            else current.classList.remove('counter-red');
-        };
-    </script>
+    <div class="mb-3">
+      <label for="{{form.incident_components.id}}"
+        class="form-label">{{form.incident_components.label}}</label>
+      <select
+          class="form-select form-select-sm mb-3 {{ ' is-invalid' if
+                 form.incident_components.errors
+                        | length > 0 else '' }}"
+          aria-label="multiple .form-select-sm"
+          multiple
+          size="10"
+          id="{{form.incident_components.id}}"
+          name="{{form.incident_components.name}}">
+        <option>Choose...</option>
+        {% for (k, v) in form.incident_components.choices %}
+        {% with attrs = v.get_attributes_as_dict() %}
+        <option
+        {% if form.incident_components.data and k|string in form.incident_components.raw_data %} selected
+        {% endif %}
+        value="{{k}}">{{v.name}} (region: {{attrs['region']}})</option>
+        {% endwith %}
+        {% endfor %}
+      </select>
+      <div id="incidentServicesHelp" class="form-text">Please enter services
+        affected.</div>
+      <div class="invalid-feedback">{{form.incident_components.errors | join(', ')
+        }}</div>
+    </div>
+
+    <div class="mb-3">
+      <label for="{{form.incident_start.id}}" class="form-label">{{form.incident_start.label}}</label>
+      <input class="form-control {{ ' is-invalid' if
+                 form.incident_start.errors
+                        | length > 0 else '' }}"
+             type="datetime-local"
+             id="{{form.incident_start.id}}"
+             name="{{form.incident_start.name}}"
+             value="{{form.incident_start.data}}"
+             aria-describedby="incidentStartHelp"
+             onchange="startToUTC(this.value)"/>
+      <div id="incidentStartHelp" class="form-text">
+        Select the incident start time.
+      </div>
+      <div class="invalid-feedback">{{form.incident_start.errors | join(', ')
+        }}</div>
+    </div>
+
+    <div>
+      <input type="hidden"
+             id="{{form.incident_start_utc.id}}"
+             name="{{form.incident_start_utc.name}}"
+             value="{{form.incident_start_utc.data}}"/>
+    </div>
+
+    <div id="maintenance_end" class="mb-3"
+      {% if form.incident_impact.data and "0" in form.incident_impact.data %}
+        style="display: block;"
+      {% else %}
+        style="display: none;"
+      {% endif %}>
+      <label for="{{form.incident_end.id}}" class="form-label">{{form.incident_end.label}}</label>
+      <input class="form-control
+                      {% if form.incident_end.errors %}is-invalid{% endif %}"
+             type="datetime-local"
+             id="{{form.incident_end.id}}"
+             name="{{form.incident_end.name}}"
+             value="{{form.incident_end.data}}"
+             aria-describedby="incidentEndHelp"
+             onchange="endToUTC(this.value)"/>
+      <div id="incidentEndHelp" class="form-text">
+        Select the maintenance expected end time.
+      </div>
+      {% if form.incident_end.errors %}
+        <div class="invalid-feedback">
+          <ul class="errors">
+          {% for error in form.incident_end.errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+      </div>
+
+      <div>
+      <input type="hidden"
+             id="{{form.incident_end_utc.id}}"
+             name="{{form.incident_end_utc.name}}"
+             value="{{form.incident_end_utc.data}}"/>
+      </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+</div>
+
+<script>
+    function startToUTC(val) {
+      var start_local = new Date(val);
+      document.getElementById("{{form.incident_start_utc.id}}").value = start_local.toISOString().split('.')[0].replace('T', ' ');
+    }
+
+    function endToUTC(val) {
+      var end_local = new Date(val);
+      document.getElementById("{{form.incident_end_utc.id}}").value = end_local.toISOString().split('.')[0].replace('T', ' ');
+    }
+
+    function maintenanceCheck(elem) {
+    if (elem.value == 0) {
+        document.getElementById("maintenance_end").style.display = "block";
+        document.getElementById("maintenance_desc").style.display = "block";
+    } else {
+        document.getElementById("maintenance_end").style.display = "none";
+        document.getElementById("maintenance_desc").style.display = "none";
+    }
+  }
+  var desc = document.getElementById("{{form.incident_desc.id}}");
+  var current = document.getElementById("current");
+  current.innerHTML = desc.value.length;
+  desc.onkeyup = function () {
+    current.innerHTML = this.value.length;
+    if (this.value.length > 500) {
+      current.classList.add('counter-red');
+    }
+    else current.classList.remove('counter-red');
+  };
+</script>
 
 {% endblock %}

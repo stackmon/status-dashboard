@@ -1,44 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- set the encoding of your site -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- set the encoding of your site -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  {% block metatags %}
+  {% endblock %}
 
-    {% block metatags %}
-    {% endblock %}
+  {% block title %}
+    <title>{{ title }}</title>
+  {% endblock %}
 
-    {% block title %}
-        <title>{{ title }}</title>
-    {% endblock %}
+  {% block icon %}
+    {% include 'icon.html' ignore missing %}
+  {% endblock %}
 
-    {% block icon %}
-        {% include 'icon.html' ignore missing %}
-    {% endblock %}
+  {% block css %}
+    {% include 'css.html' ignore missing %}
+  {% endblock %}
 
-    {% block css %}
-        {% include 'css.html' ignore missing %}
-    {% endblock %}
-
-    {% block scripts %}
-        {% include 'scripts.html' ignore missing %}
-    {% endblock %}
+  {% block scripts %}
+    {% include 'scripts.html' ignore missing %}
+  {% endblock %}
 </head>
 
 <body class="d-flex flex-column sticky-footer-wrapper min-vh-100">
-{% block header %}
+  {% block header %}
     {% include 'header.html' ignore missing %}
-{% endblock %}
+  {% endblock %}
 
-<main class="container flex-fill" style="max-width:1200px">
-    <!-- Start Main content -->
-    {% block content %}
-    {% endblock %}
-    <!-- End Main content -->
-</main>
+  <main class="container flex-fill" style="max-width:1200px">
+  <!-- Start Main content -->
+  {% block content %}
+  {% endblock %}
+  <!-- End Main content -->
+  </main>
 
-{% block footer %}
+  {% block footer %}
     {% include 'footer.html' ignore missing %}
-{% endblock %}
+  {% endblock %}
 </body>
 </html>
