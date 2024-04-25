@@ -4,11 +4,14 @@
   <!-- set the encoding of your site -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
   {% block metatags %}
   {% endblock %}
+
   {% block title %}
     <title>{{ title }}</title>
   {% endblock %}
+
   {% block icon %}
     {% include 'icon.html' ignore missing %}
   {% endblock %}
@@ -17,8 +20,8 @@
     {% include 'css.html' ignore missing %}
   {% endblock %}
 </head>
-<body class="d-flex flex-column sticky-footer-wrapper min-vh-100">
 
+<body class="d-flex flex-column sticky-footer-wrapper min-vh-100">
   {% block header %}
     {% include 'header.html' ignore missing %}
   {% endblock %}
@@ -33,10 +36,9 @@
   {% block footer %}
     {% include 'footer.html' ignore missing %}
   {% endblock %}
-  
+
   {% block scripts %}
     {% include 'scripts.html' ignore missing %}
   {% endblock %}
-  
 </body>
 </html>
