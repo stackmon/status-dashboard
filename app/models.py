@@ -186,33 +186,34 @@ class Component(Base):
         sla_dict = {month: 1 for month in months}
 
         for month_start, outage_group in outages_dict_sorted.items():
-            minutes_in_month = prev_month_minutes
-            outages_minutes = 0
-            prev_month_minutes = 0
+            if month_start in months:
+                minutes_in_month = prev_month_minutes
+                outages_minutes = 0
+                prev_month_minutes = 0
 
-            if this_month_start.month == month_start.month:
-                minutes_in_month = (
-                    time_now - month_start
-                ).total_seconds() / 60
-            else:
-                next_month_start = month_start + relativedelta(months=1)
-                minutes_in_month = (
-                    next_month_start - month_start
-                ).total_seconds() / 60
+                if this_month_start.month == month_start.month:
+                    minutes_in_month = (
+                        time_now - month_start
+                    ).total_seconds() / 60
+                else:
+                    next_month_start = month_start + relativedelta(months=1)
+                    minutes_in_month = (
+                        next_month_start - month_start
+                    ).total_seconds() / 60
 
-            for outage in outage_group:
-                outage_start = outage.start_date
-                if outage_start < month_start:
-                    diff = month_start - outage_start
-                    prev_month_minutes += diff.total_seconds() / 60
-                    outage_start = month_start
+                for outage in outage_group:
+                    outage_start = outage.start_date
+                    if outage_start < month_start:
+                        diff = month_start - outage_start
+                        prev_month_minutes += diff.total_seconds() / 60
+                        outage_start = month_start
 
-                diff = outage.end_date - outage_start
-                outages_minutes += diff.total_seconds() / 60
+                    diff = outage.end_date - outage_start
+                    outages_minutes += diff.total_seconds() / 60
 
-            sla_dict[month_start] = (
-                minutes_in_month - outages_minutes
-            ) / minutes_in_month
+                sla_dict[month_start] = (
+                    minutes_in_month - outages_minutes
+                ) / minutes_in_month
 
         return sla_dict
 
