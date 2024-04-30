@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-from datetime import datetime, timezone
+from datetime import datetime
 
 from app import authorization
 from app import cache
@@ -136,7 +136,7 @@ def new_incident(current_user):
                         inc.components.remove(comp)
                     else:
                         messages_to.append("Incident closed by system")
-                        inc.end_date = datetime.now(timezone.utc)
+                        inc.end_date = datetime.now()
             if messages_to:
                 update_incident(inc, ', '.join(messages_to))
         if messages_from:
@@ -184,7 +184,7 @@ def incident(incident_id):
             if new_status in ["completed", "resolved"]:
                 # Incident is completed
                 new_impact = incident.impact
-                incident.end_date = datetime.now(timezone.utc)
+                incident.end_date = datetime.now()
                 current_app.logger.debug(
                     f"{incident} closed by {get_user_string(session['user'])}"
                 )
@@ -248,7 +248,7 @@ def history():
     timeout=300,
 )
 def sla():
-    time_now = datetime.now(timezone.utc)
+    time_now = datetime.now()
     months = [time_now + relativedelta(months=-mon) for mon in range(6)]
 
     return render_template(
