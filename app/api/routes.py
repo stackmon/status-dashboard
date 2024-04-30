@@ -75,7 +75,7 @@ def create_new_incident(target_component, impact, text):
     new_incident = Incident(
         text=text,
         impact=impact,
-        start_date=datetime.now(timezone.utc),
+        start_date=datetime.utcnow(),
         components=[target_component],
         system=True,
     )
@@ -112,7 +112,7 @@ def handling_incidents(
                 f"{comp_with_attrs} moved from {src_incident.text}"
             )
         )
-        src_incident.end_date = datetime.now(timezone.utc)
+        src_incident.end_date = datetime.utcnow()
         dst_incident.components.append(target_component)
         db.session.commit()
         return dst_incident

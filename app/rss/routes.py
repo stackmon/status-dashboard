@@ -47,7 +47,7 @@ def rss():
         if not component:
             content = f"Component: {escape(component_name)} is not found"
             return make_response(escape(content), 404)
-        incidents = component.incidents
+        incidents = list(reversed(component.incidents[-10:]))
     elif region:
         supported_vals = ComponentAttribute.get_unique_values(attr_name)
         if attr_value not in supported_vals:
@@ -76,7 +76,7 @@ def rss():
         fg.description(f"{region} - Incidents")
     if incidents:
         date_format = "%Y-%m-%d %H:%M %Z"
-        for incident in incidents:
+        for incident in reversed(incidents):
             fe = fg.add_entry()
             fe.title(incident.text)
             content = list()
