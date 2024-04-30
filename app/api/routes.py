@@ -27,6 +27,7 @@ from app.models import db
 from flask import current_app
 from flask import jsonify
 from flask import request
+from flask import url_for
 from flask.views import MethodView
 
 from flask_smorest import abort
@@ -99,19 +100,17 @@ def handling_incidents(
             f"moved to: '{dst_incident.text}'"
         )
         current_app.logger.debug(f"{src_incident.text} CLOSED")
-        update_incident_status(
-            src_incident,
-            (
-                f"{comp_with_attrs} moved to: <a href='/incidents/{dst_incident.id}'>{dst_incident.text}</a>, "
-                "incident closed by system"
-            )
-        )
-        update_incident_status(
-            dst_incident,
-            (
-                f"{comp_with_attrs} moved from {src_incident.text}"
-            )
-        )
+
+        url_d = url_for('web.incident', incident_id=dst_incident.id)
+        url_s = url_for('web.incident', incident_id=src_incident.id)
+        link_s = f"<a href='{url_d}'>{dst_incident.text}</a>"
+        link_d = f"<a href='{url_s}'>{src_incident.text}</a>"
+        update_s = f"{comp_with_attrs} moved to {link_s}, closed by system"
+        update_d = f"{comp_with_attrs} moved from {link_d}"
+
+        update_incident_status(src_incident, update_s)
+        update_incident_status(dst_incident, update_d)
+
         src_incident.end_date = datetime.utcnow()
         dst_incident.components.append(target_component)
         db.session.commit()
@@ -141,14 +140,17 @@ def handling_incidents(
             f"{target_component} moved from {src_incident.text} to "
             f"{dst_incident.text}"
         )
-        update_incident_status(
-            src_incident,
-            f"{comp_with_attrs} moved to <a href='/incidents/{dst_incident.id}'>{dst_incident.text}</a>"
-        )
-        update_incident_status(
-            dst_incident,
-            f"{comp_with_attrs} moved from {src_incident.text}"
-        )
+
+        url_d = url_for('web.incident', incident_id=dst_incident.id)
+        url_s = url_for('web.incident', incident_id=src_incident.id)
+        link_s = f"<a href='{url_d}'>{dst_incident.text}</a>"
+        link_d = f"<a href='{url_s}'>{src_incident.text}</a>"
+        update_s = f"{comp_with_attrs} moved to {link_s}"
+        update_d = f"{comp_with_attrs} moved from {link_d}"
+
+        update_incident_status(src_incident, update_s)
+        update_incident_status(dst_incident, update_d)
+
         src_incident.components.remove(target_component)
         dst_incident.components.append(target_component)
         db.session.commit()

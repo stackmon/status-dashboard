@@ -64,7 +64,7 @@
                     <small class="text-secondary">Posted {{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC</small>
                 </div>
                 <div class="col-md-10">
-                    {{ update.text }}
+                    {{ update.text | safe }}
                 </div>
                 <hr/>
             </div>
