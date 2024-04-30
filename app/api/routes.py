@@ -102,7 +102,7 @@ def handling_incidents(
         update_incident_status(
             src_incident,
             (
-                f"{comp_with_attrs} moved to: '{dst_incident.text}', "
+                f"{comp_with_attrs} moved to: <a href='/incidents/{dst_incident.id}'>{dst_incident.text}</a>, "
                 "incident closed by system"
             )
         )
@@ -143,7 +143,7 @@ def handling_incidents(
         )
         update_incident_status(
             src_incident,
-            f"{comp_with_attrs} moved to {dst_incident.text}"
+            f"{comp_with_attrs} moved to <a href='/incidents/{dst_incident.id}'>{dst_incident.text}</a>"
         )
         update_incident_status(
             dst_incident,
