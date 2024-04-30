@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-from datetime import datetime, timezone
+from datetime import datetime
 
 from app import authorization
 from app import cache
