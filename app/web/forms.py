@@ -23,7 +23,7 @@ from wtforms import validators
 
 class IncidentUpdateForm(FlaskForm):
     update_title = StringField(
-        "Incident title",
+        "Incident Title",
         validators=[
             validators.DataRequired(),
             validators.Length(min=8, max=200),
@@ -64,15 +64,15 @@ class IncidentUpdateForm(FlaskForm):
 
 
 class IncidentForm(FlaskForm):
-    incident_text = TextAreaField(
-        "Incident summary",
+    incident_text = StringField(
+        "Incident Title",
         validators=[
             validators.DataRequired(),
             validators.Length(min=8, max=200),
         ],
     )
     incident_desc = TextAreaField(
-        "Maintenance description",
+        "Maintenance Description",
         validators=[
             validators.Optional(),
             validators.Length(min=8, max=500),
