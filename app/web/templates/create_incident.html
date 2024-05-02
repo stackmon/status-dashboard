@@ -8,12 +8,11 @@
 
     <div class="mb-3">
       <label for="{{form.incident_text.id}}" class="form-label">{{form.incident_text.label}}</label>
-      <textarea class="form-control {{ ' is-invalid' if form.incident_text.errors
+      <input class="form-control {{ ' is-invalid' if form.incident_text.errors
                         | length > 0 else '' }}"
              id="{{form.incident_text.id}}"
              name="{{form.incident_text.name}}"
-             rows=3
-             aria-describedby="incidentTextHelp">{{ form.incident_text.data if form.incident_text.data }}</textarea>
+             aria-describedby="incidentTextHelp">{{ form.incident_text.data if form.incident_text.data }}</input>
        <div id="incidentTextHelp" class="form-text">Please enter Incident
          summary here.</div>
        <div class="invalid-feedback">{{ form.incident_text.errors | join(', ')
