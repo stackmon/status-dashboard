@@ -85,6 +85,45 @@ def create_new_incident(target_component, impact, text):
     return new_incident
 
 
+def handling_statuses(
+    incident,
+    comp_with_attrs=None,
+    dst_incident=None,
+    new_incident=None,
+    action=None,
+    impact=None,
+    impacts=None
+):
+    if action:
+        url_s = url_for('web.incident', incident_id=incident.id)
+        link_s = f"<a href='{url_s}'>{incident.text}</a>"
+
+        if action == "move":
+            if dst_incident:
+                url_d = url_for('web.incident', incident_id=dst_incident.id)
+                link_d = f"<a href='{url_d}'>{dst_incident.text}</a>"
+                update_s = (
+                    f"{comp_with_attrs} moved to {link_d}"
+                )
+                update_d = f"{comp_with_attrs} moved from {link_s}"
+            elif new_incident:
+                url_d = url_for('web.incident', incident_id=new_incident.id)
+                link_d = f"<a href='{url_d}'>{new_incident.text}</a>"
+                update_s = f"{comp_with_attrs} moved to {link_d}"
+                update_n = f"{comp_with_attrs} moved from {link_s}"
+        elif action == "change_impact":
+            update_s = (
+                f"impact changed from {impacts[incident.impact].key} to "
+                f"{impacts[impact].key}"
+            )
+        if dst_incident:
+            update_incident_status(dst_incident, update_d)
+        if new_incident:
+            update_incident_status(new_incident, update_n)
+
+        update_incident_status(incident, update_s)
+
+
 def handling_incidents(
     target_component,
     impact,
@@ -100,22 +139,20 @@ def handling_incidents(
             f"moved to: '{dst_incident.text}'"
         )
         current_app.logger.debug(f"{src_incident.text} CLOSED")
-
-        url_d = url_for('web.incident', incident_id=dst_incident.id)
-        url_s = url_for('web.incident', incident_id=src_incident.id)
-        link_s = f"<a href='{url_d}'>{dst_incident.text}</a>"
-        link_d = f"<a href='{url_s}'>{src_incident.text}</a>"
-        update_s = f"{comp_with_attrs} moved to {link_s}, closed by system"
-        update_d = f"{comp_with_attrs} moved from {link_d}"
-
-        update_incident_status(src_incident, update_s)
-        update_incident_status(dst_incident, update_d)
-
         src_incident.end_date = datetime.utcnow()
         dst_incident.components.append(target_component)
+        handling_statuses(
+            src_incident,
+            comp_with_attrs,
+            dst_incident=dst_incident,
+            action="move"
+        )
+        db.session.commit()
+        update_incident_status(src_incident, "CLOSED BY SYSTEM")
         db.session.commit()
         return dst_incident
     elif len(src_incident.components) == 1 and not dst_incident:
+        # logging
         current_app.logger.debug(
             f"Component: {target_component} is present in the incident: "
             f"'{src_incident.text}'"
@@ -125,12 +162,11 @@ def handling_incidents(
             f"changing the impact from: {impacts[src_incident.impact].key}"
             f"to {impacts[impact].key}"
         )
-        update_incident_status(
+        handling_statuses(
             src_incident,
-            (
-                f"impact changed from {impacts[src_incident.impact].key} "
-                f"to {impacts[impact].key}"
-            )
+            action="change_impact",
+            impact=impact,
+            impacts=impacts
         )
         src_incident.impact = impact
         db.session.commit()
@@ -140,19 +176,14 @@ def handling_incidents(
             f"{target_component} moved from {src_incident.text} to "
             f"{dst_incident.text}"
         )
-
-        url_d = url_for('web.incident', incident_id=dst_incident.id)
-        url_s = url_for('web.incident', incident_id=src_incident.id)
-        link_s = f"<a href='{url_d}'>{dst_incident.text}</a>"
-        link_d = f"<a href='{url_s}'>{src_incident.text}</a>"
-        update_s = f"{comp_with_attrs} moved to {link_s}"
-        update_d = f"{comp_with_attrs} moved from {link_d}"
-
-        update_incident_status(src_incident, update_s)
-        update_incident_status(dst_incident, update_d)
-
         src_incident.components.remove(target_component)
         dst_incident.components.append(target_component)
+        handling_statuses(
+            src_incident,
+            comp_with_attrs,
+            dst_incident=dst_incident,
+            action="move"
+        )
         db.session.commit()
         return dst_incident
     elif len(src_incident.components) > 1 and not dst_incident:
@@ -162,12 +193,16 @@ def handling_incidents(
         current_app.logger.debug(
             f"{target_component} moved from {src_incident.text} to new one"
         )
-        update_incident_status(
-            src_incident,
-            f"{comp_with_attrs} moved to new incident"
-        )
         src_incident.components.remove(target_component)
-        return create_new_incident(target_component, impact, text)
+        new_incident = create_new_incident(target_component, impact, text)
+        handling_statuses(
+            src_incident,
+            comp_with_attrs,
+            new_incident=new_incident,
+            action="move",
+        )
+        db.session.commit()
+        return new_incident
     else:
         current_app.logger.error("Unexpected ERROR")
 
