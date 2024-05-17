@@ -126,12 +126,29 @@ def new_incident(current_user):
             messages_to = []
             for comp in incident_components:
                 if comp in inc.components:
-                    messages_to.append(
-                        f"{comp} moved to {new_incident}"
+                    comp_name = comp.name
+                    comp_attributes = comp.attributes
+                    comp_attributes_str = ", ".join(
+                        [
+                            f"{attr.value}" for attr in comp_attributes
+                        ]
                     )
-                    messages_from.append(
-                        f"{comp} moved from {inc}"
+                    comp_with_attrs = f"{comp_name} ({comp_attributes_str})"
+                    url_s = url_for(
+                        'web.incident',
+                        incident_id=inc.id
                     )
+                    link_s = f"<a href='{url_s}'>{inc.text}</a>"
+                    url_d = url_for(
+                        'web.incident',
+                        incident_id=new_incident.id
+                    )
+                    link_d = f"<a href='{url_d}'>{new_incident.text}</a>"
+                    update_s = f"{comp_with_attrs} moved to {link_d}"
+                    update_n = f"{comp_with_attrs} moved from {link_s}"
+                    messages_to.append(update_s)
+                    messages_from.append(update_n)
+
                     if len(inc.components) > 1:
                         inc.components.remove(comp)
                     else:
@@ -220,13 +237,36 @@ def separate_incident(current_user, incident_id, component_id):
         f"{new_incident} opened by {get_user_string(current_user)}"
     )
 
+    comp_name = component.name
+    comp_attributes = component.attributes
+    comp_attributes_str = ", ".join(
+        [
+            f"{attr.value}" for attr in comp_attributes
+        ]
+    )
+    comp_with_attrs = f"{comp_name} ({comp_attributes_str})"
+
+    url_s = url_for(
+        'web.incident',
+        incident_id=incident.id
+    )
+    link_s = f"<a href='{url_s}'>{incident.text}</a>"
+    url_d = url_for(
+        'web.incident',
+        incident_id=new_incident.id
+    )
+    link_d = f"<a href='{url_d}'>{new_incident.text}</a>"
+
+    update_s = f"{comp_with_attrs} moved to {link_d}"
+    update_n = f"{comp_with_attrs} moved from {link_s}"
+
     update_incident(
         incident,
-        f"{component} moved to {new_incident}"
+        update_s
     )
     update_incident(
         new_incident,
-        f"{component} moved from {incident}"
+        update_n
     )
     db.session.commit()
     return redirect("/")

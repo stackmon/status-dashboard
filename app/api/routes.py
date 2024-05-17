@@ -152,7 +152,6 @@ def handling_incidents(
         db.session.commit()
         return dst_incident
     elif len(src_incident.components) == 1 and not dst_incident:
-        # logging
         current_app.logger.debug(
             f"Component: {target_component} is present in the incident: "
             f"'{src_incident.text}'"
