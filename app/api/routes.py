@@ -372,7 +372,19 @@ class ApiComponentStatus(MethodView):
                     "requested impact equal or less - not modifying "
                     "or opening new incident"
                 )
-                return incident
+                existing_incident = incident
+                response = {
+                    "message": (
+                        "Incident with this the component "
+                        "already exists."
+                    ),
+                    "targetComponent": comp_with_attrs,
+                    "existingIncidentId": existing_incident.id,
+                    "existingIncidentTitle": existing_incident.text,
+                    "details": "Check your request parameters"
+                }
+                return jsonify(response), 409
+
         incidents = Incident.get_active()
         if not incidents:
             current_app.logger.debug("No active incidents - opening new one")
@@ -420,7 +432,18 @@ class ApiComponentStatus(MethodView):
                             f"Active incident for {target_component} - "
                             "not modifying or opening new incident"
                         )
-                        return incident
+                        existing_incident = incident
+                        response = {
+                            "message": (
+                                "Incident with this the component "
+                                "already exists."
+                            ),
+                            "targetComponent": comp_with_attrs,
+                            "existingIncidentId": existing_incident.id,
+                            "existingIncidentTitle": existing_incident.text,
+                            "details": "Check your request parameters"
+                        }
+                        return jsonify(response), 409
 
 
 @bp.route("/v1/incidents", methods=["GET"])
