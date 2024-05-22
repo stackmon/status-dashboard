@@ -376,7 +376,7 @@ class ApiComponentStatus(MethodView):
                 response = {
                     "message": (
                         "Incident with this the component "
-                        "already exists."
+                        "already exists"
                     ),
                     "targetComponent": comp_with_attrs,
                     "existingIncidentId": existing_incident.id,
@@ -436,7 +436,7 @@ class ApiComponentStatus(MethodView):
                         response = {
                             "message": (
                                 "Incident with this the component "
-                                "already exists."
+                                "already exists"
                             ),
                             "targetComponent": comp_with_attrs,
                             "existingIncidentId": existing_incident.id,
