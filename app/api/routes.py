@@ -27,6 +27,7 @@ from app.models import db
 from flask import current_app
 from flask import jsonify
 from flask import request
+from flask import url_for
 from flask.views import MethodView
 
 from flask_smorest import abort
@@ -42,9 +43,29 @@ def inc_by_impact(incidents, impact):
     return incident_match
 
 
-def add_component_to_incident(target_component, incident):
+def update_incident_status(incident, text_status, status="SYSTEM"):
+    update = IncidentStatus(
+        incident_id=incident.id,
+        text=text_status,
+        status=status,
+    )
+    current_app.logger.debug(f"UPDATE_STATUS: {text_status}")
+    db.session.add(update)
+
+
+def add_component_to_incident(
+    target_component,
+    incident,
+    comp_with_attrs=None
+):
     current_app.logger.debug(
         f"Add {target_component} to the incident: {incident}"
+    )
+    update_incident_status(
+        incident,
+        (
+            f"{comp_with_attrs} added to {incident.text}"
+        )
     )
     incident.components.append(target_component)
     db.session.commit()
@@ -64,14 +85,43 @@ def create_new_incident(target_component, impact, text):
     return new_incident
 
 
-def update_incident_status(incident, text_status, status="SYSTEM"):
-    update = IncidentStatus(
-        incident_id=incident.id,
-        text=text_status,
-        status=status,
-    )
-    current_app.logger.debug(f"UPDATE_STATUS: {text_status}")
-    db.session.add(update)
+def handling_statuses(
+    incident,
+    comp_with_attrs=None,
+    dst_incident=None,
+    new_incident=None,
+    action=None,
+    impact=None,
+    impacts=None
+):
+    if action:
+        url_s = url_for('web.incident', incident_id=incident.id)
+        link_s = f"<a href='{url_s}'>{incident.text}</a>"
+
+        if action == "move":
+            if dst_incident:
+                url_d = url_for('web.incident', incident_id=dst_incident.id)
+                link_d = f"<a href='{url_d}'>{dst_incident.text}</a>"
+                update_s = (
+                    f"{comp_with_attrs} moved to {link_d}"
+                )
+                update_d = f"{comp_with_attrs} moved from {link_s}"
+            elif new_incident:
+                url_d = url_for('web.incident', incident_id=new_incident.id)
+                link_d = f"<a href='{url_d}'>{new_incident.text}</a>"
+                update_s = f"{comp_with_attrs} moved to {link_d}"
+                update_n = f"{comp_with_attrs} moved from {link_s}"
+        elif action == "change_impact":
+            update_s = (
+                f"impact changed from {impacts[incident.impact].key} to "
+                f"{impacts[impact].key}"
+            )
+        if dst_incident:
+            update_incident_status(dst_incident, update_d)
+        if new_incident:
+            update_incident_status(new_incident, update_n)
+
+        update_incident_status(incident, update_s)
 
 
 def handling_incidents(
@@ -89,19 +139,16 @@ def handling_incidents(
             f"moved to: '{dst_incident.text}'"
         )
         current_app.logger.debug(f"{src_incident.text} CLOSED")
-        update_incident_status(
-            src_incident,
-            (
-                f"{comp_with_attrs} moved to: '{dst_incident.text}', "
-                "incident closed by system"
-            )
-        )
-        update_incident_status(
-            dst_incident,
-            f"{comp_with_attrs} moved from {src_incident.text}"
-        )
         src_incident.end_date = datetime.utcnow()
         dst_incident.components.append(target_component)
+        handling_statuses(
+            src_incident,
+            comp_with_attrs,
+            dst_incident=dst_incident,
+            action="move"
+        )
+        db.session.commit()
+        update_incident_status(src_incident, "CLOSED BY SYSTEM")
         db.session.commit()
         return dst_incident
     elif len(src_incident.components) == 1 and not dst_incident:
@@ -114,12 +161,11 @@ def handling_incidents(
             f"changing the impact from: {impacts[src_incident.impact].key}"
             f"to {impacts[impact].key}"
         )
-        update_incident_status(
+        handling_statuses(
             src_incident,
-            (
-                f"Impact changed: from {impacts[src_incident.impact].key} "
-                f"to {impacts[impact].key}"
-            )
+            action="change_impact",
+            impact=impact,
+            impacts=impacts
         )
         src_incident.impact = impact
         db.session.commit()
@@ -129,16 +175,14 @@ def handling_incidents(
             f"{target_component} moved from {src_incident.text} to "
             f"{dst_incident.text}"
         )
-        update_incident_status(
-            src_incident,
-            f"{comp_with_attrs} moved to {dst_incident.text}"
-        )
-        update_incident_status(
-            dst_incident,
-            f"{comp_with_attrs} moved from {src_incident.text}"
-        )
         src_incident.components.remove(target_component)
         dst_incident.components.append(target_component)
+        handling_statuses(
+            src_incident,
+            comp_with_attrs,
+            dst_incident=dst_incident,
+            action="move"
+        )
         db.session.commit()
         return dst_incident
     elif len(src_incident.components) > 1 and not dst_incident:
@@ -148,12 +192,16 @@ def handling_incidents(
         current_app.logger.debug(
             f"{target_component} moved from {src_incident.text} to new one"
         )
-        update_incident_status(
-            src_incident,
-            f"{comp_with_attrs} moved to new incident"
-        )
         src_incident.components.remove(target_component)
-        return create_new_incident(target_component, impact, text)
+        new_incident = create_new_incident(target_component, impact, text)
+        handling_statuses(
+            src_incident,
+            comp_with_attrs,
+            new_incident=new_incident,
+            action="move",
+        )
+        db.session.commit()
+        return new_incident
     else:
         current_app.logger.error("Unexpected ERROR")
 
@@ -324,7 +372,19 @@ class ApiComponentStatus(MethodView):
                     "requested impact equal or less - not modifying "
                     "or opening new incident"
                 )
-                return incident
+                existing_incident = incident
+                response = {
+                    "message": (
+                        "Incident with this the component "
+                        "already exists"
+                    ),
+                    "targetComponent": comp_with_attrs,
+                    "existingIncidentId": existing_incident.id,
+                    "existingIncidentTitle": existing_incident.text,
+                    "details": "Check your request parameters"
+                }
+                return jsonify(response), 409
+
         incidents = Incident.get_active()
         if not incidents:
             current_app.logger.debug("No active incidents - opening new one")
@@ -337,7 +397,7 @@ class ApiComponentStatus(MethodView):
             incident_match = inc_by_impact(incidents, impact)
             if incident_match:
                 return add_component_to_incident(
-                    target_component, incident_match
+                    target_component, incident_match, comp_with_attrs
                 )
             else:
                 current_app.logger.debug(
@@ -372,7 +432,18 @@ class ApiComponentStatus(MethodView):
                             f"Active incident for {target_component} - "
                             "not modifying or opening new incident"
                         )
-                        return incident
+                        existing_incident = incident
+                        response = {
+                            "message": (
+                                "Incident with this the component "
+                                "already exists"
+                            ),
+                            "targetComponent": comp_with_attrs,
+                            "existingIncidentId": existing_incident.id,
+                            "existingIncidentTitle": existing_incident.text,
+                            "details": "Check your request parameters"
+                        }
+                        return jsonify(response), 409
 
 
 @bp.route("/v1/incidents", methods=["GET"])
