@@ -11,10 +11,11 @@
 # under the License.
 #
 
-import datetime
+from datetime import datetime
 from typing import List
 
 from app import db
+from app.datetime import naive_utcnow
 
 from dateutil.relativedelta import relativedelta
 
@@ -108,9 +109,9 @@ class Component(Base):
                         PropComparator.and_(
                             or_(
                                 Incident.end_date.is_(None),
-                                Incident.end_date > datetime.datetime.now()
+                                Incident.end_date > naive_utcnow()
                             ),
-                            Incident.start_date <= datetime.datetime.now(),
+                            Incident.start_date <= naive_utcnow(),
                         ),
                     ),
                 )
@@ -171,8 +172,8 @@ class Component(Base):
     def calculate_sla(self):
         """Calculate component availability on the month basis"""
 
-        time_now = datetime.datetime.now()
-        this_month_start = datetime.datetime(time_now.year, time_now.month, 1)
+        time_now = naive_utcnow()
+        this_month_start = datetime(time_now.year, time_now.month, 1)
 
         outages = [inc for inc in self.incidents
                    if inc.impact == 3 and inc.end_date is not None]
@@ -271,10 +272,10 @@ class Incident(Base):
     __tablename__ = "incident"
     id = mapped_column(Integer, primary_key=True, index=True)
     text: Mapped[str] = mapped_column(String())
-    start_date: Mapped[datetime.datetime] = mapped_column(
+    start_date: Mapped[datetime] = mapped_column(
         insert_default=func.now()
     )
-    end_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    end_date: Mapped[datetime] = mapped_column(nullable=True)
     impact: Mapped[int] = mapped_column(db.SmallInteger)
     # upgrade: system: Mapped[bool] = mapped_column(Boolean, default=False)
     system: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -298,9 +299,9 @@ class Incident(Base):
             select(Incident).filter(
                 or_(
                     Incident.end_date.is_(None),
-                    Incident.end_date > datetime.datetime.now()
+                    Incident.end_date > naive_utcnow()
                 ),
-                Incident.start_date <= datetime.datetime.now(),
+                Incident.start_date <= naive_utcnow(),
             )
         ).all()
 
@@ -310,7 +311,7 @@ class Incident(Base):
         return db.session.scalars(
             select(Incident).filter(
                 Incident.end_date.is_not(None),
-                Incident.end_date < datetime.datetime.now()
+                Incident.end_date < naive_utcnow()
             )
         ).all()
 
@@ -321,7 +322,7 @@ class Incident(Base):
         incident_dict = {}
         for incident in incident_list:
             incident_dict.setdefault(
-                datetime.datetime(
+                datetime(
                     incident.end_date.year,
                     incident.end_date.month,
                     1),
@@ -338,11 +339,11 @@ class Incident(Base):
         return db.session.scalars(
             select(Incident).filter(
                 # already started
-                Incident.start_date <= datetime.datetime.now(),
+                Incident.start_date <= naive_utcnow(),
                 # not closed
                 or_(
                     Incident.end_date.is_(None),
-                    Incident.end_date > datetime.datetime.now()
+                    Incident.end_date > naive_utcnow()
                 ),
                 Incident.impact == 0,
             )
@@ -353,7 +354,7 @@ class Incident(Base):
         """Return planned maintenances"""
         return db.session.scalars(
             select(Incident).filter(
-                Incident.start_date > datetime.datetime.now(),
+                Incident.start_date > naive_utcnow(),
                 Incident.impact == 0,
             )
         ).all()
@@ -366,7 +367,7 @@ class Incident(Base):
         return db.session.scalars(
             select(Incident).filter(
                 # already started
-                Incident.start_date <= datetime.datetime.now(),
+                Incident.start_date <= naive_utcnow(),
                 # not closed
                 Incident.end_date.is_(None),
                 Incident.impact != 0,
@@ -382,7 +383,7 @@ class Incident(Base):
         return db.session.scalars(
             select(Incident).filter(
                 # already started
-                Incident.start_date <= datetime.datetime.now(),
+                Incident.start_date <= naive_utcnow(),
                 # not closed
                 Incident.end_date.is_(None),
                 Incident.impact != 0,
@@ -442,7 +443,7 @@ class IncidentStatus(Base):
     id = mapped_column(Integer, primary_key=True, index=True)
     incident_id = mapped_column(ForeignKey("incident.id"), index=True)
     incident: Mapped["Incident"] = relationship(back_populates="updates")
-    timestamp: Mapped[datetime.datetime] = mapped_column(
+    timestamp: Mapped[datetime] = mapped_column(
         db.DateTime, insert_default=func.now()
     )
     text: Mapped[str] = mapped_column(String())

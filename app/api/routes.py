@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-from datetime import datetime
 
 from app import authorization
 from app import cache
@@ -19,6 +18,7 @@ from app.api.schemas.components import ComponentSchema
 from app.api.schemas.components import ComponentSearchQueryArgs
 from app.api.schemas.components import ComponentStatusArgsSchema
 from app.api.schemas.components import IncidentSchema
+from app.datetime import naive_utcnow
 from app.models import Component
 from app.models import Incident
 from app.models import IncidentStatus
@@ -76,7 +76,7 @@ def create_new_incident(target_component, impact, text):
     new_incident = Incident(
         text=text,
         impact=impact,
-        start_date=datetime.utcnow(),
+        start_date=naive_utcnow(),
         components=[target_component],
         system=True,
     )
@@ -139,7 +139,7 @@ def handling_incidents(
             f"moved to: '{dst_incident.text}'"
         )
         current_app.logger.debug(f"{src_incident.text} CLOSED")
-        src_incident.end_date = datetime.utcnow()
+        src_incident.end_date = naive_utcnow()
         dst_incident.components.append(target_component)
         handling_statuses(
             src_incident,
