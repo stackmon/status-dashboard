@@ -15,6 +15,7 @@ from unittest import TestCase
 
 from app import create_app
 from app import db
+from app.datetime import naive_utcnow
 from app.models import Base
 from app.models import Component
 from app.models import ComponentAttribute
@@ -62,7 +63,7 @@ class TestWeb(TestBase):
                 text="inc",
                 components=[comp1],
                 impact=1,
-                end_date=datetime.datetime.now() - datetime.timedelta(days=1),
+                end_date=naive_utcnow() - datetime.timedelta(days=1),
             )
             db.session.add(inc1)
             db.session.commit()

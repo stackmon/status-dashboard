@@ -15,6 +15,7 @@ from unittest import TestCase
 
 from app import create_app
 from app import db
+from app.datetime import naive_utcnow
 from app.models import Base
 from app.models import Component
 from app.models import ComponentAttribute
@@ -118,7 +119,7 @@ class TestIncident(TestBase):
             i2 = Incident(
                 text="Incident2",
                 impact="1",
-                end_date=datetime.datetime.now() - datetime.timedelta(days=1),
+                end_date=naive_utcnow() - datetime.timedelta(days=1),
                 components=[comp1],
             )
             db.session.add(i2)
