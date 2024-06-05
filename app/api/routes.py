@@ -258,7 +258,7 @@ class ApiComponentStatus(MethodView):
         cached_component = get_elements_from_cache(cache_key)
         if cached_component:
             current_app.logger.debug("The response was cached")
-            return [cached_component]
+            return cached_component
 
         if attribute_name is not None and attribute_value is not None:
             target_component = Component.find_by_name_and_attributes(
@@ -268,7 +268,7 @@ class ApiComponentStatus(MethodView):
                 abort(404, message="Component does not exist")
             serialized_component = component_schema.dump(target_component)
             cache.set(cache_key, serialized_component)
-            return [serialized_component]
+            return serialized_component
 
         components = db.session.scalars(
             db.select(Component).filter(Component.name.startswith(name))
@@ -277,7 +277,7 @@ class ApiComponentStatus(MethodView):
             abort(404, message="Component(s) does not (do not) exist")
         serialized_components = component_schema.dump(components, many=True)
         cache.set(cache_key, serialized_components)
-        return [serialized_components]
+        return serialized_components
 
     @bp.arguments(ComponentStatusArgsSchema)
     @auth.login_required
