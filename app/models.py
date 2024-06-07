@@ -26,7 +26,7 @@ from sqlalchemy import Index
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import Table
-from sqlalchemy import func
+from sqlalchemy import text as Text
 from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy.orm import DeclarativeBase
@@ -273,7 +273,8 @@ class Incident(Base):
     id = mapped_column(Integer, primary_key=True, index=True)
     text: Mapped[str] = mapped_column(String())
     start_date: Mapped[datetime] = mapped_column(
-        insert_default=func.now()
+        db.DateTime,
+        insert_default=Text("TIMEZONE('utc', now())")
     )
     end_date: Mapped[datetime] = mapped_column(nullable=True)
     impact: Mapped[int] = mapped_column(db.SmallInteger)
@@ -444,7 +445,8 @@ class IncidentStatus(Base):
     incident_id = mapped_column(ForeignKey("incident.id"), index=True)
     incident: Mapped["Incident"] = relationship(back_populates="updates")
     timestamp: Mapped[datetime] = mapped_column(
-        db.DateTime, insert_default=func.now()
+        db.DateTime,
+        insert_default=Text("TIMEZONE('utc', now())")
     )
     text: Mapped[str] = mapped_column(String())
     status: Mapped[str] = mapped_column(String())
