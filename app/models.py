@@ -26,9 +26,9 @@ from sqlalchemy import Index
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import Table
-from sqlalchemy import text as Text
 from sqlalchemy import or_
 from sqlalchemy import select
+from sqlalchemy import text as Text
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import PropComparator
