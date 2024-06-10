@@ -28,7 +28,6 @@ from sqlalchemy import String
 from sqlalchemy import Table
 from sqlalchemy import or_
 from sqlalchemy import select
-from sqlalchemy import text as Text
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import PropComparator
@@ -274,7 +273,7 @@ class Incident(Base):
     text: Mapped[str] = mapped_column(String())
     start_date: Mapped[datetime] = mapped_column(
         db.DateTime,
-        insert_default=Text("TIMEZONE('utc', now())")
+        insert_default=naive_utcnow()
     )
     end_date: Mapped[datetime] = mapped_column(nullable=True)
     impact: Mapped[int] = mapped_column(db.SmallInteger)
@@ -446,7 +445,7 @@ class IncidentStatus(Base):
     incident: Mapped["Incident"] = relationship(back_populates="updates")
     timestamp: Mapped[datetime] = mapped_column(
         db.DateTime,
-        insert_default=Text("TIMEZONE('utc', now())")
+        insert_default=naive_utcnow()
     )
     text: Mapped[str] = mapped_column(String())
     status: Mapped[str] = mapped_column(String())
