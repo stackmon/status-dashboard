@@ -10,11 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-from datetime import datetime
 
 from app import authorization
 from app import cache
 from app import oauth
+from app.datetime import naive_utcnow
 from app.models import Component
 from app.models import ComponentAttribute
 from app.models import Incident
@@ -153,7 +153,7 @@ def new_incident(current_user):
                         inc.components.remove(comp)
                     else:
                         messages_to.append("Incident closed by system")
-                        inc.end_date = datetime.now()
+                        inc.end_date = naive_utcnow()
             if messages_to:
                 update_incident(inc, ', '.join(messages_to))
         if messages_from:
@@ -202,7 +202,7 @@ def incident(incident_id):
             if new_status in ["completed", "resolved"]:
                 # Incident is completed
                 new_impact = incident.impact
-                incident.end_date = datetime.now()
+                incident.end_date = naive_utcnow()
                 current_app.logger.debug(
                     f"{incident} closed by {get_user_string(session['user'])}"
                 )
@@ -289,7 +289,7 @@ def history():
     timeout=300,
 )
 def sla():
-    time_now = datetime.now()
+    time_now = naive_utcnow()
     months = [time_now + relativedelta(months=-mon) for mon in range(6)]
 
     return render_template(
