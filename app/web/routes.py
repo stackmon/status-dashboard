@@ -23,6 +23,7 @@ from app.models import db
 from app.web import bp
 from app.web.forms import IncidentForm
 from app.web.forms import IncidentUpdateForm
+from app.web.forms import IncidentChangeForm
 
 from dateutil.relativedelta import relativedelta
 
@@ -179,22 +180,37 @@ def incident(incident_id):
 
     form = None
     if "user" in session:
-        form = IncidentUpdateForm(id)
-        form.update_impact.choices = [
-            (v.value, v.string)
-            for (_, v) in current_app.config["INCIDENT_IMPACTS"].items()
-        ]
-        # Update_status will contain choices based on the incident_type
-        form.update_status.choices = [
+        if (incident.end_date and incident.impact != 0):
+            form = IncidentChangeForm(id)
+            print(dir(form))
+            print((form.__class__.__name__))
+            form.update_impact.choices = [
+                (v.value, v.string)
+                for (_, v) in current_app.config["INCIDENT_IMPACTS"].items()
+            ]
+            form.update_status.choices = [
             (k, v)
             for (k, v) in current_app.config.get(
-                "MAINTENANCE_STATUSES"
-                if incident.impact == 0
-                else "INCIDENT_STATUSES",
+                "INCIDENT_ACTIONS",
                 {},
             ).items()
-        ]
-
+            ]
+        else:
+            form = IncidentUpdateForm(id)
+            form.update_impact.choices = [
+                (v.value, v.string)
+                for (_, v) in current_app.config["INCIDENT_IMPACTS"].items()
+            ]
+            # Update_status will contain choices based on the incident_type
+            form.update_status.choices = [
+                (k, v)
+                for (k, v) in current_app.config.get(
+                    "MAINTENANCE_STATUSES"
+                    if incident.impact == 0
+                    else "INCIDENT_STATUSES",
+                    {},
+                ).items()
+            ]
         if form.validate_on_submit():
             new_impact = form.update_impact.data
             new_status = form.update_status.data
@@ -205,6 +221,12 @@ def incident(incident_id):
                 incident.end_date = naive_utcnow()
                 current_app.logger.debug(
                     f"{incident} closed by {get_user_string(session['user'])}"
+                )
+            elif new_status == "reopened":
+                print(new_status == "reopened")
+                incident.end_date = None
+                current_app.logger.debug(
+                    f"{incident} reopened by {get_user_string(session['user'])}"
                 )
             incident.text = form.update_title.data
             incident.impact = new_impact

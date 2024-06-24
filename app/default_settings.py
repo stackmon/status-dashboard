@@ -59,3 +59,8 @@ class DefaultConfiguration:
         "observing": "Observing fix (fix deployed, watching recovery)",
         "resolved": "Incident Resolved (service is fully available. Done)",
     }
+
+    INCIDENT_ACTIONS = {
+        "reopened" : "Incident reopened (resolved incident has ben reopened)",
+        "changed" : "Incident changed: (resolved incident has been changed)",
+    }
