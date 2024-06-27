@@ -22,6 +22,9 @@ def utc_from_timestamp(timestamp):
     # type: (float) -> datetime
     return datetime.fromtimestamp(timestamp, timezone.utc)
 
+def naive_timestamp(timestamp):
+    return utc_from_timestamp(timestamp).replace(tzinfo=None)
+
 
 def naive_utcnow():
     return datetime_utcnow().replace(tzinfo=None)

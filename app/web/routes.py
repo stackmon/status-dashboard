@@ -178,8 +178,12 @@ def incident(incident_id):
         abort(404)
     form = None
     start_date = incident.start_date
+    updates = incident.updates
+    updates_ts = []
+    for u in updates:
+        updates_ts.append(u.timestamp)
     if "user" in session:
-        form = IncidentUpdateForm(start_date)
+        form = IncidentUpdateForm(start_date, updates_ts)
         form.update_impact.choices = [
             (v.value, v.string)
             for (_, v) in current_app.config["INCIDENT_IMPACTS"].items()
@@ -224,6 +228,7 @@ def incident(incident_id):
             incident.impact = new_impact
             incident.system = False
             db.session.commit()
+            return redirect("/history")
 
     return render_template(
         "incident.html", title="Incident", incident=incident, form=form

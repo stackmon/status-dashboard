@@ -21,6 +21,7 @@ from wtforms import TextAreaField
 from wtforms import validators
 
 from app.datetime import naive_utcnow
+from app.datetime import naive_timestamp
 
 
 class IncidentUpdateForm(FlaskForm):
@@ -43,10 +44,10 @@ class IncidentUpdateForm(FlaskForm):
     date_update = DateTimeField("Next Update by", format='%Y-%m-%dT%H:%M')
     submit = SubmitField("Submit")
 
-    def __init__(self, start_date, *args, **kwargs):
+    def __init__(self, _start_date, _updates_ts, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        #self.incident_id = incident_id
-        self.start_date = start_date
+        self._start_date = _start_date
+        self._updates_ts = _updates_ts
 
     def validate_date_update(self, field):
         if (
@@ -58,19 +59,26 @@ class IncidentUpdateForm(FlaskForm):
             and field.data is None
         ):
             raise validators.ValidationError(
-                "Next update field is mandatory unless " "incident is resolved"
+                "Next update field is mandatory unless "
+                "incident is resolved"
             )
         elif self.update_status.data == "changed":
             # Ensure date_update is not in the future
             if field.data > naive_utcnow():
                 raise validators.ValidationError(
-                    "End date cannot be in the future."
+                    "End date cannot be in the future"
                 )
             # Ensure date_update is not before the start date
-            if field.data < self.start_date:
+            if field.data < self._start_date:
                 raise validators.ValidationError(
-                    "End date cannot be before the start date."
+                    "End date cannot be before the start date"
                 )
+            for timestamp in self._updates_ts:
+                if field.data < timestamp:
+                    raise validators.ValidationError(
+                        "End date cannot be before any other "
+                        "status-update timestamp"
+                    )
         elif (
             self.update_status.data in [
                 "resolved",
@@ -112,6 +120,17 @@ class IncidentForm(FlaskForm):
     incident_start_utc = DateTimeField("Start UTC")
     incident_end_utc = DateTimeField("End UTC")
     submit = SubmitField("Submit")
+
+    # print(utc_from_timestamp(incident_start))
+
+    def validate_incident_start(self, field):
+        if (
+            self.incident_impact.data != "0"
+            and naive_timestamp(field.data.timestamp()) > naive_utcnow()
+        ):
+            raise validators.ValidationError(
+                "Start date of incident cannot be in the future"
+            )
 
     def validate_incident_end(self, field):
         if (
