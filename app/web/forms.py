@@ -20,6 +20,8 @@ from wtforms import SubmitField
 from wtforms import TextAreaField
 from wtforms import validators
 
+from app.datetime import naive_utcnow
+
 
 class IncidentUpdateForm(FlaskForm):
     update_title = StringField(
@@ -38,23 +40,43 @@ class IncidentUpdateForm(FlaskForm):
     )
     update_impact = SelectField("Incident Impact")
     update_status = SelectField("Update Status")
-    next_update = DateTimeField("Next Update by", format='%Y-%m-%dT%H:%M')
+    date_update = DateTimeField("Next Update by", format='%Y-%m-%dT%H:%M')
     submit = SubmitField("Submit")
 
-    def __init__(self, incident_id, *args, **kwargs):
+    def __init__(self, start_date, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.incident_id = incident_id
+        #self.incident_id = incident_id
+        self.start_date = start_date
 
-    def validate_next_update(self, field):
+    def validate_date_update(self, field):
         if (
-            self.update_status.data not in ["resolved", "completed"]
+            self.update_status.data not in [
+                "resolved",
+                "completed",
+                "reopened",
+            ]
             and field.data is None
         ):
             raise validators.ValidationError(
                 "Next update field is mandatory unless " "incident is resolved"
             )
+        elif self.update_status.data == "changed":
+            # Ensure date_update is not in the future
+            if field.data > naive_utcnow():
+                raise validators.ValidationError(
+                    "End date cannot be in the future."
+                )
+            # Ensure date_update is not before the start date
+            if field.data < self.start_date:
+                raise validators.ValidationError(
+                    "End date cannot be before the start date."
+                )
         elif (
-            self.update_status.data in ["resolved", "completed"]
+            self.update_status.data in [
+                "resolved",
+                "completed",
+                "reopened",
+            ]
             and field.data is None
         ):
             # Making field optional requres dropping "Not a valid datetime
@@ -62,46 +84,6 @@ class IncidentUpdateForm(FlaskForm):
             field.errors[:] = []
             raise validators.StopValidation()
 
-class IncidentChangeForm(FlaskForm):
-    update_title = StringField(
-        "Incident Title",
-        validators=[
-            validators.DataRequired(),
-            validators.Length(min=8, max=200),
-        ],
-    )
-    update_text = TextAreaField(
-        "Update Message",
-        validators=[
-            validators.DataRequired(),
-            validators.Length(min=10, max=200),
-        ],
-    )
-    update_impact = SelectField("Incident Impact")
-    update_status = SelectField("Change Action")
-    next_update = DateTimeField("New end date", format='%Y-%m-%dT%H:%M')
-    submit = SubmitField("Submit")
-
-    def __init__(self, incident_id, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.incident_id = incident_id
-
-    def validate_change(self, field):
-        if (
-            self.update_status.data not in ["resolved", "completed"]
-            and field.data is None
-        ):
-            raise validators.ValidationError(
-                "Next update field is mandatory unless " "incident is resolved"
-            )
-        elif (
-            self.update_status.data in ["resolved", "completed"]
-            and field.data is None
-        ):
-            # Making field optional requres dropping "Not a valid datetime
-            # value." error as well
-            field.errors[:] = []
-            raise validators.StopValidation()
 
 class IncidentForm(FlaskForm):
     incident_text = StringField(
