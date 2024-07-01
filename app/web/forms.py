@@ -21,7 +21,7 @@ from wtforms import TextAreaField
 from wtforms import validators
 
 from app.datetime import naive_utcnow
-from app.datetime import naive_timestamp
+from app.datetime import naive_from_timestamp
 
 
 class IncidentUpdateForm(FlaskForm):
@@ -41,7 +41,8 @@ class IncidentUpdateForm(FlaskForm):
     )
     update_impact = SelectField("Incident Impact")
     update_status = SelectField("Update Status")
-    date_update = DateTimeField("Next Update by", format='%Y-%m-%dT%H:%M')
+    update_date = DateTimeField("Next Update by", format='%Y-%m-%dT%H:%M')
+    timezone = StringField("Timezone", validators=[validators.DataRequired()])
     submit = SubmitField("Submit")
 
     def __init__(self, _start_date, _updates_ts, *args, **kwargs):
@@ -49,7 +50,7 @@ class IncidentUpdateForm(FlaskForm):
         self._start_date = _start_date
         self._updates_ts = _updates_ts
 
-    def validate_date_update(self, field):
+    def validate_update_date(self, field):
         if (
             self.update_status.data not in [
                 "resolved",
@@ -63,12 +64,12 @@ class IncidentUpdateForm(FlaskForm):
                 "incident is resolved"
             )
         elif self.update_status.data == "changed":
-            # Ensure date_update is not in the future
+            # Ensure update_date is not in the future
             if field.data > naive_utcnow():
                 raise validators.ValidationError(
                     "End date cannot be in the future"
                 )
-            # Ensure date_update is not before the start date
+            # Ensure update_date is not before the start date
             if field.data < self._start_date:
                 raise validators.ValidationError(
                     "End date cannot be before the start date"
@@ -126,7 +127,7 @@ class IncidentForm(FlaskForm):
     def validate_incident_start(self, field):
         if (
             self.incident_impact.data != "0"
-            and naive_timestamp(field.data.timestamp()) > naive_utcnow()
+            and naive_from_timestamp(field.data.timestamp()) > naive_utcnow()
         ):
             raise validators.ValidationError(
                 "Start date of incident cannot be in the future"

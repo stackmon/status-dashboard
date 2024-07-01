@@ -15,6 +15,7 @@ from app import authorization
 from app import cache
 from app import oauth
 from app.datetime import naive_utcnow
+from app.datetime import naive_from_dttz
 from app.models import Component
 from app.models import ComponentAttribute
 from app.models import Incident
@@ -56,16 +57,20 @@ def get_user_string(user):
 
 
 @authorization.auth_required
-def update_incident(current_user, incident, text, status="SYSTEM"):
+def update_incident(current_user, incident, text, status="SYSTEM", timestamp=None):
+    if timestamp is None:
+        timestamp = naive_utcnow()
     update = IncidentStatus(
         incident_id=incident.id,
         text=text,
         status=status,
+        timestamp=timestamp,
     )
     db.session.add(update)
     current_app.logger.debug(
         f"Changes in {incident} by {get_user_string(current_user)}: {text}"
     )
+    db.session.commit()
 
 
 @bp.route("/incidents", methods=["GET", "POST"])
@@ -176,12 +181,12 @@ def incident(incident_id):
     incident = Incident.get_by_id(incident_id)
     if not incident:
         abort(404)
+
     form = None
     start_date = incident.start_date
     updates = incident.updates
-    updates_ts = []
-    for u in updates:
-        updates_ts.append(u.timestamp)
+    updates_ts = [u.timestamp for u in updates]
+
     if "user" in session:
         form = IncidentUpdateForm(start_date, updates_ts)
         form.update_impact.choices = [
@@ -202,13 +207,19 @@ def incident(incident_id):
             ).items()
         ]
         if form.validate_on_submit():
+            now = naive_utcnow()
+
             new_impact = form.update_impact.data
             new_status = form.update_status.data
-            update_incident(incident, form.update_text.data, new_status)
+            update_incident(incident, form.update_text.data, new_status, now)
+
             if new_status in ["completed", "resolved"]:
                 # Incident is completed
                 new_impact = incident.impact
-                incident.end_date = naive_utcnow()
+                incident.end_date = naive_from_dttz(
+                    form.update_date.data,
+                    form.timezone.data,
+                ) if form.update_date.data else now
                 current_app.logger.debug(
                     f"{incident} closed by {get_user_string(session['user'])}"
                 )
@@ -220,7 +231,10 @@ def incident(incident_id):
                 )
             elif new_status == "changed":
                 print(new_status == "changed")
-                incident.end_date = form.date_update.data
+                incident.end_date = naive_from_dttz(
+                    form.update_date.data,
+                    form.timezone.data,
+                )
                 current_app.logger.debug(
                     f"{incident} changed by {get_user_string(session['user'])}"
                 )

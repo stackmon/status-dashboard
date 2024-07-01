@@ -193,31 +193,41 @@
         {% endif %}
       </div>
       <div class="mb-3">
-        <label for="{{form.date_update.id}}" class="form-label">{{form.date_update.label}}</label>
+        <label for="{{form.update_date.id}}" class="form-label">{{form.update_date.label}}</label>
         <input class="form-control
-                      {% if form.date_update.errors %}is-invalid{% endif %}"
+                      {% if form.update_date.errors %}is-invalid{% endif %}"
               type="datetime-local"
-              id="{{form.date_update.id}}"
-              name="{{form.date_update.name}}"
-              value="{{form.date_update.data}}"
+              id="{{form.update_date.id}}"
+              name="{{form.update_date.name}}"
+              value="{{form.update_date.data}}"
               aria-describedby="nextUpdateHelp"/>
         <div id="nextUpdateHelp" class="form-text">
           Please provide the time for the next expected update.</div>
-        {% if form.date_update.errors %}
+        {% if form.update_date.errors %}
         <div class="invalid-feedback">
           <ul class="errors">
-          {% for error in form.date_update.errors %}
+          {% for error in form.update_date.errors %}
             <li>{{ error }}</li>
           {% endfor %}
           </ul>
         </div>
         {% endif %}
       </div>
+      <input type="hidden" id="timezone" name="timezone">
       <button type="submit" class="btn btn-primary">Submit</button>
 
       </form>
     </div>
+
   {% endif %}
 
 </div>
+<script>
+  // Function to set the timezone
+  document.addEventListener('DOMContentLoaded', (event) => {
+    var timezoneField = document.getElementById('timezone');
+    var timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    timezoneField.value = timezone;
+  });
+</script>
 {% endblock %}
