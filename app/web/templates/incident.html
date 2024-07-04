@@ -224,10 +224,14 @@
 </div>
 <script>
   // Function to set the timezone
-  document.addEventListener('DOMContentLoaded', (event) => {
+  document.addEventListener('DOMContentLoaded', function() {
     var timezoneField = document.getElementById('timezone');
     var timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    timezoneField.value = timezone;
+    if (timezone) {
+      timezoneField.value = timezone;
+    } else {
+          timezoneField.value = 'UTC';
+    }
   });
 </script>
 {% endblock %}

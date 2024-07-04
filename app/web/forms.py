@@ -21,7 +21,7 @@ from wtforms import TextAreaField
 from wtforms import validators
 
 from app.datetime import naive_utcnow
-from app.datetime import naive_from_timestamp
+from app.datetime import naive_from_dttz
 
 
 class IncidentUpdateForm(FlaskForm):
@@ -43,14 +43,20 @@ class IncidentUpdateForm(FlaskForm):
     update_status = SelectField("Update Status")
     update_date = DateTimeField("Next Update by", format='%Y-%m-%dT%H:%M')
     timezone = StringField("Timezone", validators=[validators.DataRequired()])
+    
     submit = SubmitField("Submit")
 
     def __init__(self, _start_date, _updates_ts, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # _start_date from the class Incident.start_date ()
         self._start_date = _start_date
         self._updates_ts = _updates_ts
 
     def validate_update_date(self, field):
+        form_timestamp = naive_from_dttz(
+            self.update_date.data,
+            self.timezone.data,
+        ) if self.update_date.data else naive_utcnow()
         if (
             self.update_status.data not in [
                 "resolved",
@@ -63,19 +69,31 @@ class IncidentUpdateForm(FlaskForm):
                 "Next update field is mandatory unless "
                 "incident is resolved"
             )
-        elif self.update_status.data == "changed":
-            # Ensure update_date is not in the future
-            if field.data > naive_utcnow():
-                raise validators.ValidationError(
-                    "End date cannot be in the future"
-                )
+        elif self.update_status.data == "converted":
             # Ensure update_date is not before the start date
-            if field.data < self._start_date:
+            if form_timestamp < self._start_date:
                 raise validators.ValidationError(
                     "End date cannot be before the start date"
                 )
             for timestamp in self._updates_ts:
-                if field.data < timestamp:
+                if form_timestamp < timestamp:
+                    raise validators.ValidationError(
+                        "End date cannot be before any other "
+                        "status-update timestamp"
+                    )
+        elif self.update_status.data == "changed":
+            # Ensure update_date is not in the future
+            if form_timestamp > naive_utcnow():
+                raise validators.ValidationError(
+                    "End date cannot be in the future"
+                )
+            # Ensure update_date is not before the start date
+            if form_timestamp < self._start_date:
+                raise validators.ValidationError(
+                    "End date cannot be before the start date"
+                )
+            for timestamp in self._updates_ts:
+                if form_timestamp < timestamp:
                     raise validators.ValidationError(
                         "End date cannot be before any other "
                         "status-update timestamp"
@@ -118,16 +136,19 @@ class IncidentForm(FlaskForm):
     incident_end = DateTimeField(
         "End", format='%Y-%m-%dT%H:%M'
     )
-    incident_start_utc = DateTimeField("Start UTC")
-    incident_end_utc = DateTimeField("End UTC")
+    timezone = StringField("Timezone", validators=[validators.DataRequired()])
+
     submit = SubmitField("Submit")
 
-    # print(utc_from_timestamp(incident_start))
 
     def validate_incident_start(self, field):
+        form_timestamp = naive_from_dttz(
+            self.incident_start.data, 
+            self.timezone.data,
+        )
         if (
             self.incident_impact.data != "0"
-            and naive_from_timestamp(field.data.timestamp()) > naive_utcnow()
+            and form_timestamp > naive_utcnow()
         ):
             raise validators.ValidationError(
                 "Start date of incident cannot be in the future"
@@ -150,7 +171,7 @@ class IncidentForm(FlaskForm):
             field.errors[:] = []
             raise validators.StopValidation()
 
-    def validate_incident_end_utc(self, field):
+    def validate_incident_end(self, field):
         if (
             self.incident_impact.data == "0"
             and field.data is None

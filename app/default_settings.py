@@ -54,6 +54,7 @@ class DefaultConfiguration:
     }
 
     INCIDENT_STATUSES = {
+        "converted": "Incident Converted to maintenance",
         "analyzing": "Analyzing incident (problem not known yet)",
         "fixing": "Fixing incident (problem identified, working on fix)",
         "observing": "Observing fix (fix deployed, watching recovery)",

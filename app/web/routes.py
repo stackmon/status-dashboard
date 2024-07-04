@@ -73,6 +73,54 @@ def update_incident(current_user, incident, text, status="SYSTEM", timestamp=Non
     db.session.commit()
 
 
+def form_submission(form, incident):
+    new_impact = form.update_impact.data
+    new_status = form.update_status.data
+    timestamp = naive_from_dttz(
+            form.update_date.data,
+            form.timezone.data,
+        ) if form.update_date.data else naive_utcnow()
+    update_incident(incident, form.update_text.data, new_status, timestamp)
+
+    redirect_path = f"/incidents/{incident.id}"
+
+    if new_status in ["completed", "resolved"]:
+        # Incident is completed
+        # new_impact = incident.impact
+        incident.end_date = timestamp
+        current_app.logger.debug(
+            f"{incident} closed by {get_user_string(session['user'])}"
+        )
+        redirect_path = "/history"
+    elif new_status == "reopened":
+        incident.end_date = None
+        current_app.logger.debug(
+            f"{incident} reopened by {get_user_string(session['user'])}"
+        )
+        redirect_path = "/"
+    elif new_status == "changed":
+        incident.end_date = timestamp
+        current_app.logger.debug(
+            f"{incident} changed by {get_user_string(session['user'])}"
+        )
+    elif new_status == "converted":
+        new_impact = 0
+        incident.end_date = naive_from_dttz(
+            form.update_date.data,
+            form.timezone.data,
+        ) if form.update_date.data else incident.end_date
+        current_app.logger.debug(
+            f"{incident} converted to maintenance "
+            f"by {get_user_string(session['user'])}"
+        )
+
+    incident.text = form.update_title.data
+    incident.impact = new_impact
+    incident.system = False
+    db.session.commit()
+    return redirect_path
+
+
 @bp.route("/incidents", methods=["GET", "POST"])
 @authorization.auth_required
 def new_incident(current_user):
@@ -92,22 +140,26 @@ def new_incident(current_user):
             int(x) for x in form.incident_components.raw_data
         ]
 
-        incident_components = []
-
-        for comp in all_components:
-            if comp.id in selected_components:
-                incident_components.append(comp)
+        incident_components = [
+            comp for comp in all_components if comp.id in selected_components
+        ]
 
         new_incident = Incident(
             text=form.incident_text.data,
             impact=form.incident_impact.data,
-            start_date=form.incident_start_utc.data,
+            start_date=naive_from_dttz(
+                form.incident_start.data,
+                form.timezone.data,
+            ),
             components=incident_components,
             system=False,
         )
 
         if form.incident_impact.data == "0":
-            new_incident.end_date = form.incident_end_utc.data
+            new_incident.end_date = naive_from_dttz(
+                form.incident_end.data,
+                form.timezone.data,
+            )
 
         db.session.add(new_incident)
         db.session.commit()
@@ -125,47 +177,50 @@ def new_incident(current_user):
             f"{new_incident} opened by {get_user_string(current_user)}"
         )
 
-        messages_from = []
+        if form.incident_impact.data != "0":
+            messages_from = []
 
-        for inc in active_incidents:
-            messages_to = []
-            for comp in incident_components:
-                if comp in inc.components:
-                    comp_name = comp.name
-                    comp_attributes = comp.attributes
-                    comp_attributes_str = ", ".join(
-                        [
-                            f"{attr.value}" for attr in comp_attributes
-                        ]
-                    )
-                    comp_with_attrs = f"{comp_name} ({comp_attributes_str})"
-                    url_s = url_for(
-                        'web.incident',
-                        incident_id=inc.id
-                    )
-                    link_s = f"<a href='{url_s}'>{inc.text}</a>"
-                    url_d = url_for(
-                        'web.incident',
-                        incident_id=new_incident.id
-                    )
-                    link_d = f"<a href='{url_d}'>{new_incident.text}</a>"
-                    update_s = f"{comp_with_attrs} moved to {link_d}"
-                    update_n = f"{comp_with_attrs} moved from {link_s}"
-                    messages_to.append(update_s)
-                    messages_from.append(update_n)
+            for inc in active_incidents:
+                messages_to = []
+                for comp in incident_components:
+                    if comp in inc.components:
+                        comp_name = comp.name
+                        comp_attributes = comp.attributes
+                        comp_attributes_str = ", ".join(
+                            [
+                                f"{attr.value}" for attr in comp_attributes
+                            ]
+                        )
+                        comp_with_attrs = f"{comp_name} ({comp_attributes_str})"
+                        url_s = url_for(
+                            'web.incident',
+                            incident_id=inc.id
+                        )
+                        link_s = f"<a href='{url_s}'>{inc.text}</a>"
+                        url_d = url_for(
+                            'web.incident',
+                            incident_id=new_incident.id
+                        )
+                        link_d = f"<a href='{url_d}'>{new_incident.text}</a>"
+                        update_s = f"{comp_with_attrs} moved to {link_d}"
+                        update_n = f"{comp_with_attrs} moved from {link_s}"
+                        messages_to.append(update_s)
+                        messages_from.append(update_n)
 
-                    if len(inc.components) > 1:
-                        inc.components.remove(comp)
-                    else:
-                        messages_to.append("Incident closed by system")
-                        inc.end_date = naive_utcnow()
-            if messages_to:
-                update_incident(inc, ', '.join(messages_to))
-        if messages_from:
-            update_incident(new_incident, ', '.join(messages_from))
+                        if len(inc.components) > 1:
+                            inc.components.remove(comp)
+                        else:
+                            messages_to.append("Incident closed by system")
+                            inc.end_date = naive_utcnow()
+                if messages_to:
+                    update_incident(inc, ', '.join(messages_to))
+            if messages_from:
+                update_incident(new_incident, ', '.join(messages_from))
         db.session.commit()
+
         return (redirect("/") if new_incident.impact != 0
                 else redirect("/incidents/" + str(new_incident.id)))
+
     return render_template(
         "create_incident.html", title="Open Incident", form=form
     )
@@ -189,10 +244,22 @@ def incident(incident_id):
 
     if "user" in session:
         form = IncidentUpdateForm(start_date, updates_ts)
-        form.update_impact.choices = [
+        # update_impact will contain choices based on the incident_type
+        choices = [
             (v.value, v.string)
             for (_, v) in current_app.config["INCIDENT_IMPACTS"].items()
+            if v.value != 0
         ]
+
+        if incident.impact == 0:
+            choices = [
+                (v.value, v.string)
+                for (_, v) in current_app.config["INCIDENT_IMPACTS"].items()
+                if v.value == 0
+            ]
+
+        form.update_impact.choices = choices
+                     
         # Update_status will contain choices based on the incident_type
         form.update_status.choices = [
             (k, v)
@@ -206,43 +273,10 @@ def incident(incident_id):
                 {},
             ).items()
         ]
+
         if form.validate_on_submit():
-            now = naive_utcnow()
-
-            new_impact = form.update_impact.data
-            new_status = form.update_status.data
-            update_incident(incident, form.update_text.data, new_status, now)
-
-            if new_status in ["completed", "resolved"]:
-                # Incident is completed
-                new_impact = incident.impact
-                incident.end_date = naive_from_dttz(
-                    form.update_date.data,
-                    form.timezone.data,
-                ) if form.update_date.data else now
-                current_app.logger.debug(
-                    f"{incident} closed by {get_user_string(session['user'])}"
-                )
-            elif new_status == "reopened":
-                print(new_status == "reopened")
-                incident.end_date = None
-                current_app.logger.debug(
-                    f"{incident} reopened by {get_user_string(session['user'])}"
-                )
-            elif new_status == "changed":
-                print(new_status == "changed")
-                incident.end_date = naive_from_dttz(
-                    form.update_date.data,
-                    form.timezone.data,
-                )
-                current_app.logger.debug(
-                    f"{incident} changed by {get_user_string(session['user'])}"
-                )
-            incident.text = form.update_title.data
-            incident.impact = new_impact
-            incident.system = False
-            db.session.commit()
-            return redirect("/history")
+            redirect_path = form_submission(form, incident)
+            return redirect(redirect_path)
 
     return render_template(
         "incident.html", title="Incident", incident=incident, form=form
