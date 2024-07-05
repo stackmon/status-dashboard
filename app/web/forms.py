@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
+from app.datetime import naive_from_dttz
+from app.datetime import naive_utcnow
 
 from flask_wtf import FlaskForm
 
@@ -19,9 +21,6 @@ from wtforms import StringField
 from wtforms import SubmitField
 from wtforms import TextAreaField
 from wtforms import validators
-
-from app.datetime import naive_utcnow
-from app.datetime import naive_from_dttz
 
 
 class IncidentUpdateForm(FlaskForm):
@@ -43,7 +42,6 @@ class IncidentUpdateForm(FlaskForm):
     update_status = SelectField("Update Status")
     update_date = DateTimeField("Next Update by", format='%Y-%m-%dT%H:%M')
     timezone = StringField("Timezone", validators=[validators.DataRequired()])
-    
     submit = SubmitField("Submit")
 
     def __init__(self, _start_date, _updates_ts, *args, **kwargs):
@@ -53,63 +51,102 @@ class IncidentUpdateForm(FlaskForm):
         self._updates_ts = _updates_ts
 
     def validate_update_date(self, field):
-        form_timestamp = naive_from_dttz(
-            self.update_date.data,
-            self.timezone.data,
-        ) if self.update_date.data else naive_utcnow()
-        if (
-            self.update_status.data not in [
+
+        if field.data is None:
+            if self.update_status.data in [
                 "resolved",
                 "completed",
-                "reopened",
-            ]
-            and field.data is None
-        ):
-            raise validators.ValidationError(
-                "Next update field is mandatory unless "
-                "incident is resolved"
-            )
-        elif self.update_status.data == "converted":
-            # Ensure update_date is not before the start date
-            if form_timestamp < self._start_date:
+                "reopened"
+            ]:
+                field.errors[:] = []
+                raise validators.StopValidation()
+            elif self.update_status.data == "changed":
                 raise validators.ValidationError(
-                    "End date cannot be before the start date"
+                    "New end date field cannot be empty"
                 )
-            for timestamp in self._updates_ts:
-                if form_timestamp < timestamp:
-                    raise validators.ValidationError(
-                        "End date cannot be before any other "
-                        "status-update timestamp"
-                    )
-        elif self.update_status.data == "changed":
-            # Ensure update_date is not in the future
-            if form_timestamp > naive_utcnow():
+
+        if field.data is not None:
+            upd_date_form = naive_from_dttz(
+                self.update_date.data,
+                self.timezone.data,
+            )
+        else:
+            upd_date_form = None
+            raise validators.ValidationError("Update date cannot be empty")
+
+        if self.update_status.data in [
+            "resolved",
+            "completed",
+            "reopened",
+        ]:
+            if upd_date_form > naive_utcnow():
                 raise validators.ValidationError(
                     "End date cannot be in the future"
                 )
-            # Ensure update_date is not before the start date
-            if form_timestamp < self._start_date:
+            if upd_date_form < self._start_date:
+                raise validators.ValidationError(
+                    "End date cannot be before the start date"
+                )
+            if field.data is not None and field.data < self._start_date:
                 raise validators.ValidationError(
                     "End date cannot be before the start date"
                 )
             for timestamp in self._updates_ts:
-                if form_timestamp < timestamp:
+                if upd_date_form <= timestamp:
                     raise validators.ValidationError(
-                        "End date cannot be before any other "
-                        "status-update timestamp"
+                        "End date cannot be before any "
+                        "other status-update timestamp or equal"
                     )
-        elif (
-            self.update_status.data in [
-                "resolved",
-                "completed",
-                "reopened",
-            ]
-            and field.data is None
-        ):
-            # Making field optional requres dropping "Not a valid datetime
-            # value." error as well
-            field.errors[:] = []
-            raise validators.StopValidation()
+        elif self.update_status.data == "changed":
+            if upd_date_form > naive_utcnow():
+                raise validators.ValidationError(
+                    "End date cannot be in the future"
+                )
+            if upd_date_form < self._start_date:
+                raise validators.ValidationError(
+                    "End date cannot be before the start date"
+                )
+            if field.data < self._start_date:
+                raise validators.ValidationError(
+                    "End date cannot be before the start date"
+                )
+            for timestamp in self._updates_ts:
+                if upd_date_form <= timestamp:
+                    raise validators.ValidationError(
+                        "End date cannot be before any "
+                        "other status-update timestamp or equal"
+                    )
+        elif self.update_status.data in [
+            "analyzing",
+            "fixing",
+            "observing",
+            "in progress"
+        ]:
+            if upd_date_form > naive_utcnow():
+                raise validators.ValidationError(
+                    "Update date cannot be in the future"
+                )
+            if upd_date_form < self._start_date:
+                raise validators.ValidationError(
+                    "End date cannot be before the start date"
+                )
+            for timestamp in self._updates_ts:
+                if upd_date_form <= timestamp:
+                    raise validators.ValidationError(
+                        "End date cannot be before any "
+                        "other status-update timestamp or equal"
+                    )
+        if self.update_status.data == "scheduled":
+            if upd_date_form < self._start_date:
+                raise validators.ValidationError(
+                    "Scheduled date cannot be before the start date"
+                )
+            for timestamp in self._updates_ts:
+                if upd_date_form <= timestamp:
+                    raise validators.ValidationError(
+                        "Scheduled date cannot be before any "
+                        "other status-update timestamp or equal"
+                    )
 
 
 class IncidentForm(FlaskForm):
@@ -140,15 +177,14 @@ class IncidentForm(FlaskForm):
 
     submit = SubmitField("Submit")
 
-
     def validate_incident_start(self, field):
-        form_timestamp = naive_from_dttz(
-            self.incident_start.data, 
+        start_date_form = naive_from_dttz(
+            self.incident_start.data,
             self.timezone.data,
         )
         if (
             self.incident_impact.data != "0"
-            and form_timestamp > naive_utcnow()
+            and start_date_form > naive_utcnow()
         ):
             raise validators.ValidationError(
                 "Start date of incident cannot be in the future"
@@ -168,20 +204,5 @@ class IncidentForm(FlaskForm):
         ):
             # Making field optional requres dropping "Not a valid datetime
             # value." error as well
-            field.errors[:] = []
-            raise validators.StopValidation()
-
-    def validate_incident_end(self, field):
-        if (
-            self.incident_impact.data == "0"
-            and field.data is None
-        ):
-            raise validators.ValidationError(
-                "Expected end date field is mandatory for maintenance"
-            )
-        elif (
-            self.incident_impact.data != "0"
-            and field.data is None
-        ):
             field.errors[:] = []
             raise validators.StopValidation()

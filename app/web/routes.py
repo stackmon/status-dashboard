@@ -14,8 +14,8 @@
 from app import authorization
 from app import cache
 from app import oauth
-from app.datetime import naive_utcnow
 from app.datetime import naive_from_dttz
+from app.datetime import naive_utcnow
 from app.models import Component
 from app.models import ComponentAttribute
 from app.models import Incident
@@ -57,7 +57,13 @@ def get_user_string(user):
 
 
 @authorization.auth_required
-def update_incident(current_user, incident, text, status="SYSTEM", timestamp=None):
+def update_incident(
+    current_user,
+    incident,
+    text,
+    status="SYSTEM",
+    timestamp=None,
+):
     if timestamp is None:
         timestamp = naive_utcnow()
     update = IncidentStatus(
@@ -76,48 +82,45 @@ def update_incident(current_user, incident, text, status="SYSTEM", timestamp=Non
 def form_submission(form, incident):
     new_impact = form.update_impact.data
     new_status = form.update_status.data
-    timestamp = naive_from_dttz(
+    date_form = None
+
+    if form.update_date.data:
+        date_form = naive_from_dttz(
             form.update_date.data,
             form.timezone.data,
-        ) if form.update_date.data else naive_utcnow()
-    update_incident(incident, form.update_text.data, new_status, timestamp)
-
+        )
     redirect_path = f"/incidents/{incident.id}"
 
     if new_status in ["completed", "resolved"]:
         # Incident is completed
         # new_impact = incident.impact
-        incident.end_date = timestamp
+        if date_form:
+            incident.end_date = date_form
+        else:
+            incident.end_date = naive_utcnow()
+
         current_app.logger.debug(
             f"{incident} closed by {get_user_string(session['user'])}"
         )
         redirect_path = "/history"
     elif new_status == "reopened":
+        date_form = naive_utcnow()
         incident.end_date = None
         current_app.logger.debug(
             f"{incident} reopened by {get_user_string(session['user'])}"
         )
         redirect_path = "/"
     elif new_status == "changed":
-        incident.end_date = timestamp
+        incident.end_date = date_form
+        date_form = naive_utcnow()
         current_app.logger.debug(
             f"{incident} changed by {get_user_string(session['user'])}"
-        )
-    elif new_status == "converted":
-        new_impact = 0
-        incident.end_date = naive_from_dttz(
-            form.update_date.data,
-            form.timezone.data,
-        ) if form.update_date.data else incident.end_date
-        current_app.logger.debug(
-            f"{incident} converted to maintenance "
-            f"by {get_user_string(session['user'])}"
         )
 
     incident.text = form.update_title.data
     incident.impact = new_impact
     incident.system = False
-    db.session.commit()
+    update_incident(incident, form.update_text.data, new_status, date_form)
     return redirect_path
 
 
@@ -191,7 +194,9 @@ def new_incident(current_user):
                                 f"{attr.value}" for attr in comp_attributes
                             ]
                         )
-                        comp_with_attrs = f"{comp_name} ({comp_attributes_str})"
+                        comp_with_attrs = (
+                            f"{comp_name} "
+                            f"({comp_attributes_str})")
                         url_s = url_for(
                             'web.incident',
                             incident_id=inc.id
@@ -241,6 +246,7 @@ def incident(incident_id):
     start_date = incident.start_date
     updates = incident.updates
     updates_ts = [u.timestamp for u in updates]
+    now = naive_utcnow()
 
     if "user" in session:
         form = IncidentUpdateForm(start_date, updates_ts)
@@ -259,7 +265,6 @@ def incident(incident_id):
             ]
 
         form.update_impact.choices = choices
-                     
         # Update_status will contain choices based on the incident_type
         form.update_status.choices = [
             (k, v)
@@ -279,7 +284,11 @@ def incident(incident_id):
             return redirect(redirect_path)
 
     return render_template(
-        "incident.html", title="Incident", incident=incident, form=form
+        "incident.html",
+        title="Incident",
+        incident=incident,
+        form=form,
+        now=now,
     )
 
 

@@ -54,7 +54,6 @@ class DefaultConfiguration:
     }
 
     INCIDENT_STATUSES = {
-        "converted": "Incident Converted to maintenance",
         "analyzing": "Analyzing incident (problem not known yet)",
         "fixing": "Fixing incident (problem identified, working on fix)",
         "observing": "Observing fix (fix deployed, watching recovery)",
@@ -62,6 +61,6 @@ class DefaultConfiguration:
     }
 
     INCIDENT_ACTIONS = {
-        "reopened" : "Incident reopened (resolved incident has ben reopened)",
-        "changed" : "Incident changed: (resolved incident has been changed)",
+        "reopened": "Incident reopened (resolved incident has ben reopened)",
+        "changed": "Incident changed: (end date has been changed)",
     }

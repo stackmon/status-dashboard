@@ -60,7 +60,11 @@
 {% if incident.impact == 0 %}
   <small>
     <b>Start date:</b> {{ incident.start_date.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC<br/>
-    <b>Planned end date:</b> {{ incident.end_date.strftime('%Y-%m-%d %H:%M') | default('no') }}&nbsp;UTC
+    {% if now <= incident.end_date %}
+      <b>Planned end date:</b> {{ incident.end_date.strftime('%Y-%m-%d %H:%M') | default('no') }}&nbsp;UTC
+    {% else %}
+      <b>End date:</b> {{ incident.end_date.strftime('%Y-%m-%d %H:%M') | default('no') }}&nbsp;UTC
+    {% endif %}
   </small>
 {% else %}
   <small>Incident began at
@@ -166,9 +170,9 @@
       <div class="mb-3">
         <label for="{{form.update_status.id}}" class="form-label">{{form.update_status.label}}</label>
         <select
+            onchange="updateDateLabel(this);"
             class="form-select form-select-sm mb-3
-                   {% if form.update_status.errors %}is-invalid{% endif %}
-                    "
+                   {% if form.update_status.errors %}is-invalid{% endif %}"
             aria-label=".form-select-sm"
             id="{{form.update_status.id}}"
             name="{{form.update_status.name}}">
@@ -180,8 +184,7 @@
           value="{{k}}">{{v}}</option>
           {% endfor %}
         </select>
-        <div id="updateStatusHelp" class="form-text">Please enter update status
-        here.</div>
+        <div id="updateStatusHelp" class="form-text">Please enter update status here.</div>
         {% if form.update_status.errors %}
         <div class="invalid-feedback">
           <ul class="errors">
@@ -192,8 +195,8 @@
         </div>
         {% endif %}
       </div>
-      <div class="mb-3">
-        <label for="{{form.update_date.id}}" class="form-label">{{form.update_date.label}}</label>
+      <div class="mb-3" id="updateDateDiv">
+        <label for="{{form.update_date.id}}" class="form-label" id="updateDateLabel">{{form.update_date.label}}</label>
         <input class="form-control
                       {% if form.update_date.errors %}is-invalid{% endif %}"
               type="datetime-local"
@@ -230,8 +233,35 @@
     if (timezone) {
       timezoneField.value = timezone;
     } else {
-          timezoneField.value = 'UTC';
+      timezoneField.value = 'UTC';
     }
+    updateDateLabel(); // Update the date label when the page loads
   });
+
+  // Function to update the date label based on the selected status
+  function updateDateLabel(selectElement) {
+    var selectedValue = selectElement.value;
+    var updateDateLabel = document.getElementById('updateDateLabel');
+    var updateDateDiv = document.getElementById('updateDateDiv');
+    switch (selectedValue) {
+      case 'resolved':
+      case 'completed':
+        updateDateLabel.innerText = 'End Date:';
+        break;
+      case 'reopened':
+        updateDateDiv.style.display = 'none'; // Hide date input
+        break;
+      case 'changed':
+        updateDateDiv.style.display = 'Block'; // Show date input
+        updateDateLabel.innerText = 'End Date:';
+        break;
+      case 'converted':
+        updateDateLabel.innerText = 'Planned maintenance End date:';
+        break;
+      default:
+        updateDateLabel.innerText = 'Next Update by:';
+        break;
+    }
+  }
 </script>
 {% endblock %}
