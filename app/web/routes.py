@@ -24,6 +24,7 @@ from app.models import db
 from app.web import bp
 from app.web.forms import IncidentForm
 from app.web.forms import IncidentUpdateForm
+from app.web.forms import MaintenanceUpdateForm
 
 from dateutil.relativedelta import relativedelta
 
@@ -82,20 +83,19 @@ def update_incident(
 def form_submission(form, incident):
     new_impact = form.update_impact.data
     new_status = form.update_status.data
-    date_form = None
+    update_date = None
 
     if form.update_date.data:
-        date_form = naive_from_dttz(
+        update_date = naive_from_dttz(
             form.update_date.data,
             form.timezone.data,
         )
     redirect_path = f"/incidents/{incident.id}"
 
     if new_status in ["completed", "resolved"]:
-        # Incident is completed
-        # new_impact = incident.impact
-        if date_form:
-            incident.end_date = date_form
+        new_impact = incident.impact
+        if update_date:
+            incident.end_date = update_date
         else:
             incident.end_date = naive_utcnow()
 
@@ -104,23 +104,40 @@ def form_submission(form, incident):
         )
         redirect_path = "/history"
     elif new_status == "reopened":
-        date_form = naive_utcnow()
+        update_date = naive_utcnow()
         incident.end_date = None
         current_app.logger.debug(
             f"{incident} reopened by {get_user_string(session['user'])}"
         )
         redirect_path = "/"
     elif new_status == "changed":
-        incident.end_date = date_form
-        date_form = naive_utcnow()
+        incident.end_date = update_date
+        update_date = naive_utcnow()
         current_app.logger.debug(
             f"{incident} changed by {get_user_string(session['user'])}"
+        )
+    elif new_status == "modified":
+        if form.start_date.data:
+            start_date = naive_from_dttz(
+                form.start_date.data,
+                form.timezone.data,
+            )
+            incident.start_date = start_date
+        if form.end_date.data:
+            end_date = naive_from_dttz(
+                form.end_date.data,
+                form.timezone.data,
+            )
+            incident.end_date = end_date
+        update_date = naive_utcnow()
+        current_app.logger.debug(
+            f"{incident} modified by {get_user_string(session['user'])}"
         )
 
     incident.text = form.update_title.data
     incident.impact = new_impact
     incident.system = False
-    update_incident(incident, form.update_text.data, new_status, date_form)
+    update_incident(incident, form.update_text.data, new_status, update_date)
     return redirect_path
 
 
@@ -244,25 +261,29 @@ def incident(incident_id):
 
     form = None
     start_date = incident.start_date
+    if incident.end_date:
+        end_date = incident.end_date
+    else:
+        end_date = None
     updates = incident.updates
-    updates_ts = [u.timestamp for u in updates]
+    updates_ts = [u.timestamp for u in updates if u.status != 'description']
     now = naive_utcnow()
 
     if "user" in session:
-        form = IncidentUpdateForm(start_date, updates_ts)
+
+        if incident.impact == 0:
+            form = MaintenanceUpdateForm(start_date, end_date, updates_ts)
+        else:
+            form = IncidentUpdateForm(start_date, updates_ts)
         # update_impact will contain choices based on the incident_type
         choices = [
             (v.value, v.string)
             for (_, v) in current_app.config["INCIDENT_IMPACTS"].items()
-            if v.value != 0
+            if (
+                (incident.impact == 0 and v.value == 0)
+                or (incident.impact != 0 and v.value != 0)
+            )
         ]
-
-        if incident.impact == 0:
-            choices = [
-                (v.value, v.string)
-                for (_, v) in current_app.config["INCIDENT_IMPACTS"].items()
-                if v.value == 0
-            ]
 
         form.update_impact.choices = choices
         # Update_status will contain choices based on the incident_type

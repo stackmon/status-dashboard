@@ -170,7 +170,7 @@
       <div class="mb-3">
         <label for="{{form.update_status.id}}" class="form-label">{{form.update_status.label}}</label>
         <select
-            onchange="updateDateLabel(this);"
+            onchange="updateDateLabel(this); updateMaintenanceFields(this);"
             class="form-select form-select-sm mb-3
                    {% if form.update_status.errors %}is-invalid{% endif %}"
             aria-label=".form-select-sm"
@@ -216,6 +216,50 @@
         </div>
         {% endif %}
       </div>
+      {% if form.start_date is defined %}
+        <div class="mb-3" id="maintenanceStartDiv" style="display: none;">
+          <label for="{{form.start_date.id}}" class="form-label" id="maintenanceStartLabel">{{form.start_date.label}}</label>
+          <input class="form-control {{ ' is-invalid' if
+                     form.start_date.errors
+                            | length > 0 else '' }}"
+                 type="datetime-local"
+                 id="{{form.start_date.id}}"
+                 name="{{form.start_date.name}}"
+                 value="{{form.start_date.data}}"
+                 aria-describedby="incidentStartHelp"/>
+          <div id="incidentStartHelp" class="form-text">
+            Select the incident start time.
+          </div>
+          <div class="invalid-feedback">{{form.start_date.errors | join(', ')
+            }}</div>
+        </div>
+      {% endif %}
+      {% if form.end_date is defined %}
+        <div class="mb-3" id="maintenanceEndDiv" style="display: none;">
+          <label for="{{form.end_date.id}}" class="form-label" id="maintenanceEndLabel">{{form.end_date.label}}</label>
+          <input class="form-control
+                          {% if form.end_date.errors %}is-invalid{% endif %}"
+                 type="datetime-local"
+                 id="{{form.end_date.id}}"
+                 name="{{form.end_date.name}}"
+                 value="{{form.end_date.data}}"
+                 aria-describedby="incidentEndHelp"/>
+          <div id="incidentEndHelp" class="form-text">
+            Select the maintenance expected end time.
+          </div>
+          {% if form.end_date.errors %}
+            <div class="invalid-feedback">
+              <ul class="errors">
+              {% for error in form.end_date.errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+      
+
       <input type="hidden" id="timezone" name="timezone">
       <button type="submit" class="btn btn-primary">Submit</button>
 
@@ -235,32 +279,50 @@
     } else {
       timezoneField.value = 'UTC';
     }
-    updateDateLabel(); // Update the date label when the page loads
+    updateDateLabel();
+    updateMaintenanceFields();
   });
 
-  // Function to update the date label based on the selected status
   function updateDateLabel(selectElement) {
     var selectedValue = selectElement.value;
     var updateDateLabel = document.getElementById('updateDateLabel');
     var updateDateDiv = document.getElementById('updateDateDiv');
+
     switch (selectedValue) {
       case 'resolved':
       case 'completed':
         updateDateLabel.innerText = 'End Date:';
+        updateDateDiv.style.display = 'block';
         break;
       case 'reopened':
-        updateDateDiv.style.display = 'none'; // Hide date input
+        updateDateDiv.style.display = 'none';
         break;
       case 'changed':
-        updateDateDiv.style.display = 'Block'; // Show date input
+        updateDateDiv.style.display = 'block';
         updateDateLabel.innerText = 'End Date:';
         break;
-      case 'converted':
-        updateDateLabel.innerText = 'Planned maintenance End date:';
+      case 'modified':
+        updateDateDiv.style.display = 'none';
         break;
       default:
         updateDateLabel.innerText = 'Next Update by:';
+        updateDateDiv.style.display = 'block';
         break;
+    }
+  }
+
+  function updateMaintenanceFields(selectElement) {
+    var selectedValue = selectElement.value;
+    var maintenanceStartDiv = document.getElementById('maintenanceStartDiv');
+    var maintenanceEndDiv = document.getElementById('maintenanceEndDiv');
+    var incidentImpact = {{ incident.impact }};
+
+    if (selectedValue === 'modified' && incidentImpact == 0) {
+      maintenanceStartDiv.style.display = 'block';
+      maintenanceEndDiv.style.display = 'block';
+    } else {
+      maintenanceStartDiv.style.display = 'none';
+      maintenanceEndDiv.style.display = 'none';
     }
   }
 </script>
