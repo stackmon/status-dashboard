@@ -133,6 +133,7 @@ def form_submission(form, incident):
         current_app.logger.debug(
             f"{incident} modified by {get_user_string(session['user'])}"
         )
+        redirect_path = "/"
 
     incident.text = form.update_title.data
     incident.impact = new_impact
@@ -266,7 +267,13 @@ def incident(incident_id):
     else:
         end_date = None
     updates = incident.updates
-    updates_ts = [u.timestamp for u in updates if u.status != 'description']
+    updates_ts = [
+        u.timestamp for u in updates if u.status not in [
+            "resolved",
+            "description",
+            "changed",
+        ]
+    ]
     now = naive_utcnow()
 
     if "user" in session:
