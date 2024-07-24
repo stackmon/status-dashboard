@@ -50,6 +50,7 @@ class DefaultConfiguration:
     MAINTENANCE_STATUSES = {
         "scheduled": "Maintenance scheduled",
         "in progress": "Maintenance is in progress",
+        "modified": "Maintenance time window has been modified",
         "completed": "Maintenance is successfully completed",
     }
 
@@ -58,4 +59,9 @@ class DefaultConfiguration:
         "fixing": "Fixing incident (problem identified, working on fix)",
         "observing": "Observing fix (fix deployed, watching recovery)",
         "resolved": "Incident Resolved (service is fully available. Done)",
+    }
+
+    INCIDENT_ACTIONS = {
+        "reopened": "Incident reopened (resolved incident has ben reopened)",
+        "changed": "Incident changed: (end date has been changed)",
     }
