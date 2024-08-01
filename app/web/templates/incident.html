@@ -68,10 +68,11 @@
   </small>
 {% else %}
   <small>Incident began at
-    {{ incident.start_date.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC
+    {{ incident.start_date.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC "|||"
+    <span class="datetime">{{ incident.start_date.isoformat() }}Z</span>&nbsp;
     {% if incident.end_date %}
-      and ended at
-      {{ incident.end_date.strftime('%Y-%m-%d %H:%M') | default('no') }}&nbsp;UTC
+      and ended at {{ incident.end_date.strftime('%Y-%m-%d %H:%M') | default('no') }} &nbsp;UTC "|||"
+      <span class="datetime">{{ incident.end_date.isoformat() | default('no') }}Z</span>&nbsp;
     {% endif %}
   </small>
 {% endif %}
@@ -82,7 +83,10 @@
     <div class="row">
         <div class="col-md-2">
             <h6>{{ update.status }}</h6>
-            <small>{{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC</small>
+            <small>
+              {{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC "|||"
+              <span class="datetime">{{ update.timestamp.isoformat() }}Z</span>&nbsp;
+            </small>
         </div>
         <div class="col-md-10">
             {{ update.text|safe }}
@@ -270,60 +274,97 @@
 
 </div>
 <script>
-  // Function to set the timezone
-  document.addEventListener('DOMContentLoaded', function() {
-    var timezoneField = document.getElementById('timezone');
-    var timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (timezone) {
+  document.addEventListener('DOMContentLoaded', () => {
+    const timezoneField = document.getElementById('timezone');
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    if (timezoneField) {
       timezoneField.value = timezone;
-    } else {
-      timezoneField.value = 'UTC';
     }
+
     updateDateLabel();
     updateMaintenanceFields();
+
+    const selectElement = document.querySelector('select');
+    if (selectElement) {
+      selectElement.addEventListener('change', (event) => {
+        updateDateLabel(event.target);
+        updateMaintenanceFields(event.target);
+      });
+    }
   });
 
-  function updateDateLabel(selectElement) {
-    var selectedValue = selectElement.value;
-    var updateDateLabel = document.getElementById('updateDateLabel');
-    var updateDateDiv = document.getElementById('updateDateDiv');
+  // timezone showing fix
+  const formatDateTimeWithTimeZone = (date) => {
+    if (isNaN(date.getTime())) return 'Invalid Date';
+    
+    const options = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short',
+      hour12: false,
+    };
+    
+    const localDateTime = new Intl.DateTimeFormat('en-GB', options).format(date);
+    return localDateTime.replace(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}:\d{2}) (.+)/, '$3-$2-$1 $4 $5');
+  };
 
-    switch (selectedValue) {
-      case 'resolved':
-      case 'completed':
-        updateDateLabel.innerText = 'End Date:';
-        updateDateDiv.style.display = 'block';
-        break;
-      case 'reopened':
-        updateDateDiv.style.display = 'none';
-        break;
-      case 'changed':
-        updateDateDiv.style.display = 'block';
-        updateDateLabel.innerText = 'End Date:';
-        break;
-      case 'modified':
-        updateDateDiv.style.display = 'none';
-        break;
-      default:
-        updateDateLabel.innerText = 'Next Update by:';
-        updateDateDiv.style.display = 'block';
-        break;
+  const updateDateLabels = () => {
+    document.querySelectorAll('.datetime').forEach((element) => {
+      const dateTimeStr = element.textContent;
+      const dateTimeUTC = new Date(dateTimeStr);
+      element.textContent = formatDateTimeWithTimeZone(dateTimeUTC);
+      console.log(element.textContent);
+    });
+  };
+
+  const updateDateLabel = (selectElement) => {
+    const selectedValue = selectElement ? selectElement.value : '';
+    const updateDateLabel = document.getElementById('updateDateLabel');
+    const updateDateDiv = document.getElementById('updateDateDiv');
+
+    if (updateDateLabel && updateDateDiv) {
+      switch (selectedValue) {
+        case 'resolved':
+        case 'completed':
+        case 'changed':
+          updateDateLabel.innerText = 'End Date:';
+          updateDateDiv.style.display = 'block';
+          break;
+        case 'reopened':
+        case 'modified':
+          updateDateDiv.style.display = 'none';
+          if (selectedValue === 'changed') {
+            updateDateLabel.innerText = 'End Date:';
+          }
+          break;
+        default:
+          updateDateLabel.innerText = 'Next Update by:';
+          updateDateDiv.style.display = 'block';
+          break;
+      }
     }
-  }
+  };
 
-  function updateMaintenanceFields(selectElement) {
-    var selectedValue = selectElement.value;
-    var maintenanceStartDiv = document.getElementById('maintenanceStartDiv');
-    var maintenanceEndDiv = document.getElementById('maintenanceEndDiv');
-    var incidentImpact = {{ incident.impact }};
+  const updateMaintenanceFields = (selectElement) => {
+    const selectedValue = selectElement ? selectElement.value : '';
+    const maintenanceStartDiv = document.getElementById('maintenanceStartDiv');
+    const maintenanceEndDiv = document.getElementById('maintenanceEndDiv');
+    const incidentImpact = {{ incident.impact }};
 
-    if (selectedValue === 'modified' && incidentImpact == 0) {
-      maintenanceStartDiv.style.display = 'block';
-      maintenanceEndDiv.style.display = 'block';
-    } else {
-      maintenanceStartDiv.style.display = 'none';
-      maintenanceEndDiv.style.display = 'none';
+    if (maintenanceStartDiv && maintenanceEndDiv) {
+      if (selectedValue === 'modified' && incidentImpact == 0) {
+        maintenanceStartDiv.style.display = 'block';
+        maintenanceEndDiv.style.display = 'block';
+      } else {
+        maintenanceStartDiv.style.display = 'none';
+        maintenanceEndDiv.style.display = 'none';
+      }
     }
-  }
+  };
+
+  updateDateLabels();
 </script>
 {% endblock %}
