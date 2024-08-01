@@ -73,36 +73,6 @@ class IncidentUpdateForm(FlaskForm):
             upd_date_form = None
             raise validators.ValidationError("Update date cannot be empty")
 
-        # if self.update_status.data == "resolved":
-        #     if upd_date_form > naive_utcnow():
-        #         raise validators.ValidationError(
-        #             "End date cannot be in the future"
-        #         )
-        #     if upd_date_form < self._start_date:
-        #         raise validators.ValidationError(
-        #             "End date cannot be before the start date"
-        #         )
-        #     for timestamp in self._updates_ts:
-        #         if upd_date_form <= timestamp:
-        #             raise validators.ValidationError(
-        #                 "End date cannot be before any "
-        #                 "other status-update timestamp or equal"
-        #             )
-        # elif self.update_status.data == "changed":
-        #     if upd_date_form > naive_utcnow():
-        #         raise validators.ValidationError(
-        #             "End date cannot be in the future"
-        #         )
-        #     if upd_date_form < self._start_date:
-        #         raise validators.ValidationError(
-        #             "End date cannot be before the start date"
-        #         )
-        #     for timestamp in self._updates_ts:
-        #         if upd_date_form <= timestamp:
-        #             raise validators.ValidationError(
-        #                 "End date cannot be before any "
-        #                 "other status-update timestamp or equal"
-        #             )
         if self.update_status.data in [
             "analyzing",
             "fixing",
