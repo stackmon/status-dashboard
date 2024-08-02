@@ -68,10 +68,9 @@
   </small>
 {% else %}
   <small>Incident began at
-    {{ incident.start_date.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC "|||"
     <span class="datetime">{{ incident.start_date.isoformat() }}Z</span>&nbsp;
     {% if incident.end_date %}
-      and ended at {{ incident.end_date.strftime('%Y-%m-%d %H:%M') | default('no') }} &nbsp;UTC "|||"
+      and ended at
       <span class="datetime">{{ incident.end_date.isoformat() | default('no') }}Z</span>&nbsp;
     {% endif %}
   </small>
@@ -84,7 +83,6 @@
         <div class="col-md-2">
             <h6>{{ update.status }}</h6>
             <small>
-              {{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC "|||"
               <span class="datetime">{{ update.timestamp.isoformat() }}Z</span>&nbsp;
             </small>
         </div>
