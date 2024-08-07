@@ -50,6 +50,7 @@ def index():
         components=Component,
         component_attributes=ComponentAttribute,
         incidents=Incident,
+        datetime_labels_script=True,
     )
 
 
@@ -245,7 +246,9 @@ def new_incident(current_user):
                 else redirect("/incidents/" + str(new_incident.id)))
 
     return render_template(
-        "create_incident.html", title="Open Incident", form=form
+        "create_incident.html",
+        title="Open Incident",
+        form=form,
     )
 
 
@@ -317,6 +320,8 @@ def incident(incident_id):
         incident=incident,
         form=form,
         now=now,
+        incident_datelabels_script=True,
+        datetime_labels_script=True,
     )
 
 
@@ -384,6 +389,7 @@ def history():
         "history.html",
         title="Event History",
         incidents=Incident,
+        datetime_labels_script=True,
     )
 
 

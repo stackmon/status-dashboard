@@ -53,7 +53,11 @@
             {%- endwith %}
             {%- endfor %}
         </h6>
-        <small class="text-secondary">Started: {{ incident.start_date.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC</small>
+        <small class="text-secondary">
+          Started: 
+          <span class="datetime">{{ incident.start_date.isoformat() }}Z</span>&nbsp; //
+          {{ incident.start_date.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC
+        </small>
         <hr/>
         {% if incident.updates | rejectattr('status', 'equalto', 'description') | list | length != 0 %}
           <div class="container text-left">
@@ -61,7 +65,11 @@
             <div class="row">
                 <div class="col-md-2">
                     <h6>{{ update.status }}</h6>
-                    <small class="text-secondary">Posted {{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC</small>
+                    <small class="text-secondary">
+                      Posted 
+                      <span class="datetime">{{ update.timestamp.isoformat() }}Z</span>&nbsp; //
+                      {{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC
+                    </small>
                 </div>
                 <div class="col-md-10">
                     {{ update.text | safe }}
@@ -160,9 +168,15 @@
             {%- endwith %}
             {%- endfor %}
         </h6>
-        <small class="text-secondary">Started: {{ incident.start_date.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC</small>
+        <small class="text-secondary">
+          Started: <span class="datetime">{{ incident.start_date.isoformat() }}Z</span>&nbsp; //
+          Started: {{ incident.start_date.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC
+        </small>
         <br/>
-        <small class="text-secondary">Planned end date: {{ incident.end_date.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC</small>
+        <small class="text-secondary">
+          Planned end date: <span class="datetime">{{ incident.end_date.isoformat() }}Z</span>&nbsp; //
+          Planned end date: {{ incident.end_date.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC
+        </small>
         <hr/>
         {% if incident.updates | rejectattr('status', 'equalto', 'description') | list | length != 0 %}
           <div class="container text-left">
@@ -170,7 +184,10 @@
             <div class="row">
                 <div class="col-md-2">
                     <h6>{{ update.status }}</h6>
-                    <small class="text-secondary">Posted {{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC</small>
+                    <small class="text-secondary">
+                      Posted <span class="datetime">{{ update.timestamp.isoformat() }}Z</span>&nbsp; //
+                      Posted {{ update.timestamp.strftime('%Y-%m-%d %H:%M') }}&nbsp;UTC
+                    </small>
                 </div>
                 <div class="col-md-10">
                     {{ update.text | safe }}
@@ -200,7 +217,6 @@
     </ul>
   </div>
 </div>
-
 {% endblock %}
 
 {% macro component_status_widget(component) -%}

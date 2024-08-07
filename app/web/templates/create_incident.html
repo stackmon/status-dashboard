@@ -108,7 +108,7 @@
              type="datetime-local"
              id="{{form.incident_start.id}}"
              name="{{form.incident_start.name}}"
-             value="{{form.incident_start.data}}"
+             value="{{form.incident_start.data if form.incident_start.data else '' }}"
              aria-describedby="incidentStartHelp"/>
       <div id="incidentStartHelp" class="form-text">
         Select the incident start time.
@@ -129,7 +129,7 @@
              type="datetime-local"
              id="{{form.incident_end.id}}"
              name="{{form.incident_end.name}}"
-             value="{{form.incident_end.data}}"
+             value="{{form.incident_end.data if form.incident_end.data else '' }}"
              aria-describedby="incidentEndHelp"/>
       <div id="incidentEndHelp" class="form-text">
         Select the maintenance expected end time.
@@ -157,37 +157,24 @@
 </div>
 
 <script>
-    function maintenanceCheck(elem) {
-    if (elem.value == 0) {
-        document.getElementById("maintenance_end").style.display = "block";
-        document.getElementById("maintenance_desc").style.display = "block";
-    } else {
-        document.getElementById("maintenance_end").style.display = "none";
-        document.getElementById("maintenance_desc").style.display = "none";
-    }
+  function maintenanceCheck(elem) {
+  if (elem.value == 0) {
+      document.getElementById("maintenance_end").style.display = "block";
+      document.getElementById("maintenance_desc").style.display = "block";
+  } else {
+      document.getElementById("maintenance_end").style.display = "none";
+      document.getElementById("maintenance_desc").style.display = "none";
   }
-  var desc = document.getElementById("{{form.incident_desc.id}}");
-  var current = document.getElementById("current");
-  current.innerHTML = desc.value.length;
-  desc.onkeyup = function () {
-    current.innerHTML = this.value.length;
-    if (this.value.length > 500) {
-      current.classList.add('counter-red');
-    }
-    else current.classList.remove('counter-red');
-  };
-</script>
-
-<script>
-  // Function to set the timezone
-  document.addEventListener('DOMContentLoaded', function() {
-    var timezoneField = document.getElementById('timezone');
-    var timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (timezone) {
-      timezoneField.value = timezone;
-    } else {
-          timezoneField.value = 'UTC';
-    }
-  });
+}
+var desc = document.getElementById("{{form.incident_desc.id}}");
+var current = document.getElementById("current");
+current.innerHTML = desc.value.length;
+desc.onkeyup = function () {
+  current.innerHTML = this.value.length;
+  if (this.value.length > 500) {
+    current.classList.add('counter-red');
+  }
+  else current.classList.remove('counter-red');
+};
 </script>
 {% endblock %}
