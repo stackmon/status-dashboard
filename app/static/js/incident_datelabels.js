@@ -1,67 +1,64 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const incidentImpact = document.getElementById('incidentImpact').value;
-
-  if (incidentImpact == 0) {
-    updateMaintenanceFields();
-  } else {
-    updateDateLabel();
-  }
-
-  const selectElement = document.querySelector('select');
-  if (selectElement) {
-    selectElement.addEventListener('change', (event) => {
-      const selectedValue = event.target.value;
-
-      if (incidentImpact == 0) {
-        updateMaintenanceFields(event.target);
-      } else {
-        updateDateLabel(event.target);
-      }
-    });
-  }
-});
-
 const updateDateLabel = (selectElement) => {
-  const selectedValue = selectElement ? selectElement.value : '';
-  const updateDateLabel = document.getElementById('updateDateLabel');
-  const updateDateDiv = document.getElementById('updateDateDiv');
+  console.log("Update Date Label called with:", selectElement ? selectElement.value : 'No selectElement'); // Debugging line
 
-  if (updateDateLabel && updateDateDiv) {
+  const selectedValue = selectElement ? selectElement.value : '';
+  console.log("Selected Value inside updateDateLabelElement:", selectedValue); // Debugging line
+
+  const updateDateLabelElement = document.getElementById('updateDateLabelElement');
+  const updateDateDiv = document.getElementById('updateDateDiv');
+  const updateMessageDiv = document.getElementById('updateMessageDiv');
+
+  if (updateDateLabelElement && updateDateDiv && updateMessageDiv) {
     switch (selectedValue) {
-      case 'resolved':
-      case 'completed':
-      case 'changed':
-        updateDateLabel.innerText = 'End Date:';
-        updateDateDiv.style.display = 'block';
-        break;
       case 'reopened':
-      case 'modified':
+        updateMessageDiv.style.display = 'block';
         updateDateDiv.style.display = 'none';
-        if (selectedValue === 'changed') {
-          updateDateLabel.innerText = 'End Date:';
-        }
         break;
       default:
-        updateDateLabel.innerText = 'Next Update by:';
+        updateDateLabelElement.innerText = 'Date:';
         updateDateDiv.style.display = 'block';
+        updateMessageDiv.style.display = 'block';
+        break;
+      case 'Choose status..':
+        updateDateLabelElement.innerText = 'Date:';
+        updateDateDiv.style.display = 'block';
+        updateMessageDiv.style.display = 'block';
         break;
     }
   }
 };
 
 const updateMaintenanceFields = (selectElement) => {
+  console.log("Update Date Label called with:", selectElement ? selectElement.value : 'No selectElement'); // Debugging line
+
   const selectedValue = selectElement ? selectElement.value : '';
+  console.log("Selected Value inside updateDateLabelElement:", selectedValue); // Debugging line
+
+  const updateDateLabelElement = document.getElementById('updateDateLabelElement');
+  const updateDateDiv = document.getElementById('updateDateDiv');
   const maintenanceStartDiv = document.getElementById('maintenanceStartDiv');
   const maintenanceEndDiv = document.getElementById('maintenanceEndDiv');
-  console.log(incidentImpact)
+  const updateMessageDiv = document.getElementById('updateMessageDiv');
+  
 
-  if (maintenanceStartDiv && maintenanceEndDiv) {
-    if (selectedValue === 'modified' && incidentImpact == 0) {
-      maintenanceStartDiv.style.display = 'block';
-      maintenanceEndDiv.style.display = 'block';
-    } else {
-      maintenanceStartDiv.style.display = 'none';
-      maintenanceEndDiv.style.display = 'none';
+  if (maintenanceStartDiv && maintenanceEndDiv && updateMessageDiv) {
+    switch (selectedValue) {
+      case 'modified':
+        maintenanceStartDiv.style.display = 'block';
+        maintenanceEndDiv.style.display = 'block';
+        updateDateDiv.style.display = 'none';
+        break;
+      case 'completed':
+        maintenanceEndDiv.style.display = 'none';
+        maintenanceStartDiv.style.display = 'none';
+        updateDateDiv.style.display = 'block';
+        break;
+      default:
+        maintenanceStartDiv.style.display = 'none';
+        maintenanceEndDiv.style.display = 'none';
+        updateDateDiv.style.display = 'block';
+        updateDateLabelElement.innerText = 'Update date:';
+        break;
     }
   }
 };

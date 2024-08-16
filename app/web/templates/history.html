@@ -30,9 +30,7 @@
             {{ incident.text }}</a></h4>
           <p class="text-muted mb-2 fw-bold">
             <span class="datetime">{{ incident.start_date.isoformat() }}Z</span>&nbsp; -
-            <span class="datetime">{{ incident.end_date.isoformat() }}Z</span>&nbsp; //
-            {{ incident.start_date.strftime('%d %b, %H:%M') }}&nbsp;UTC -
-            {{ incident.end_date.strftime('%d %b, %H:%M')}}&nbsp;UTC</p>
+            <span class="datetime">{{ incident.end_date.isoformat() }}Z</span>&nbsp;
           {% if incident.impact == 0 %}
           <p class="text-muted">This maintenance has been completed.</p>
           {% else %}

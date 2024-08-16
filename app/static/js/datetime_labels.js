@@ -3,7 +3,7 @@ const formatDateTimeWithTimeZone = (date) => {
 
   const options = {
     year: 'numeric',
-    month: '2-digit',
+    month: 'short',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
@@ -20,7 +20,6 @@ const updateDateLabels = () => {
     const dateTimeStr = element.textContent;
     const dateTimeUTC = new Date(dateTimeStr);
     element.textContent = formatDateTimeWithTimeZone(dateTimeUTC);
-    console.log(element.textContent);
   });
 };
 

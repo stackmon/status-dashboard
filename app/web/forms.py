@@ -40,7 +40,7 @@ class IncidentUpdateForm(FlaskForm):
     )
     update_impact = SelectField("Incident Impact")
     update_status = SelectField("Update Status")
-    update_date = DateTimeField("Next Update by", format='%Y-%m-%dT%H:%M')
+    update_date = DateTimeField("Update date:", format='%Y-%m-%dT%H:%M')
     timezone = StringField("Timezone", validators=[validators.DataRequired()])
     submit = SubmitField("Submit")
 
@@ -114,9 +114,9 @@ class MaintenanceUpdateForm(FlaskForm):
     )
     update_impact = SelectField("Incident Impact")
     update_status = SelectField("Update Status")
-    start_date = DateTimeField("Start date", format='%Y-%m-%dT%H:%M')
-    end_date = DateTimeField("End date", format='%Y-%m-%dT%H:%M')
-    update_date = DateTimeField("Next Update by", format='%Y-%m-%dT%H:%M')
+    start_date = DateTimeField("Start date:", format='%Y-%m-%dT%H:%M')
+    end_date = DateTimeField("End date:", format='%Y-%m-%dT%H:%M')
+    update_date = DateTimeField("Update date:", format='%Y-%m-%dT%H:%M')
     timezone = StringField("Timezone", validators=[validators.DataRequired()])
     submit = SubmitField("Submit")
 

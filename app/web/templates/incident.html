@@ -147,7 +147,7 @@
         }}</div>
     </div>
 
-      <div class="mb-3">
+      <div class="mb-3" id="updateMessageDiv">
         <label for="{{form.update_text.id}}" class="form-label">{{form.update_text.label}}</label>
         <textarea class="form-control
                          {% if form.update_text.errors %}is-invalid{% endif %}
@@ -173,13 +173,17 @@
       <div class="mb-3">
         <label for="{{form.update_status.id}}" class="form-label">{{form.update_status.label}}</label>
         <select
-            onchange="updateDateLabel(this); updateMaintenanceFields(this);"
+            {% if incident.impact == 0 %}
+              onchange="updateMaintenanceFields(this);"
+            {% else %}
+              onchange="updateDateLabel(this);"
+            {% endif %}
             class="form-select form-select-sm mb-3
                    {% if form.update_status.errors %}is-invalid{% endif %}"
             aria-label=".form-select-sm"
             id="{{form.update_status.id}}"
             name="{{form.update_status.name}}">
-          <option>Choose...</option>
+          <option>Choose status..</option>
           {% for (k, v) in form.update_status.choices %}
           <option
           {% if form.update_status.data and k|string in form.update_status.data %} selected
@@ -199,7 +203,7 @@
         {% endif %}
       </div>
       <div class="mb-3" id="updateDateDiv">
-        <label for="{{form.update_date.id}}" class="form-label" id="updateDateLabel">{{form.update_date.label}}</label>
+        <label for="{{form.update_date.id}}" class="form-label" id="updateDateLabelElement">{{form.update_date.label}}</label>
         <input class="form-control
                       {% if form.update_date.errors %}is-invalid{% endif %}"
               type="datetime-local"
@@ -220,7 +224,7 @@
         {% endif %}
       </div>
       {% if form.start_date is defined %}
-        <div class="mb-3" id="maintenanceStartDiv" style="display: none;">
+        <div class="mb-3" id="maintenanceStartDiv" style="display: block;">
           <label for="{{form.start_date.id}}" class="form-label" id="maintenanceStartLabel">{{form.start_date.label}}</label>
           <input class="form-control {{ ' is-invalid' if form.start_date.errors | length > 0 else '' }}"
                  type="datetime-local"
@@ -236,7 +240,7 @@
         </div>
       {% endif %}
       {% if form.end_date is defined %}
-        <div class="mb-3" id="maintenanceEndDiv" style="display: none;">
+        <div class="mb-3" id="maintenanceEndDiv" style="display: block;">
           <label for="{{form.end_date.id}}" class="form-label" id="maintenanceEndLabel">{{form.end_date.label}}</label>
           <input class="form-control
                           {% if form.end_date.errors %}is-invalid{% endif %}"
