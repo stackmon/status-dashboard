@@ -154,22 +154,19 @@ class MaintenanceUpdateForm(FlaskForm):
             upd_date_form = None
             raise validators.ValidationError("Update date cannot be empty")
 
-        if self.update_status.data in [
-            "scheduled",
-            "in progress",
-        ]:
+        if self.update_status.data == "in progress":
             if upd_date_form > naive_utcnow():
                 raise validators.ValidationError(
                     "Update date cannot be in the future"
                 )
             if upd_date_form < self._start_date:
                 raise validators.ValidationError(
-                    "End date cannot be before the start date"
+                    "Update date cannot be before the start date"
                 )
             for timestamp in self._updates_ts:
                 if upd_date_form <= timestamp:
                     raise validators.ValidationError(
-                        "End date cannot be before any "
+                        "Update date cannot be before any "
                         "other status-update timestamp or equal"
                     )
             if upd_date_form > self._end_date:

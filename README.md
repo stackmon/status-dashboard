@@ -68,7 +68,7 @@ classDiagram
     class IncidentStatuses{
         -int incident_id
         +date time
-        +enum status [scheduled, investigating, identified, watching, fixed]
+        +enum status [investigating, identified, watching, fixed]
         +string text
         -int user_id
 

@@ -48,7 +48,6 @@ class DefaultConfiguration:
     }
 
     MAINTENANCE_STATUSES = {
-        "scheduled": "Maintenance scheduled",
         "in progress": "Maintenance is in progress",
         "modified": "Maintenance time window has been modified",
         "completed": "Maintenance is successfully completed",
