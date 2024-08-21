@@ -15,12 +15,12 @@ const updateDateLabel = (selectElement) => {
         updateDateDiv.style.display = 'none';
         break;
       default:
-        updateDateLabelElement.innerText = 'Date:';
+        updateDateLabelElement.innerText = 'Update date:';
         updateDateDiv.style.display = 'block';
         updateMessageDiv.style.display = 'block';
         break;
       case 'Choose status..':
-        updateDateLabelElement.innerText = 'Date:';
+        updateDateLabelElement.innerText = 'Update date:';
         updateDateDiv.style.display = 'block';
         updateMessageDiv.style.display = 'block';
         break;

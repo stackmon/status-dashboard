@@ -99,7 +99,6 @@ def form_submission(form, incident):
             incident.end_date = update_date
         else:
             incident.end_date = naive_utcnow()
-
         current_app.logger.debug(
             f"{incident} closed by {get_user_string(session['user'])}"
         )
@@ -116,6 +115,17 @@ def form_submission(form, incident):
         update_date = naive_utcnow()
         current_app.logger.debug(
             f"{incident} changed by {get_user_string(session['user'])}"
+        )
+    elif new_status in ["analyzing", "fixing", "observing"]:
+        new_impact = incident.impact
+    elif new_status == "in progress":
+        print(update_date)
+        print(incident.start_date)
+        incident.start_date = update_date
+        current_app.logger.debug(
+            f"{incident} switched to 'in progress' "
+            f"by {get_user_string(session['user'])}, "
+            f"start date is set: {incident.start_date}"
         )
     elif new_status == "modified":
         if form.start_date.data:

@@ -77,22 +77,22 @@ class IncidentUpdateForm(FlaskForm):
             "analyzing",
             "fixing",
             "observing",
-            "in progress",
+            "impact changed",
             "resolved",
             "changed",
         ]:
             if upd_date_form > naive_utcnow():
                 raise validators.ValidationError(
-                    "Update date cannot be in the future"
+                    "The date cannot be in the future"
                 )
             if upd_date_form < self._start_date:
                 raise validators.ValidationError(
-                    "End date cannot be before the start date"
+                    "The date cannot be before the start date"
                 )
             for timestamp in self._updates_ts:
                 if upd_date_form <= timestamp:
                     raise validators.ValidationError(
-                        "End date cannot be before any "
+                        "The date cannot be before any "
                         "other status-update timestamp or equal"
                     )
 
@@ -144,7 +144,6 @@ class MaintenanceUpdateForm(FlaskForm):
             if self.update_status.data in ["modified", "completed"]:
                 field.errors[:] = []
                 raise validators.StopValidation()
-
         if field.data is not None:
             upd_date_form = naive_from_dttz(
                 self.update_date.data,
@@ -154,24 +153,24 @@ class MaintenanceUpdateForm(FlaskForm):
             upd_date_form = None
             raise validators.ValidationError("Update date cannot be empty")
 
+        if field.data is not None and self.update_status.data == "completed":
+            if upd_date_form < self._start_date:
+                raise validators.ValidationError(
+                    "Complete date cannot be earlier than the start date"
+                )
         if self.update_status.data == "in progress":
             if upd_date_form > naive_utcnow():
                 raise validators.ValidationError(
                     "Update date cannot be in the future"
                 )
-            if upd_date_form < self._start_date:
+            if self._updates_ts:
                 raise validators.ValidationError(
-                    "Update date cannot be before the start date"
+                    "This maintenance already has a status update, "
+                    "no statuses should be present."
                 )
-            for timestamp in self._updates_ts:
-                if upd_date_form <= timestamp:
-                    raise validators.ValidationError(
-                        "Update date cannot be before any "
-                        "other status-update timestamp or equal"
-                    )
             if upd_date_form > self._end_date:
                 raise validators.ValidationError(
-                    "The update date cannot be later than the end date"
+                    "Update date cannot be later than the end date"
                 )
 
     def validate_start_date(self, field):
