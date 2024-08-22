@@ -141,7 +141,21 @@ class MaintenanceUpdateForm(FlaskForm):
 
     def validate_update_date(self, field):
         if field.data is None:
-            if self.update_status.data in ["modified", "completed"]:
+            if (
+                self.update_status.data == "completed" 
+                and naive_utcnow() > self._start_date
+            ):
+                field.errors[:] = []
+                raise validators.StopValidation()
+            elif (
+                self.update_status.data == "completed" 
+                and naive_utcnow() > self._start_date
+            ):
+                raise validators.ValidationError(
+                    "The date cannot be earlier than the start date"
+                )
+        if field.data is None:
+            if self.update_status.data == "modified":
                 field.errors[:] = []
                 raise validators.StopValidation()
         if field.data is not None:
@@ -156,7 +170,7 @@ class MaintenanceUpdateForm(FlaskForm):
         if field.data is not None and self.update_status.data == "completed":
             if upd_date_form < self._start_date:
                 raise validators.ValidationError(
-                    "Complete date cannot be earlier than the start date"
+                    "The date cannot be earlier than the start date"
                 )
         if self.update_status.data == "in progress":
             if upd_date_form > naive_utcnow():
@@ -224,12 +238,12 @@ class MaintenanceUpdateForm(FlaskForm):
                 )
                 if end_date_form < start_date_form:
                     raise validators.ValidationError(
-                        "End date cannot be before start date"
+                        "End date cannot be earlier than the start date"
                     )
             for timestamp in self._updates_ts:
                 if end_date_form < timestamp:
                     raise validators.ValidationError(
-                        "End date cannot be before any update timestamp"
+                        "End date cannot be earlier than any update timestamp"
                     )
 
 

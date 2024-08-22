@@ -84,72 +84,73 @@ def update_incident(
 def form_submission(form, incident):
     new_impact = form.update_impact.data
     new_status = form.update_status.data
-    update_date = None
+    update_date = naive_from_dttz(
+            form.update_date.data, form.timezone.data
+        ) if form.update_date.data else None
 
-    if form.update_date.data:
-        update_date = naive_from_dttz(
-            form.update_date.data,
-            form.timezone.data,
-        )
-    redirect_path = f"/incidents/{incident.id}"
+    redirect_path_map = {
+        "completed": "/history",
+        "resolved": "/history",
+        "reopened": "/",
+        "in progress": "/",
+    }
 
     if new_status in ["completed", "resolved"]:
         new_impact = incident.impact
-        if update_date:
-            incident.end_date = update_date
-        else:
-            incident.end_date = naive_utcnow()
-        current_app.logger.debug(
-            f"{incident} closed by {get_user_string(session['user'])}"
-        )
-        redirect_path = "/history"
+        incident.end_date = update_date or naive_utcnow()
     elif new_status == "reopened":
         update_date = naive_utcnow()
         incident.end_date = None
-        current_app.logger.debug(
-            f"{incident} reopened by {get_user_string(session['user'])}"
-        )
-        redirect_path = "/"
     elif new_status == "changed":
         incident.end_date = update_date
         update_date = naive_utcnow()
-        current_app.logger.debug(
-            f"{incident} changed by {get_user_string(session['user'])}"
-        )
-    elif new_status in ["analyzing", "fixing", "observing"]:
-        new_impact = incident.impact
     elif new_status == "in progress":
-        print(update_date)
-        print(incident.start_date)
         incident.start_date = update_date
-        current_app.logger.debug(
-            f"{incident} switched to 'in progress' "
-            f"by {get_user_string(session['user'])}, "
-            f"start date is set: {incident.start_date}"
-        )
+        update_date = naive_utcnow()
     elif new_status == "modified":
         if form.start_date.data:
-            start_date = naive_from_dttz(
+            incident.start_date = naive_from_dttz(
                 form.start_date.data,
                 form.timezone.data,
             )
-            incident.start_date = start_date
         if form.end_date.data:
-            end_date = naive_from_dttz(
+            incident.end_date = naive_from_dttz(
                 form.end_date.data,
                 form.timezone.data,
             )
-            incident.end_date = end_date
         update_date = naive_utcnow()
-        current_app.logger.debug(
-            f"{incident} modified by {get_user_string(session['user'])}"
+    elif new_status in [
+        "analyzing",
+        "fixing",
+        "observing",
+    ]:
+        new_impact = incident.impact
+
+    redirect_path = redirect_path_map.get(
+        new_status,
+        f"/incidents/{incident.id}",
+    )
+
+    if new_status in [
+        "completed",
+        "resolved",
+        "reopened",
+        "changed",
+        "in progress",
+        "modified",
+    ]:
+        log_message = (
+            f"{incident} '{new_status}' by {get_user_string(session['user'])}"
         )
-        redirect_path = "/"
+        if new_status == "in progress":
+            log_message += f", start date is set: {incident.start_date}"
+        current_app.logger.debug(log_message)
 
     incident.text = form.update_title.data
     incident.impact = new_impact
     incident.system = False
     update_incident(incident, form.update_text.data, new_status, update_date)
+
     return redirect_path
 
 
@@ -285,6 +286,7 @@ def incident(incident_id):
             "resolved",
             "description",
             "changed",
+            "modified",
         ]
     ]
     now = naive_utcnow()
