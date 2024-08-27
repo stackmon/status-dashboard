@@ -85,8 +85,9 @@ def form_submission(form, incident):
     new_impact = form.update_impact.data
     new_status = form.update_status.data
     update_date = naive_from_dttz(
-            form.update_date.data, form.timezone.data
-        ) if form.update_date.data else None
+        form.update_date.data,
+        form.timezone.data,
+    ) if form.update_date.data else None
 
     redirect_path_map = {
         "completed": "/history",

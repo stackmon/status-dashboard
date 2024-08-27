@@ -1,9 +1,5 @@
 const updateDateLabel = (selectElement) => {
-  console.log("Update Date Label called with:", selectElement ? selectElement.value : 'No selectElement'); // Debugging line
-
   const selectedValue = selectElement ? selectElement.value : '';
-  console.log("Selected Value inside updateDateLabelElement:", selectedValue); // Debugging line
-
   const updateDateLabelElement = document.getElementById('updateDateLabelElement');
   const updateDateDiv = document.getElementById('updateDateDiv');
   const updateMessageDiv = document.getElementById('updateMessageDiv');
@@ -29,11 +25,7 @@ const updateDateLabel = (selectElement) => {
 };
 
 const updateMaintenanceFields = (selectElement) => {
-  console.log("Update Date Label called with:", selectElement ? selectElement.value : 'No selectElement'); // Debugging line
-
   const selectedValue = selectElement ? selectElement.value : '';
-  console.log("Selected Value inside updateDateLabelElement:", selectedValue); // Debugging line
-
   const updateDateLabelElement = document.getElementById('updateDateLabelElement');
   const updateDateDiv = document.getElementById('updateDateDiv');
   const maintenanceStartDiv = document.getElementById('maintenanceStartDiv');

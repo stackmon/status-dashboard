@@ -212,7 +212,7 @@
               value="{{ form.update_date.data if form.update_date.data else '' }}"
               aria-describedby="nextUpdateHelp"/>
         <div id="nextUpdateHelp" class="form-text">
-          Please provide the time for the next expected update.</div>
+          Please provide the time for the next expected update (<small class="timezone-info"></small>).</div>
         {% if form.update_date.errors %}
         <div class="invalid-feedback">
           <ul class="errors">
@@ -233,7 +233,7 @@
                  value="{{ form.start_date.data if form.start_date.data else '' }}"
                  aria-describedby="incidentStartHelp"/>
           <div id="incidentStartHelp" class="form-text">
-            Select the incident start time.
+            Select the incident start time (<small class="timezone-info"></small>).
           </div>
           <div class="invalid-feedback">{{form.start_date.errors | join(', ')
             }}</div>
@@ -250,7 +250,7 @@
                  value="{{form.end_date.data if form.end_date.data else '' }}"
                  aria-describedby="incidentEndHelp"/>
           <div id="incidentEndHelp" class="form-text">
-            Select the maintenance expected end time.
+            Select the maintenance expected end time (<small class="timezone-info"></small>).
           </div>
           {% if form.end_date.errors %}
             <div class="invalid-feedback">

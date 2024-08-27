@@ -142,13 +142,13 @@ class MaintenanceUpdateForm(FlaskForm):
     def validate_update_date(self, field):
         if field.data is None:
             if (
-                self.update_status.data == "completed" 
+                self.update_status.data == "completed"
                 and naive_utcnow() > self._start_date
             ):
                 field.errors[:] = []
                 raise validators.StopValidation()
             elif (
-                self.update_status.data == "completed" 
+                self.update_status.data == "completed"
                 and naive_utcnow() > self._start_date
             ):
                 raise validators.ValidationError(

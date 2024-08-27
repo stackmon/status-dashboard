@@ -111,7 +111,7 @@
              value="{{form.incident_start.data if form.incident_start.data else '' }}"
              aria-describedby="incidentStartHelp"/>
       <div id="incidentStartHelp" class="form-text">
-        Select the incident start time.
+        Select the incident start time (<small class="timezone-info"></small>).
       </div>
       <div class="invalid-feedback">{{form.incident_start.errors | join(', ')
         }}</div>
@@ -132,7 +132,7 @@
              value="{{form.incident_end.data if form.incident_end.data else '' }}"
              aria-describedby="incidentEndHelp"/>
       <div id="incidentEndHelp" class="form-text">
-        Select the maintenance expected end time.
+        Select the maintenance expected end time (<small class="timezone-info"></small>).
       </div>
       {% if form.incident_end.errors %}
         <div class="invalid-feedback">
