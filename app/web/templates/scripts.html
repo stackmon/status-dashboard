@@ -1,2 +1,9 @@
 <!-- Bootstrap 5 JavaScript -->
 <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}" ></script>
+<script src="{{ url_for('static', filename='js/timezone.js') }}"></script>
+{% if datetime_labels_script %}
+<script src="{{ url_for('static', filename='js/datetime_labels.js') }}"></script>
+{% endif %}
+{% if incident_datelabels_script %}
+  <script src="{{ url_for('static', filename='js/incident_datelabels.js') }}"></script>
+{% endif %}
