@@ -60,11 +60,11 @@
   </h6>
 {% if incident.impact == 0 %}
   <small>
-    <b>Start date:</b> <span class="datetime">{{ incident.start_date.isoformat() }}Z</span>&nbsp;<br/>
+    <b>Began at:</b> <span class="datetime">{{ incident.start_date.isoformat() }}Z</span>&nbsp;<br/>
     {% if now <= incident.end_date %}
       <b>Planned end date:</b> <span class="datetime">{{ incident.end_date.isoformat() | default('no') }}Z</span>&nbsp;
     {% else %}
-      <b>End date:</b> <span class="datetime">{{ incident.end_date.isoformat() | default('no') }}Z</span>&nbsp;
+      <b>Ended at:</b> <span class="datetime">{{ incident.end_date.isoformat() | default('no') }}Z</span>&nbsp;
     {% endif %}
   </small>
 {% else %}

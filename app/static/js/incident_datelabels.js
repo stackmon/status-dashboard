@@ -11,12 +11,12 @@ const updateDateLabel = (selectElement) => {
         updateDateDiv.style.display = 'none';
         break;
       default:
-        updateDateLabelElement.innerText = 'Update date:';
+        updateDateLabelElement.innerText = 'Updated at:';
         updateDateDiv.style.display = 'block';
         updateMessageDiv.style.display = 'block';
         break;
       case 'Choose status..':
-        updateDateLabelElement.innerText = 'Update date:';
+        updateDateLabelElement.innerText = 'Updated at:';
         updateDateDiv.style.display = 'block';
         updateMessageDiv.style.display = 'block';
         break;
@@ -49,7 +49,7 @@ const updateMaintenanceFields = (selectElement) => {
         maintenanceStartDiv.style.display = 'none';
         maintenanceEndDiv.style.display = 'none';
         updateDateDiv.style.display = 'block';
-        updateDateLabelElement.innerText = 'Update date:';
+        updateDateLabelElement.innerText = 'Updated at:';
         break;
     }
   }
