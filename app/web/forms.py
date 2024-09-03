@@ -149,13 +149,12 @@ class MaintenanceUpdateForm(FlaskForm):
                 raise validators.StopValidation()
             elif (
                 self.update_status.data == "completed"
-                and naive_utcnow() > self._start_date
+                and naive_utcnow() < self._start_date
             ):
                 raise validators.ValidationError(
                     "The date cannot be earlier than the start date"
                 )
-        if field.data is None:
-            if self.update_status.data == "modified":
+            elif self.update_status.data == "modified":
                 field.errors[:] = []
                 raise validators.StopValidation()
         if field.data is not None:
@@ -163,26 +162,32 @@ class MaintenanceUpdateForm(FlaskForm):
                 self.update_date.data,
                 self.timezone.data,
             )
-        else:
-            upd_date_form = None
-            raise validators.ValidationError("Update date cannot be empty")
-
-        if field.data is not None and self.update_status.data == "completed":
-            if upd_date_form < self._start_date:
+            if (
+                self.update_status.data == "completed"
+                and upd_date_form < self._start_date
+            ):
                 raise validators.ValidationError(
                     "The date cannot be earlier than the start date"
                 )
-        if self.update_status.data == "in progress":
-            if upd_date_form > naive_utcnow():
+            elif (
+                self.update_status.data == "in progress"
+                and upd_date_form > naive_utcnow()
+            ):
                 raise validators.ValidationError(
                     "Update date cannot be in the future"
                 )
-            if self._updates_ts:
+            elif (
+                self.update_status.data == "in progress"
+                and self._updates_ts
+            ):
                 raise validators.ValidationError(
                     "This maintenance already has a status update, "
                     "no statuses should be present."
                 )
-            if upd_date_form > self._end_date:
+            elif (
+                self.update_status.data == "in progress"
+                and upd_date_form > self._end_date
+            ):
                 raise validators.ValidationError(
                     "Update date cannot be later than the end date"
                 )
