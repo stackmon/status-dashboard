@@ -96,9 +96,13 @@ def form_submission(form, incident):
         "in progress": "/",
     }
 
-    if new_status in ["completed", "resolved"]:
+    if new_status == "resolved":
         new_impact = incident.impact
         incident.end_date = update_date or naive_utcnow()
+    elif new_status == "completed":
+        new_impact = incident.impact
+        update_date = naive_utcnow()
+        incident.end_date = update_date
     elif new_status == "reopened":
         update_date = naive_utcnow()
         incident.end_date = None
