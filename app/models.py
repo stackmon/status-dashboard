@@ -73,9 +73,7 @@ class Component(Base):
 
     def as_string(self, attr_key):
         return "<Component {}: {} ({})>".format(
-            self.id,
-            self.name,
-            self.get_attributes_as_dict()[attr_key]
+            self.id, self.name, self.get_attributes_as_dict()[attr_key]
         )
 
     @staticmethod
@@ -108,7 +106,7 @@ class Component(Base):
                         PropComparator.and_(
                             or_(
                                 Incident.end_date.is_(None),
-                                Incident.end_date > naive_utcnow()
+                                Incident.end_date > naive_utcnow(),
                             ),
                             Incident.start_date <= naive_utcnow(),
                         ),
@@ -130,10 +128,9 @@ class Component(Base):
         counter = 0
         for comp in Component.all():
             comp_attrs = comp.get_attributes_as_dict()
-            if set(
-                comp_attrs.items()
-            ).intersection(set(
-                    attr_dict.items())) == set(attr_dict.items()):
+            if set(comp_attrs.items()).intersection(
+                set(attr_dict.items())
+            ) == set(attr_dict.items()):
                 counter += 1
         return counter
 
@@ -174,15 +171,19 @@ class Component(Base):
         time_now = naive_utcnow()
         this_month_start = datetime(time_now.year, time_now.month, 1)
 
-        outages = [inc for inc in self.incidents
-                   if inc.impact == 3 and inc.end_date is not None]
+        outages = [
+            inc
+            for inc in self.incidents
+            if inc.impact == 3 and inc.end_date is not None
+        ]
         outages_dict = Incident.get_history_by_months(outages)
         outages_dict_sorted = dict(sorted(outages_dict.items()))
 
         prev_month_minutes = 0
 
-        months = [this_month_start + relativedelta(months=-mon)
-                  for mon in range(6)]
+        months = [
+            this_month_start + relativedelta(months=-mon) for mon in range(6)
+        ]
         sla_dict = {month: 1 for month in months}
 
         for month_start, outage_group in outages_dict_sorted.items():
@@ -272,12 +273,10 @@ class Incident(Base):
     id = mapped_column(Integer, primary_key=True, index=True)
     text: Mapped[str] = mapped_column(String())
     start_date: Mapped[datetime] = mapped_column(
-        db.DateTime,
-        insert_default=naive_utcnow()
+        db.DateTime, insert_default=naive_utcnow()
     )
     end_date: Mapped[datetime] = mapped_column(nullable=True)
     impact: Mapped[int] = mapped_column(db.SmallInteger)
-    # upgrade: system: Mapped[bool] = mapped_column(Boolean, default=False)
     system: Mapped[bool] = mapped_column(Boolean, default=False)
 
     components: Mapped[List["Component"]] = relationship(
@@ -299,7 +298,7 @@ class Incident(Base):
             select(Incident).filter(
                 or_(
                     Incident.end_date.is_(None),
-                    Incident.end_date > naive_utcnow()
+                    Incident.end_date > naive_utcnow(),
                 ),
                 Incident.start_date <= naive_utcnow(),
             )
@@ -311,7 +310,7 @@ class Incident(Base):
         return db.session.scalars(
             select(Incident).filter(
                 Incident.end_date.is_not(None),
-                Incident.end_date < naive_utcnow()
+                Incident.end_date < naive_utcnow(),
             )
         ).all()
 
@@ -322,11 +321,8 @@ class Incident(Base):
         incident_dict = {}
         for incident in incident_list:
             incident_dict.setdefault(
-                datetime(
-                    incident.end_date.year,
-                    incident.end_date.month,
-                    1),
-                []
+                datetime(incident.end_date.year, incident.end_date.month, 1),
+                [],
             ).append(incident)
         return incident_dict
 
@@ -343,7 +339,7 @@ class Incident(Base):
                 # not closed
                 or_(
                     Incident.end_date.is_(None),
-                    Incident.end_date > naive_utcnow()
+                    Incident.end_date > naive_utcnow(),
                 ),
                 Incident.impact == 0,
             )
@@ -444,8 +440,7 @@ class IncidentStatus(Base):
     incident_id = mapped_column(ForeignKey("incident.id"), index=True)
     incident: Mapped["Incident"] = relationship(back_populates="updates")
     timestamp: Mapped[datetime] = mapped_column(
-        db.DateTime,
-        insert_default=naive_utcnow()
+        db.DateTime, insert_default=naive_utcnow()
     )
     text: Mapped[str] = mapped_column(String())
     status: Mapped[str] = mapped_column(String())

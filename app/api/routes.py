@@ -37,8 +37,7 @@ auth = authorization.auth
 
 def inc_by_impact(incidents, impact):
     incident_match = next(
-        (incident for incident in incidents if incident.impact == impact),
-        None
+        (incident for incident in incidents if incident.impact == impact), None
     )
     return incident_match
 
@@ -48,24 +47,20 @@ def update_incident_status(incident, text_status, status="SYSTEM"):
         incident_id=incident.id,
         text=text_status,
         status=status,
+        timestamp=naive_utcnow(),
     )
     current_app.logger.debug(f"UPDATE_STATUS: {text_status}")
     db.session.add(update)
 
 
 def add_component_to_incident(
-    target_component,
-    incident,
-    comp_with_attrs=None
+    target_component, incident, comp_with_attrs=None
 ):
     current_app.logger.debug(
         f"Add {target_component} to the incident: {incident}"
     )
     update_incident_status(
-        incident,
-        (
-            f"{comp_with_attrs} added to {incident.text}"
-        )
+        incident, (f"{comp_with_attrs} added to {incident.text}")
     )
     incident.components.append(target_component)
     db.session.commit()
@@ -92,22 +87,20 @@ def handling_statuses(
     new_incident=None,
     action=None,
     impact=None,
-    impacts=None
+    impacts=None,
 ):
     if action:
-        url_s = url_for('web.incident', incident_id=incident.id)
+        url_s = url_for("web.incident", incident_id=incident.id)
         link_s = f"<a href='{url_s}'>{incident.text}</a>"
 
         if action == "move":
             if dst_incident:
-                url_d = url_for('web.incident', incident_id=dst_incident.id)
+                url_d = url_for("web.incident", incident_id=dst_incident.id)
                 link_d = f"<a href='{url_d}'>{dst_incident.text}</a>"
-                update_s = (
-                    f"{comp_with_attrs} moved to {link_d}"
-                )
+                update_s = f"{comp_with_attrs} moved to {link_d}"
                 update_d = f"{comp_with_attrs} moved from {link_s}"
             elif new_incident:
-                url_d = url_for('web.incident', incident_id=new_incident.id)
+                url_d = url_for("web.incident", incident_id=new_incident.id)
                 link_d = f"<a href='{url_d}'>{new_incident.text}</a>"
                 update_s = f"{comp_with_attrs} moved to {link_d}"
                 update_n = f"{comp_with_attrs} moved from {link_s}"
@@ -131,12 +124,11 @@ def handling_incidents(
     src_incident,
     dst_incident=None,
     text=None,
-    comp_with_attrs=None
+    comp_with_attrs=None,
 ):
     if len(src_incident.components) == 1 and dst_incident:
         current_app.logger.debug(
-            f"{target_component} "
-            f"moved to: '{dst_incident.text}'"
+            f"{target_component} " f"moved to: '{dst_incident.text}'"
         )
         current_app.logger.debug(f"{src_incident.text} CLOSED")
         src_incident.end_date = naive_utcnow()
@@ -145,7 +137,7 @@ def handling_incidents(
             src_incident,
             comp_with_attrs,
             dst_incident=dst_incident,
-            action="move"
+            action="move",
         )
         db.session.commit()
         update_incident_status(src_incident, "CLOSED BY SYSTEM")
@@ -165,7 +157,7 @@ def handling_incidents(
             src_incident,
             action="change_impact",
             impact=impact,
-            impacts=impacts
+            impacts=impacts,
         )
         src_incident.impact = impact
         db.session.commit()
@@ -181,7 +173,7 @@ def handling_incidents(
             src_incident,
             comp_with_attrs,
             dst_incident=dst_incident,
-            action="move"
+            action="move",
         )
         db.session.commit()
         return dst_incident
@@ -221,7 +213,7 @@ class ApiComponentStatus(MethodView):
         return (
             f"Request method: {request.method}, "
             f"Request path: {request.path}",
-            f"Client address: {request.remote_addr}"
+            f"Client address: {request.remote_addr}",
         )
 
     @bp.arguments(ComponentSearchQueryArgs, location="query")
@@ -251,8 +243,9 @@ class ApiComponentStatus(MethodView):
         else:
             attribute = None
         component_schema = ComponentSchema()
-        cache_key = (f"component_status:{name if name else 'all'}"
-                     f"{attribute if attribute else ''}"
+        cache_key = (
+            f"component_status:{name if name else 'all'}"
+            f"{attribute if attribute else ''}"
         )
 
         cached_component = get_elements_from_cache(cache_key)
@@ -344,9 +337,7 @@ class ApiComponentStatus(MethodView):
         comp_name = target_component.name
         comp_attributes = target_component.attributes
         comp_attributes_str = ", ".join(
-            [
-                f"{attr.value}" for attr in comp_attributes
-            ]
+            [f"{attr.value}" for attr in comp_attributes]
         )
         comp_with_attrs = f"{comp_name} ({comp_attributes_str})"
 
@@ -365,8 +356,10 @@ class ApiComponentStatus(MethodView):
                 return maintenance
         incidents_by_user = Incident.get_active_m()
         for incident in incidents_by_user:
-            if target_component in incident.components and \
-                impact <= incident.impact:
+            if (
+                target_component in incident.components
+                and impact <= incident.impact
+            ):
                 current_app.logger.debug(
                     "Incident is active for the component, "
                     "requested impact equal or less - not modifying "
@@ -375,13 +368,12 @@ class ApiComponentStatus(MethodView):
                 existing_incident = incident
                 response = {
                     "message": (
-                        "Incident with this the component "
-                        "already exists"
+                        "Incident with this the component " "already exists"
                     ),
                     "targetComponent": comp_with_attrs,
                     "existingIncidentId": existing_incident.id,
                     "existingIncidentTitle": existing_incident.text,
-                    "details": "Check your request parameters"
+                    "details": "Check your request parameters",
                 }
                 return jsonify(response), 409
 
@@ -414,16 +406,14 @@ class ApiComponentStatus(MethodView):
             for incident in incidents:
                 if target_component in incident.components:
                     if impact > incident.impact:
-                        return (
-                            handling_incidents(
-                                target_component,
-                                impact,
-                                impacts,
-                                incident,
-                                incident_match,
-                                text,
-                                comp_with_attrs,
-                            )
+                        return handling_incidents(
+                            target_component,
+                            impact,
+                            impacts,
+                            incident,
+                            incident_match,
+                            text,
+                            comp_with_attrs,
                         )
                     else:
                         # For the component incident is already open -
@@ -441,7 +431,7 @@ class ApiComponentStatus(MethodView):
                             "targetComponent": comp_with_attrs,
                             "existingIncidentId": existing_incident.id,
                             "existingIncidentTitle": existing_incident.text,
-                            "details": "Check your request parameters"
+                            "details": "Check your request parameters",
                         }
                         return jsonify(response), 409
 
@@ -453,7 +443,7 @@ class ApiIncidents(MethodView):
         return (
             f"Request method: {request.method}, "
             f"Request path: {request.path}",
-            f"Client address: {request.remote_addr}"
+            f"Client address: {request.remote_addr}",
         )
 
     @bp.response(200, IncidentSchema(many=True))
