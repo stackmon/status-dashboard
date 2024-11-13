@@ -40,7 +40,7 @@ class IncidentUpdateForm(FlaskForm):
     )
     update_impact = SelectField("Incident Impact")
     update_status = SelectField("Update Status")
-    update_date = DateTimeField("Updated at:", format='%Y-%m-%dT%H:%M')
+    update_date = DateTimeField("Updated at:", format="%Y-%m-%dT%H:%M")
     timezone = StringField("Timezone", validators=[validators.DataRequired()])
     submit = SubmitField("Submit")
 
@@ -53,10 +53,7 @@ class IncidentUpdateForm(FlaskForm):
     def validate_update_date(self, field):
 
         if field.data is None:
-            if self.update_status.data in [
-                "resolved",
-                "reopened"
-            ]:
+            if self.update_status.data in ["resolved", "reopened"]:
                 field.errors[:] = []
                 raise validators.StopValidation()
             elif self.update_status.data == "changed":
@@ -114,9 +111,9 @@ class MaintenanceUpdateForm(FlaskForm):
     )
     update_impact = SelectField("Incident Impact")
     update_status = SelectField("Update Status")
-    start_date = DateTimeField("Start date:", format='%Y-%m-%dT%H:%M')
-    end_date = DateTimeField("End date:", format='%Y-%m-%dT%H:%M')
-    update_date = DateTimeField("Updated at:", format='%Y-%m-%dT%H:%M')
+    start_date = DateTimeField("Start date:", format="%Y-%m-%dT%H:%M")
+    end_date = DateTimeField("End date:", format="%Y-%m-%dT%H:%M")
+    update_date = DateTimeField("Updated at:", format="%Y-%m-%dT%H:%M")
     timezone = StringField("Timezone", validators=[validators.DataRequired()])
     submit = SubmitField("Submit")
 
@@ -152,7 +149,8 @@ class MaintenanceUpdateForm(FlaskForm):
                 and naive_utcnow() < self._start_date
             ):
                 raise validators.ValidationError(
-                    "The date cannot be earlier than the start date"
+                    "Current time is earlier than maintenance start time.\n"
+                    "You cannot complete an event that has not yet started."
                 )
             elif self.update_status.data == "modified":
                 field.errors[:] = []
@@ -170,16 +168,21 @@ class MaintenanceUpdateForm(FlaskForm):
                     "The date cannot be earlier than the start date"
                 )
             elif (
+                self.update_status.data == "completed"
+                and naive_utcnow() < self._start_date
+            ):
+                raise validators.ValidationError(
+                    "Current time is earlier than maintenance start time.\n"
+                    "You cannot complete an event that has not yet started."
+                )
+            elif (
                 self.update_status.data == "in progress"
                 and upd_date_form > naive_utcnow()
             ):
                 raise validators.ValidationError(
                     "Update date cannot be in the future"
                 )
-            elif (
-                self.update_status.data == "in progress"
-                and self._updates_ts
-            ):
+            elif self.update_status.data == "in progress" and self._updates_ts:
                 raise validators.ValidationError(
                     "This maintenance already has a status update, "
                     "no statuses should be present."
@@ -198,9 +201,7 @@ class MaintenanceUpdateForm(FlaskForm):
             raise validators.StopValidation()
         else:
             if field.data is None:
-                raise validators.ValidationError(
-                    "Start date cannot be empty"
-                )
+                raise validators.ValidationError("Start date cannot be empty")
 
             start_date_form = naive_from_dttz(
                 field.data,
@@ -228,9 +229,7 @@ class MaintenanceUpdateForm(FlaskForm):
             raise validators.StopValidation()
         else:
             if field.data is None:
-                raise validators.ValidationError(
-                    "End date cannot be empty"
-                )
+                raise validators.ValidationError("End date cannot be empty")
 
             end_date_form = naive_from_dttz(
                 field.data,
@@ -270,12 +269,11 @@ class IncidentForm(FlaskForm):
     incident_impact = SelectField("Incident Impact")
     incident_components = SelectField("Affected services")
     incident_start = DateTimeField(
-        "Start", validators=[validators.DataRequired()],
-        format='%Y-%m-%dT%H:%M'
+        "Start",
+        validators=[validators.DataRequired()],
+        format="%Y-%m-%dT%H:%M",
     )
-    incident_end = DateTimeField(
-        "End", format='%Y-%m-%dT%H:%M'
-    )
+    incident_end = DateTimeField("End", format="%Y-%m-%dT%H:%M")
     timezone = StringField("Timezone", validators=[validators.DataRequired()])
 
     submit = SubmitField("Submit")
@@ -294,17 +292,11 @@ class IncidentForm(FlaskForm):
             )
 
     def validate_incident_end(self, field):
-        if (
-            self.incident_impact.data == "0"
-            and field.data is None
-        ):
+        if self.incident_impact.data == "0" and field.data is None:
             raise validators.ValidationError(
                 "Expected end date field is mandatory for maintenance"
             )
-        elif (
-            self.incident_impact.data != "0"
-            and field.data is None
-        ):
+        elif self.incident_impact.data != "0" and field.data is None:
             # Making field optional requres dropping "Not a valid datetime
             # value." error as well
             field.errors[:] = []
