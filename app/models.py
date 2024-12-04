@@ -257,9 +257,9 @@ class ComponentAttribute(Base):
         return [
             r[0]
             for r in db.session.execute(
-                select(ComponentAttribute.value).where(
-                    ComponentAttribute.name == attr
-                )
+                select(ComponentAttribute.value)
+                .where(ComponentAttribute.name == attr)
+                .order_by(ComponentAttribute.value.asc())
             )
             .unique()
             .all()
