@@ -301,3 +301,16 @@ class IncidentForm(FlaskForm):
             # value." error as well
             field.errors[:] = []
             raise validators.StopValidation()
+        if self.incident_impact.data == 0 and field.data is not None:
+            start_date = naive_from_dttz(
+                self.incident_start.data,
+                self.timezone.data,
+            )
+            end_date = naive_from_dttz(
+                field.data,
+                self.timezone.data,
+            )
+            if end_date <= start_date:
+                raise validators.ValidationError(
+                    "End date cannot be earlier than the start date or equal"
+                )
