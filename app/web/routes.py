@@ -183,7 +183,6 @@ def new_incident(current_user):
         incident_components = [
             comp for comp in all_components if comp.id in selected_components
         ]
-
         new_incident = Incident(
             text=form.incident_text.data,
             impact=form.incident_impact.data,
