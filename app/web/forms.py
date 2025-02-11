@@ -283,12 +283,25 @@ class IncidentForm(FlaskForm):
             self.incident_start.data,
             self.timezone.data,
         )
+        if self.incident_end.data is not None:
+            end_date_form = naive_from_dttz(
+                self.incident_end.data,
+                self.timezone.data,
+            )
         if (
             self.incident_impact.data != "0"
             and start_date_form > naive_utcnow()
         ):
             raise validators.ValidationError(
                 "Start date of incident cannot be in the future"
+            )
+        elif (
+            self.incident_impact.data == "0"
+            and end_date_form is not None
+            and start_date_form >= end_date_form
+        ):
+            raise validators.ValidationError(
+                "Start date cannot be later than the end date or equal"
             )
 
     def validate_incident_end(self, field):
@@ -301,16 +314,3 @@ class IncidentForm(FlaskForm):
             # value." error as well
             field.errors[:] = []
             raise validators.StopValidation()
-        if self.incident_impact.data == 0 and field.data is not None:
-            start_date = naive_from_dttz(
-                self.incident_start.data,
-                self.timezone.data,
-            )
-            end_date = naive_from_dttz(
-                field.data,
-                self.timezone.data,
-            )
-            if end_date <= start_date:
-                raise validators.ValidationError(
-                    "End date cannot be earlier than the start date or equal"
-                )
