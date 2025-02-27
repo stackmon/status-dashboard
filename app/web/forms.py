@@ -273,31 +273,44 @@ class IncidentForm(FlaskForm):
         validators=[validators.DataRequired()],
         format="%Y-%m-%dT%H:%M",
     )
-    incident_end = DateTimeField("End", format="%Y-%m-%dT%H:%M")
+    incident_end = DateTimeField(
+        "End",
+        validators=[validators.DataRequired()],
+        format="%Y-%m-%dT%H:%M",
+    )
     timezone = StringField("Timezone", validators=[validators.DataRequired()])
 
     submit = SubmitField("Submit")
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.incident_impact.data == "0":
+            self.incident_end.validators = [validators.DataRequired()]
+        else:
+            self.incident_end.validators = [validators.Optional()]
+
     def validate_incident_start(self, field):
+        if not field.data:
+            raise validators.ValidationError("Start date is required")
+
         start_date_form = naive_from_dttz(
-            self.incident_start.data,
+            field.data,
             self.timezone.data,
         )
-        if (
-            self.incident_impact.data != "0"
-            and start_date_form > naive_utcnow()
-        ):
-            raise validators.ValidationError(
-                "Start date of incident cannot be in the future"
-            )
 
-    def validate_incident_end(self, field):
-        if self.incident_impact.data == "0" and field.data is None:
-            raise validators.ValidationError(
-                "Expected end date field is mandatory for maintenance"
+        if self.incident_impact.data and self.incident_impact.data != "0":
+            if start_date_form > naive_utcnow():
+                raise validators.ValidationError(
+                    "Start date of incident cannot be in the future"
+                )
+        elif self.incident_impact.data == "0" and self.incident_end.data:
+            # For maintenance, validate against end date
+            end_date_form = naive_from_dttz(
+                self.incident_end.data,
+                self.timezone.data,
             )
-        elif self.incident_impact.data != "0" and field.data is None:
-            # Making field optional requres dropping "Not a valid datetime
-            # value." error as well
-            field.errors[:] = []
-            raise validators.StopValidation()
+            if start_date_form >= end_date_form:
+                raise validators.ValidationError(
+                    "Start date cannot be later than or equal to the end date"
+                )

@@ -40,9 +40,7 @@ from flask import url_for
 
 @bp.route("/", methods=["GET"])
 @bp.route("/index", methods=["GET"])
-@cache.cached(unless=lambda: "user" in session,
-              key_prefix="/index"
-)
+@cache.cached(unless=lambda: "user" in session, key_prefix="/index")
 def index():
     return render_template(
         "index.html",
@@ -84,10 +82,14 @@ def update_incident(
 def form_submission(form, incident):
     new_impact = form.update_impact.data
     new_status = form.update_status.data
-    update_date = naive_from_dttz(
-        form.update_date.data,
-        form.timezone.data,
-    ) if form.update_date.data else None
+    update_date = (
+        naive_from_dttz(
+            form.update_date.data,
+            form.timezone.data,
+        )
+        if form.update_date.data
+        else None
+    )
 
     redirect_path_map = {
         "completed": "/history",
@@ -181,7 +183,6 @@ def new_incident(current_user):
         incident_components = [
             comp for comp in all_components if comp.id in selected_components
         ]
-
         new_incident = Incident(
             text=form.incident_text.data,
             impact=form.incident_impact.data,
@@ -225,21 +226,15 @@ def new_incident(current_user):
                         comp_name = comp.name
                         comp_attributes = comp.attributes
                         comp_attributes_str = ", ".join(
-                            [
-                                f"{attr.value}" for attr in comp_attributes
-                            ]
+                            [f"{attr.value}" for attr in comp_attributes]
                         )
                         comp_with_attrs = (
-                            f"{comp_name} "
-                            f"({comp_attributes_str})")
-                        url_s = url_for(
-                            'web.incident',
-                            incident_id=inc.id
+                            f"{comp_name} " f"({comp_attributes_str})"
                         )
+                        url_s = url_for("web.incident", incident_id=inc.id)
                         link_s = f"<a href='{url_s}'>{inc.text}</a>"
                         url_d = url_for(
-                            'web.incident',
-                            incident_id=new_incident.id
+                            "web.incident", incident_id=new_incident.id
                         )
                         link_d = f"<a href='{url_d}'>{new_incident.text}</a>"
                         update_s = f"{comp_with_attrs} moved to {link_d}"
@@ -253,13 +248,16 @@ def new_incident(current_user):
                             messages_to.append("Incident closed by system")
                             inc.end_date = naive_utcnow()
                 if messages_to:
-                    update_incident(inc, ', '.join(messages_to))
+                    update_incident(inc, ", ".join(messages_to))
             if messages_from:
-                update_incident(new_incident, ', '.join(messages_from))
+                update_incident(new_incident, ", ".join(messages_from))
         db.session.commit()
 
-        return (redirect("/") if new_incident.impact != 0
-                else redirect("/incidents/" + str(new_incident.id)))
+        return (
+            redirect("/")
+            if new_incident.impact != 0
+            else redirect("/incidents/" + str(new_incident.id))
+        )
 
     return render_template(
         "create_incident.html",
@@ -287,7 +285,10 @@ def incident(incident_id):
         end_date = None
     updates = incident.updates
     updates_ts = [
-        u.timestamp for u in updates if u.status not in [
+        u.timestamp
+        for u in updates
+        if u.status
+        not in [
             "resolved",
             "description",
             "changed",
@@ -317,11 +318,14 @@ def incident(incident_id):
         form.update_status.choices = [
             (k, v)
             for (k, v) in current_app.config.get(
-                "INCIDENT_ACTIONS"
-                if incident.end_date and incident.impact != 0 else (
-                    "MAINTENANCE_STATUSES"
-                    if incident.impact == 0
-                    else "INCIDENT_STATUSES"
+                (
+                    "INCIDENT_ACTIONS"
+                    if incident.end_date and incident.impact != 0
+                    else (
+                        "MAINTENANCE_STATUSES"
+                        if incident.impact == 0
+                        else "INCIDENT_STATUSES"
+                    )
                 ),
                 {},
             ).items()
@@ -367,34 +371,20 @@ def separate_incident(current_user, incident_id, component_id):
     comp_name = component.name
     comp_attributes = component.attributes
     comp_attributes_str = ", ".join(
-        [
-            f"{attr.value}" for attr in comp_attributes
-        ]
+        [f"{attr.value}" for attr in comp_attributes]
     )
     comp_with_attrs = f"{comp_name} ({comp_attributes_str})"
 
-    url_s = url_for(
-        'web.incident',
-        incident_id=incident.id
-    )
+    url_s = url_for("web.incident", incident_id=incident.id)
     link_s = f"<a href='{url_s}'>{incident.text}</a>"
-    url_d = url_for(
-        'web.incident',
-        incident_id=new_incident.id
-    )
+    url_d = url_for("web.incident", incident_id=new_incident.id)
     link_d = f"<a href='{url_d}'>{new_incident.text}</a>"
 
     update_s = f"{comp_with_attrs} moved to {link_d}"
     update_n = f"{comp_with_attrs} moved from {link_s}"
 
-    update_incident(
-        incident,
-        update_s
-    )
-    update_incident(
-        new_incident,
-        update_n
-    )
+    update_incident(incident, update_s)
+    update_incident(new_incident, update_n)
     db.session.commit()
     return redirect("/")
 
